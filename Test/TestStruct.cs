@@ -2,26 +2,66 @@
 using System.Linq;
 using Cave;
 
-namespace Tests
+namespace Test.Cave.IO
 {
     public struct TestStruct
     {
+        #region Public Fields
+
+        public byte[] Arr;
+
+        public byte B;
+
+        public char C;
+
+        public ConnectionString ConStr;
+
+        public double D;
+
+        public DateTime Date;
+
+        public decimal Dec;
+
+        public float F;
+
+        public int I;
+
+        public long ID;
+
+        public short S;
+
+        public sbyte SB;
+
+        public string Text;
+
+        public TimeSpan Time;
+
+        public uint UI;
+
+        public Uri Uri;
+
+        public ushort US;
+
+        #endregion Public Fields
+
+        #region Public Methods
+
         public static TestStruct Create(int i)
         {
             var t = new TestStruct
             {
-                Arr = BitConverter.GetBytes((long) i),
-                B = (byte) (i & 0xFF),
-                SB = (sbyte) (-i / 10),
-                US = (ushort) i,
-                C = (char) i,
+                Arr = BitConverter.GetBytes((long)i),
+                B = (byte)(i & 0xFF),
+                SB = (sbyte)(-i / 10),
+                US = (ushort)i,
+                C = (char)i,
                 I = i,
                 F = (500 - i) * 0.5f,
                 D = (500 - i) * 0.5d,
                 Date = new DateTime(1 + Math.Abs(i % 3000), 12, 31, 23, 59, 48, Math.Abs(i % 1000), (i % 2) == 1 ? DateTimeKind.Local : DateTimeKind.Utc),
                 Time = TimeSpan.FromSeconds(i),
-                S = (short) (i - 500),
-                UI = (uint) i,
+                S = (short)(i - 500),
+                UI = (uint)i,
                 Text = i.ToString(),
                 Dec = 0.005m * (i - 500),
                 Uri = new Uri("http://localhost/" + i),
@@ -30,24 +70,6 @@ namespace Tests
             return t;
         }
 
-        public long ID;
-        public byte B;
-        public sbyte SB;
-        public char C;
-        public short S;
-        public ushort US;
-        public int I;
-        public uint UI;
-        public byte[] Arr;
-        public string Text;
-        public TimeSpan Time;
-        public DateTime Date;
-        public double D;
-        public float F;
-        public decimal Dec;
-        public Uri Uri;
-        public ConnectionString ConStr;
-
         public override bool Equals(object obj)
         {
             if (!(obj is TestStruct))
@@ -55,7 +77,7 @@ namespace Tests
                 return false;
             }
 
-            var other = (TestStruct) obj;
+            var other = (TestStruct)obj;
             return
                 Arr.SequenceEqual(other.Arr) &&
                 Equals(B, other.B) &&
@@ -78,5 +100,7 @@ namespace Tests
         public override int GetHashCode() => ID.GetHashCode();
 
         public override string ToString() { return new object[] { Arr, B, C, ConStr, D, Date, Dec, F, I, S, SB, Text, Time, UI, Uri, US }.Join(';'); }
+
+        #endregion Public Methods
     }
 }

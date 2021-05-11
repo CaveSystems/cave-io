@@ -1,9 +1,11 @@
 ﻿using System;
 
-namespace Test
+namespace Test.Cave.IO
 {
     public class SettingsObjectFields
     {
+        #region Public Fields
+
         public bool SampleBool;
         public DateTime SampleDateTime;
         public decimal SampleDecimal;
@@ -22,5 +24,7 @@ namespace Test
         public uint SampleUInt32;
         public ulong SampleUInt64;
         public byte SampleUInt8;
+
+        #endregion Public Fields
     }
 }

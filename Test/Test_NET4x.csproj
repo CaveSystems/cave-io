@@ -5,9 +5,8 @@
     <IsPackable>false</IsPackable>
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
-    <StartupObject>Test.Program</StartupObject>
-    <RootNamespace>Test</RootNamespace>
-    <AssemblyName>Test</AssemblyName>
+    <RootNamespace>Test.Cave.IO</RootNamespace>
+    <AssemblyName>Test.Cave.IO</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

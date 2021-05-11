@@ -3,10 +3,12 @@ using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 
-namespace Test
+namespace Test.Cave.IO
 {
     class Program
     {
+        #region Private Methods
+
         static int Main(string[] args)
         {
             var errors = 0;
@@ -79,5 +81,7 @@ namespace Test
                 ;
             }
         }
+
+        #endregion Private Methods
     }
 }

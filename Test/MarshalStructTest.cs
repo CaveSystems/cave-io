@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Runtime.InteropServices;
+﻿using System.IO;
 using NUnit.Framework;
-using Cave;
 using Cave.IO;
-using Test.Collections;
 
-namespace Cave.IO
+namespace Test.Cave.IO
 {
     [TestFixture]
     public class MarshalStructTest
     {
+        #region Public Methods
+
         [Test]
         public void Test_MarshalStruct_1()
         {
@@ -34,5 +29,7 @@ namespace Cave.IO
             InteropTestStruct result3 = MarshalStruct.Read<InteropTestStruct>(buffer, 1024);
             Assert.AreEqual(l_Test, result3);
         }
+
+        #endregion Public Methods
     }
 }

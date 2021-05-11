@@ -6,7 +6,7 @@ using System.Text;
 using Cave.IO;
 using NUnit.Framework;
 
-namespace Test
+namespace Test.Cave.IO
 {
     [TestFixture]
     public class DataReaderWriterTest
