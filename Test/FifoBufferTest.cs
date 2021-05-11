@@ -3,11 +3,13 @@ using System.Text;
 using Cave.IO;
 using NUnit.Framework;
 
-namespace Test
+namespace Test.Cave.IO
 {
     [TestFixture]
     public class FifoBufferTest
     {
+        #region Public Methods
+
         [Test]
         public void Test1()
         {
@@ -23,7 +25,7 @@ namespace Test
             {
                 var t = buffer.Dequeue(1);
                 Assert.AreEqual(1, t.Length);
-                Assert.AreEqual((byte) ('0' + (i % 10)), t[0]);
+                Assert.AreEqual((byte)('0' + (i % 10)), t[0]);
                 Assert.AreEqual(10 - i, buffer.Length);
             }
 
@@ -43,5 +45,7 @@ namespace Test
             Assert.AreEqual("1234567890", Encoding.ASCII.GetString(buffer.Dequeue(buffer.Length)));
             Assert.AreEqual(buffer.Length, 0);
         }
+
+        #endregion Public Methods
     }
 }

@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using NUnit.Framework;
 using Cave.IO;
-namespace Cave.IO
+
+namespace Test.Cave.IO
 {
     [TestFixture]
     public class DoubleStructTest
     {
+        #region Public Methods
+
         [Test]
         public void Test_DoubleStruct_ToDouble()
         {
@@ -42,5 +40,7 @@ namespace Cave.IO
                 Assert.AreEqual(a, DoubleStruct.ToUInt64(value));
             }
         }
+
+        #endregion Public Methods
     }
 }

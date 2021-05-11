@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Test.Collections
+namespace Test.Cave.IO
 {
     [StructLayout(LayoutKind.Sequential, Pack = 8, CharSet = CharSet.Ansi)]
     public struct InteropTestStruct
@@ -22,7 +22,6 @@ namespace Test.Collections
             };
             return t;
         }
-        
 
         public long ID;
 
