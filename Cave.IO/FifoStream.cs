@@ -12,7 +12,7 @@ namespace Cave.IO
     {
         #region Private Fields
 
-        readonly LinkedList<byte[]> buffers = new LinkedList<byte[]>();
+        readonly LinkedList<byte[]> Buffers = new();
         LinkedListNode<byte[]> currentBuffer;
         int currentBufferPosition;
         int realLength;
@@ -45,7 +45,7 @@ namespace Cave.IO
             {
                 lock (this)
                 {
-                    return buffers.Count;
+                    return Buffers.Count;
                 }
             }
         }
@@ -213,7 +213,7 @@ namespace Cave.IO
         {
             lock (this)
             {
-                buffers.Clear();
+                Buffers.Clear();
                 realLength = 0;
                 realPosition = 0;
                 currentBuffer = null;
@@ -302,16 +302,16 @@ namespace Cave.IO
             lock (this)
             {
                 var bytesFreed = 0;
-                while ((buffers.First != null) && (buffers.First.Value.Length <= realPosition))
+                while ((Buffers.First != null) && (Buffers.First.Value.Length <= realPosition))
                 {
-                    var len = buffers.First.Value.Length;
+                    var len = Buffers.First.Value.Length;
                     realPosition -= len;
                     realLength -= len;
-                    buffers.RemoveFirst();
+                    Buffers.RemoveFirst();
                     bytesFreed += len;
                 }
 
-                if (buffers.Count == 0)
+                if (Buffers.Count == 0)
                 {
                     currentBufferPosition = 0;
                     currentBuffer = null;
@@ -329,14 +329,14 @@ namespace Cave.IO
         {
             lock (this)
             {
-                while ((buffers.First != null) && (buffers.First.Value.Length <= realPosition))
+                while ((Buffers.First != null) && (Buffers.First.Value.Length <= realPosition))
                 {
-                    var len = buffers.First.Value.Length;
+                    var len = Buffers.First.Value.Length;
                     if ((Available - len) >= sizeToKeep)
                     {
                         realPosition -= len;
                         realLength -= len;
-                        buffers.RemoveFirst();
+                        Buffers.RemoveFirst();
                     }
                     else
                     {
@@ -344,7 +344,7 @@ namespace Cave.IO
                     }
                 }
 
-                if (buffers.Count == 0)
+                if (Buffers.Count == 0)
                 {
                     currentBufferPosition = 0;
                     currentBuffer = null;
@@ -451,7 +451,7 @@ namespace Cave.IO
                     throw new ArgumentNullException(nameof(buffer));
                 }
 
-                buffers.AddLast(buffer);
+                Buffers.AddLast(buffer);
                 realLength += buffer.Length;
                 if (currentBuffer == null)
                 {
@@ -564,7 +564,7 @@ namespace Cave.IO
 
                         case SeekOrigin.Begin:
                         {
-                            currentBuffer = buffers.First;
+                            currentBuffer = Buffers.First;
                             currentBufferPosition = 0;
                             realPosition = 0;
                             if (offset != 0)
@@ -577,7 +577,7 @@ namespace Cave.IO
                         case SeekOrigin.End:
                         {
                             realPosition = realLength;
-                            currentBuffer = buffers.Last;
+                            currentBuffer = Buffers.Last;
                             currentBufferPosition = currentBuffer.Value.Length;
                             if (offset != 0)
                             {
@@ -600,7 +600,7 @@ namespace Cave.IO
         /// Throws new NotSupportedException().
         /// </summary>
         /// <param name="value">Not supported.</param>
-        public override void SetLength(long value) { throw new NotSupportedException(); }
+        public override void SetLength(long value) => throw new NotSupportedException();
 
         /// <summary>
         /// Retrieves all data at the buffer as array (peek).

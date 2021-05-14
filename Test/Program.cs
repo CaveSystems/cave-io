@@ -9,7 +9,7 @@ namespace Test.Cave.IO
     {
         #region Private Methods
 
-        static int Main(string[] args)
+        static int Main()
         {
             var errors = 0;
             var types = typeof(Program).Assembly.GetTypes();

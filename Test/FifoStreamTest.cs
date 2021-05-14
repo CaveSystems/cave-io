@@ -17,7 +17,7 @@ namespace Test.Cave.IO
             fifo.PutBuffer(b);
 
             //write buffer after add
-            for (int i = 0; i < b.Length; i++) b[i] = (byte)(i);
+            for (var i = 0; i < b.Length; i++) b[i] = (byte)(i);
 
             //test content
             Assert.IsTrue(b.SequenceEqual(fifo.ToArray()));
@@ -26,9 +26,9 @@ namespace Test.Cave.IO
             Assert.AreEqual(255, fifo.Available);
             Assert.AreEqual(255, fifo[254]);
 
-            for (int i = 1; i < b.Length; i++)
+            for (var i = 1; i < b.Length; i++)
             {
-                for (int n = i; n < b.Length; n++)
+                for (var n = i; n < b.Length; n++)
                 {
                     Assert.AreEqual(n, fifo[n - i]);
                 }
@@ -41,17 +41,17 @@ namespace Test.Cave.IO
         [Test]
         public void Test2()
         {
-            const int items = 256;
+            const int Items = 256;
             var fifo = new FifoStream();
-            for (int i = 0; i < items; i++) fifo.WriteByte((byte)i);
+            for (var i = 0; i < Items; i++) fifo.WriteByte((byte)i);
 
             Assert.AreEqual(0, fifo.ReadByte());
             Assert.AreEqual(255, fifo.Available);
             Assert.AreEqual(255, fifo[254]);
 
-            for (int i = 1; i < items; i++)
+            for (var i = 1; i < Items; i++)
             {
-                for (int n = i; n < items; n++)
+                for (var n = i; n < Items; n++)
                 {
                     Assert.AreEqual(n, fifo[n - i]);
                 }

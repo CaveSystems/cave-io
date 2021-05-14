@@ -3,20 +3,24 @@ using System.Collections.Generic;
 
 namespace Cave.IO
 {
-    /// <summary>Provides a base class for bit converters.</summary>
-    /// <seealso cref="IBitConverter" />
+    /// <summary>
+    /// Provides a base class for bit converters.
+    /// </summary>
+    /// <seealso cref="IBitConverter"/>
     public abstract class BitConverterBase : IBitConverter
     {
-        #region public GetBytes() members
+        #region Public Methods
 
-        /// <summary>Gets the bytes of a 7 bit encoded integer.</summary>
+        /// <summary>
+        /// Gets the bytes of a 7 bit encoded integer.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public byte[] Get7BitEncodedBytes(ulong value)
         {
             var index = 0;
             var result = new byte[10];
-            var b = (byte) (value % 128);
+            var b = (byte)(value % 128);
             do
             {
                 value /= 128;
@@ -26,7 +30,7 @@ namespace Cave.IO
                 }
 
                 result[index++] = b;
-                b = (byte) (value % 128);
+                b = (byte)(value % 128);
             }
             while (value != 0);
 
@@ -34,12 +38,16 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>Gets the bytes of a 7 bit encoded integer.</summary>
+        /// <summary>
+        /// Gets the bytes of a 7 bit encoded integer.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
-        public byte[] Get7BitEncodedBytes(long value) => Get7BitEncodedBytes(unchecked((ulong) value));
+        public byte[] Get7BitEncodedBytes(long value) => Get7BitEncodedBytes(unchecked((ulong)value));
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public byte[] GetBytes(bool value)
@@ -52,52 +60,72 @@ namespace Cave.IO
             return new byte[] { 0 };
         }
 
-        /// <summary>Gets the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Gets the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
-        public byte[] GetBytes(byte value) { return new[] { value }; }
+        public byte[] GetBytes(byte value) => new[] { value };
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
-        public byte[] GetBytes(sbyte value) { return unchecked(new[] { (byte) value }); }
+        public byte[] GetBytes(sbyte value) => unchecked(new[] { (byte)value });
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
-        public byte[] GetBytes(short value) => unchecked(GetBytes((ushort) value));
+        public byte[] GetBytes(short value) => unchecked(GetBytes((ushort)value));
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
-        public byte[] GetBytes(int value) => unchecked(GetBytes((uint) value));
+        public byte[] GetBytes(int value) => unchecked(GetBytes((uint)value));
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
-        public byte[] GetBytes(long value) => unchecked(GetBytes((ulong) value));
+        public byte[] GetBytes(long value) => unchecked(GetBytes((ulong)value));
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public byte[] GetBytes(float value) => GetBytes(SingleStruct.ToUInt32(value));
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public byte[] GetBytes(double value) => GetBytes(DoubleStruct.ToUInt64(value));
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public byte[] GetBytes(DateTime value) => GetBytes(value.Ticks);
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public byte[] GetBytes(TimeSpan value) => GetBytes(value.Ticks);
 
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public byte[] GetBytes(decimal value)
@@ -112,11 +140,30 @@ namespace Cave.IO
             return result.ToArray();
         }
 
-        #endregion
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <returns>The value as byte array.</returns>
+        public abstract byte[] GetBytes(ushort value);
 
-        #region public ToXXX() members
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <returns>The value as byte array.</returns>
+        public abstract byte[] GetBytes(uint value);
 
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Retrieves the specified value as byte array with the specified endiantype.
+        /// </summary>
+        /// <param name="value">The value to convert.</param>
+        /// <returns>The value as byte array.</returns>
+        public abstract byte[] GetBytes(ulong value);
+
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>
@@ -130,7 +177,9 @@ namespace Cave.IO
             return data[index] != 0;
         }
 
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>
@@ -144,39 +193,17 @@ namespace Cave.IO
             return data[index];
         }
 
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>
-        public sbyte ToSByte(byte[] data, int index)
-        {
-            if (data == null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
+        public DateTime ToDateTime(byte[] data, int index) => new(ToInt64(data, index));
 
-            return unchecked((sbyte) data[index]);
-        }
-
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
-        /// <param name="data">The data as byte array.</param>
-        /// <param name="index">The index.</param>
-        /// <returns>The converted value.</returns>
-        public short ToInt16(byte[] data, int index) => unchecked((short) ToUInt16(data, index));
-
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
-        /// <param name="data">The data as byte array.</param>
-        /// <param name="index">The index.</param>
-        /// <returns>The converted value.</returns>
-        public int ToInt32(byte[] data, int index) => unchecked((int) ToUInt32(data, index));
-
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
-        /// <param name="data">The data as byte array.</param>
-        /// <param name="index">The index.</param>
-        /// <returns>The converted value.</returns>
-        public long ToInt64(byte[] data, int index) => unchecked((long) ToUInt64(data, index));
-
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>
@@ -196,67 +223,94 @@ namespace Cave.IO
             return new decimal(array);
         }
 
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
-        /// <param name="data">The data as byte array.</param>
-        /// <param name="index">The index.</param>
-        /// <returns>The converted value.</returns>
-        public DateTime ToDateTime(byte[] data, int index) => new DateTime(ToInt64(data, index));
-
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
-        /// <param name="data">The data as byte array.</param>
-        /// <param name="index">The index.</param>
-        /// <returns>The converted value.</returns>
-        public TimeSpan ToTimeSpan(byte[] data, int index) => new TimeSpan(ToInt64(data, index));
-
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>
         public double ToDouble(byte[] data, int index) => DoubleStruct.ToDouble(ToUInt64(data, index));
 
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
+        /// <param name="data">The data as byte array.</param>
+        /// <param name="index">The index.</param>
+        /// <returns>The converted value.</returns>
+        public short ToInt16(byte[] data, int index) => unchecked((short)ToUInt16(data, index));
+
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
+        /// <param name="data">The data as byte array.</param>
+        /// <param name="index">The index.</param>
+        /// <returns>The converted value.</returns>
+        public int ToInt32(byte[] data, int index) => unchecked((int)ToUInt32(data, index));
+
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
+        /// <param name="data">The data as byte array.</param>
+        /// <param name="index">The index.</param>
+        /// <returns>The converted value.</returns>
+        public long ToInt64(byte[] data, int index) => unchecked((long)ToUInt64(data, index));
+
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
+        /// <param name="data">The data as byte array.</param>
+        /// <param name="index">The index.</param>
+        /// <returns>The converted value.</returns>
+        public sbyte ToSByte(byte[] data, int index)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            return unchecked((sbyte)data[index]);
+        }
+
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>
         public float ToSingle(byte[] data, int index) => SingleStruct.ToSingle(ToUInt32(data, index));
 
-        #endregion
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
+        /// <param name="data">The data as byte array.</param>
+        /// <param name="index">The index.</param>
+        /// <returns>The converted value.</returns>
+        public TimeSpan ToTimeSpan(byte[] data, int index) => new(ToInt64(data, index));
 
-        #region abstract definitions
-
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
-        /// <param name="value">The value to convert.</param>
-        /// <returns>The value as byte array.</returns>
-        public abstract byte[] GetBytes(ushort value);
-
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
-        /// <param name="value">The value to convert.</param>
-        /// <returns>The value as byte array.</returns>
-        public abstract byte[] GetBytes(uint value);
-
-        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
-        /// <param name="value">The value to convert.</param>
-        /// <returns>The value as byte array.</returns>
-        public abstract byte[] GetBytes(ulong value);
-
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The value as byte array.</returns>
         public abstract ushort ToUInt16(byte[] data, int index);
 
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The value as byte array.</returns>
         public abstract uint ToUInt32(byte[] data, int index);
 
-        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+        /// <summary>
+        /// Returns a value converted from the specified data at a specified index.
+        /// </summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The value as byte array.</returns>
         public abstract ulong ToUInt64(byte[] data, int index);
 
-        #endregion
+        #endregion Public Methods
     }
 }

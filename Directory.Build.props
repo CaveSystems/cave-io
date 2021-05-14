@@ -1,5 +1,17 @@
 <Project>
   <PropertyGroup>
-    <MSBuildProjectExtensionsPath>obj\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
-  </PropertyGroup>
+        <LangVersion>latest</LangVersion>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <MSBuildProjectExtensionsPath>$(MSBuildProjectDirectory)/obj/$(MSBuildProjectName)</MSBuildProjectExtensionsPath>
+    </PropertyGroup>
+    <Target Name="ForceGenerationOfBindingRedirects"
+            AfterTargets="ResolveAssemblyReferences"
+            BeforeTargets="GenerateBindingRedirects"
+            Condition="'$(AutoGenerateBindingRedirects)' == 'true'">
+        <PropertyGroup>
+            <!-- Needs to be set in a target because it has to be set after the initial evaluation in the common targets -->
+            <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+        </PropertyGroup>
+    </Target>
+
 </Project>
