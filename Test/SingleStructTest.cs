@@ -12,9 +12,9 @@ namespace Test.Cave.IO
         [Test]
         public void Test_SingleStruct_ToInt64()
         {
-            foreach (float value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
+            foreach (var value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
             {
-                int b = BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
+                var b = BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
                 Assert.AreEqual(b, SingleStruct.ToInt32(value));
             }
         }
@@ -22,21 +22,33 @@ namespace Test.Cave.IO
         [Test]
         public void Test_SingleStruct_ToSingle()
         {
-            foreach (float value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
+            foreach (var value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
             {
-                uint a = BitConverter.ToUInt32(BitConverter.GetBytes(value), 0);
-                int b = BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
+                var a = BitConverter.ToUInt32(BitConverter.GetBytes(value), 0);
+                var b = BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
                 Assert.AreEqual(value, SingleStruct.ToSingle(a));
                 Assert.AreEqual(value, SingleStruct.ToSingle(b));
+
+                IBitConverter bc = Endian.MachineType switch
+                {
+                    EndianType.BigEndian => new BitConverterBE(),
+                    EndianType.LittleEndian => new BitConverterLE(),
+                    _ => throw new NotSupportedException()
+                };
+
+                var x = bc.ToUInt32(bc.GetBytes((value)), 0);
+                var y = bc.ToInt32(bc.GetBytes((value)), 0);
+                Assert.AreEqual(value, SingleStruct.ToSingle(x));
+                Assert.AreEqual(value, SingleStruct.ToSingle(y));
             }
         }
 
         [Test]
         public void Test_SingleStruct_ToUInt64()
         {
-            foreach (float value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
+            foreach (var value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
             {
-                uint a = BitConverter.ToUInt32(BitConverter.GetBytes(value), 0);
+                var a = BitConverter.ToUInt32(BitConverter.GetBytes(value), 0);
                 Assert.AreEqual(a, SingleStruct.ToUInt32(value));
             }
         }
