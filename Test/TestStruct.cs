@@ -99,7 +99,7 @@ namespace Test.Cave.IO
 
         public override int GetHashCode() => ID.GetHashCode();
 
-        public override string ToString() { return new object[] { Arr, B, C, ConStr, D, Date, Dec, F, I, S, SB, Text, Time, UI, Uri, US }.Join(';'); }
+        public override string ToString() => new object[] { Arr, B, C, ConStr, D, Date, Dec, F, I, S, SB, Text, Time, UI, Uri, US }.Join(';');
 
         #endregion Public Methods
     }

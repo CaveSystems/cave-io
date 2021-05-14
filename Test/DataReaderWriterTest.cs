@@ -157,14 +157,16 @@ namespace Test.Cave.IO
                 switch (reader.NewLineMode)
                 {
                     case NewLineMode.CR:
-                    writer.WriteLine("\n\n\n");
-                    break;
-
+                    {
+                        writer.WriteLine("\n\n\n");
+                        break;
+                    }
                     case NewLineMode.CRLF:
                     case NewLineMode.LF:
-                    writer.WriteLine("\r\r\r");
-                    break;
-
+                    {
+                        writer.WriteLine("\r\r\r");
+                        break;
+                    }
                     default: throw new NotSupportedException();
                 }
 

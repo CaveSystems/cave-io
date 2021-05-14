@@ -4,46 +4,57 @@ using System.IO;
 namespace Cave.IO
 {
     /// <summary>
-    ///     Bit Stream Reader Class for Bitstreams of the form: byte0[bit0,bit1,bit2,bit3,bit4,bit5,bit6,bit7]
-    ///     byte1[bit8,bit9,bit10,bit11,...].
+    /// Bit Stream Reader Class for Bitstreams of the form: byte0[bit0,bit1,bit2,bit3,bit4,bit5,bit6,bit7] byte1[bit8,bit9,bit10,bit11,...].
     /// </summary>
     public class BitStreamWriter
     {
         int bufferedByte;
         int position;
 
-        /// <summary>Initializes a new instance of the <see cref="BitStreamWriter" /> class.</summary>
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BitStreamWriter"/> class.
+        /// </summary>
         /// <param name="stream">The stream to write to.</param>
         public BitStreamWriter(Stream stream) => BaseStream = stream;
 
-        /// <summary>Gets the BaseStream.</summary>
+        /// <summary>
+        /// Gets the BaseStream.
+        /// </summary>
         public Stream BaseStream { get; private set; }
 
-        /// <summary>Gets the current bitposition.</summary>
+        /// <summary>
+        /// Gets the current bitposition.
+        /// </summary>
         public long Position => (BaseStream.Position * 8) + position;
 
-        /// <summary>Gets the length in bits.</summary>
+        /// <summary>
+        /// Gets the length in bits.
+        /// </summary>
         public long Length => (BaseStream.Length * 8) + position;
 
-        /// <summary>writes a bit to the buffer.</summary>
+        /// <summary>
+        /// writes a bit to the buffer.
+        /// </summary>
         /// <param name="bit">The bit.</param>
         public void WriteBit(bool bit)
         {
             if (bit)
             {
                 var bitmask = 1 << (7 - position);
-                bufferedByte = bufferedByte | bitmask;
+                bufferedByte |= bitmask;
             }
 
             if (++position > 7)
             {
-                BaseStream.WriteByte((byte) bufferedByte);
+                BaseStream.WriteByte((byte)bufferedByte);
                 bufferedByte = 0;
                 position = 0;
             }
         }
 
-        /// <summary>writes some bits.</summary>
+        /// <summary>
+        /// writes some bits.
+        /// </summary>
         /// <param name="bits">The bits to write.</param>
         /// <param name="count">Number of bits to write.</param>
         public void WriteBits(long bits, int count)
@@ -64,7 +75,9 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>writes some bits.</summary>
+        /// <summary>
+        /// writes some bits.
+        /// </summary>
         /// <param name="bits">The bits to write.</param>
         /// <param name="count">Number of bits to write.</param>
         public void WriteBits(int bits, int count)
@@ -85,7 +98,9 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>writes some bits (todo: optimize me).</summary>
+        /// <summary>
+        /// writes some bits (todo: optimize me).
+        /// </summary>
         /// <param name="count">Number of bits to write.</param>
         /// <param name="bit">The bit to write count times.</param>
         public void WriteBits(int count, bool bit)
@@ -96,7 +111,9 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>Closes the writer and the underlying stream.</summary>
+        /// <summary>
+        /// Closes the writer and the underlying stream.
+        /// </summary>
         public void Close()
         {
             Flush();
@@ -108,12 +125,14 @@ namespace Cave.IO
             BaseStream = null;
         }
 
-        /// <summary>Flushes the buffered bits to the stream and closes the writer (not the underlying stream).</summary>
+        /// <summary>
+        /// Flushes the buffered bits to the stream and closes the writer (not the underlying stream).
+        /// </summary>
         public void Flush()
         {
             if (position > 0)
             {
-                BaseStream.WriteByte((byte) bufferedByte);
+                BaseStream.WriteByte((byte)bufferedByte);
             }
 
             BaseStream = null;
@@ -121,7 +140,9 @@ namespace Cave.IO
 
         #region overrides
 
-        /// <summary>Gets the name of the class and the current state.</summary>
+        /// <summary>
+        /// Gets the name of the class and the current state.
+        /// </summary>
         /// <returns>The class name and the current state.</returns>
         public override string ToString()
         {
@@ -145,10 +166,12 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>Gets a hash code for this object.</summary>
+        /// <summary>
+        /// Gets a hash code for this object.
+        /// </summary>
         /// <returns>The hash code.</returns>
         public override int GetHashCode() => base.GetHashCode();
 
-        #endregion
+        #endregion overrides
     }
 }
