@@ -335,6 +335,17 @@ namespace Cave.IO
         public void Write(float value) => Write(endianEncoder.GetBytes(value));
 
         /// <summary>
+        /// Writes the specified value directly to the stream.
+        /// </summary>
+        /// <param name="value">The value to write.</param>
+        public void Write(Guid value)
+        {
+            var data = value.ToByteArray();
+            if (data.Length != 16) throw new ArgumentException("Invalid byte array at guid.ToByteArray()!");
+            Write(data);
+        }
+
+        /// <summary>
         /// Writes the specified string directly to the stream.
         /// </summary>
         /// <param name="text">String to write.</param>
