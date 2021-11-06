@@ -17,7 +17,7 @@ namespace Test.Cave.IO
             fifo.PutBuffer(b);
 
             //write buffer after add
-            for (var i = 0; i < b.Length; i++) b[i] = (byte)(i);
+            for (var i = 0; i < b.Length; i++) b[i] = (byte)i;
 
             //test content
             Assert.IsTrue(b.SequenceEqual(fifo.ToArray()));

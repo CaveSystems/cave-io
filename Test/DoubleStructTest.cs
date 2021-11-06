@@ -36,8 +36,8 @@ namespace Test.Cave.IO
                     _ => throw new NotSupportedException()
                 };
 
-                var x = bc.ToUInt64(bc.GetBytes((value)), 0);
-                var y = bc.ToInt64(bc.GetBytes((value)), 0);
+                var x = bc.ToUInt64(bc.GetBytes(value), 0);
+                var y = bc.ToInt64(bc.GetBytes(value), 0);
                 Assert.AreEqual(value, DoubleStruct.ToDouble(x));
                 Assert.AreEqual(value, DoubleStruct.ToDouble(y));
             }
