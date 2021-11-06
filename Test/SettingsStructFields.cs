@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Test.Cave.IO
 {
-    public struct SettingsStructFields
+    public struct SettingsStructFields : IEquatable<SettingsStructFields>
     {
         #region Private Fields
 
@@ -37,7 +37,7 @@ namespace Test.Cave.IO
 
         #region Public Methods
 
-        public static SettingsStructFields RandomStruct(CultureInfo culture)
+        public static SettingsStructFields RandomStruct(CultureInfo culture = null)
         {
             var len = Random.Next(0, 90);
             char[] str;
@@ -78,6 +78,31 @@ namespace Test.Cave.IO
                 SampleNullableUInt32 = Random.Next(1, 100) < 20 ? null : (uint?)Random.Next()
             };
         }
+
+        public bool Equals(SettingsStructFields other)
+        {
+            return
+             Equals(other.SampleString, SampleString) &&
+             Equals(other.SampleBool, SampleBool) &&
+             Equals(other.SampleDateTime, SampleDateTime) &&
+             Equals(other.SampleTimeSpan, SampleTimeSpan) &&
+             Equals(other.SampleDecimal, SampleDecimal) &&
+             Equals(other.SampleDouble, SampleDouble) &&
+             Equals(other.SampleEnum, SampleEnum) &&
+             Equals(other.SampleFlagEnum, SampleFlagEnum) &&
+             Equals(other.SampleFloat, SampleFloat) &&
+             Equals(other.SampleInt16, SampleInt16) &&
+             Equals(other.SampleInt32, SampleInt32) &&
+             Equals(other.SampleInt64, SampleInt64) &&
+             Equals(other.SampleInt8, SampleInt8) &&
+             Equals(other.SampleUInt8, SampleUInt8) &&
+             Equals(other.SampleUInt16, SampleUInt16) &&
+             Equals(other.SampleUInt32, SampleUInt32) &&
+             Equals(other.SampleUInt64, SampleUInt64) &&
+             Equals(other.SampleNullableUInt32, SampleNullableUInt32);
+        }
+
+        public override bool Equals(object obj) => obj is SettingsStructFields && Equals((SettingsStructFields)obj);
 
         #endregion Public Methods
     }
