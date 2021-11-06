@@ -1,23 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
-    <IsPackable>false</IsPackable>
-    <ApplicationIcon />
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Test.Cave.IO</RootNamespace>
-    <AssemblyName>Test.Cave.IO</AssemblyName>
-    <StartupObject>Test.Cave.IO.Program</StartupObject>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+        <IsPackable>false</IsPackable>
+        <ApplicationIcon />
+        <OutputType>Exe</OutputType>
+        <RootNamespace>Test.Cave.IO</RootNamespace>
+        <AssemblyName>Test.Cave.IO</AssemblyName>
+        <StartupObject>Test.Cave.IO.Program</StartupObject>
 
-  <ItemGroup>
-    <PackageReference Include="Cave.Extensions" Version="2.0.12" />
-    <PackageReference Include="NUnit" Version="3.13.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.1" />
-  </ItemGroup>
+        <GenerateDocumentation>false</GenerateDocumentation>
+        <NoWarn>CS1591</NoWarn>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Cave.IO\Cave.IO.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Cave.Extensions" Version="2.1.2" />
+        <PackageReference Include="NUnit" Version="3.13.2" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Cave.IO\Cave.IO.csproj" />
+    </ItemGroup>
 </Project>
