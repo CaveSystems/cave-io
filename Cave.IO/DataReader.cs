@@ -563,6 +563,15 @@ namespace Cave.IO
         }
 
         /// <summary>
+        /// Reads a guid from the stream.
+        /// </summary>
+        /// <returns>The guid.</returns>
+        public Guid ReadGuid()
+        {
+            return new Guid(ReadBytes(16));
+        }
+
+        /// <summary>
         /// Reads a zero terminated string from the stream.
         /// </summary>
         /// <param name="maximumBytes">The number of bytes to write at maximum.</param>
