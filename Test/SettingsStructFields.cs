@@ -8,7 +8,7 @@ namespace Test.Cave.IO
     {
         #region Private Fields
 
-        static readonly Random Random = new(Environment.TickCount);
+        static readonly Random random = new(Environment.TickCount);
 
         #endregion Private Fields
 
@@ -39,43 +39,43 @@ namespace Test.Cave.IO
 
         public static SettingsStructFields RandomStruct(CultureInfo culture = null)
         {
-            var len = Random.Next(0, 90);
+            var len = random.Next(0, 90);
             char[] str;
             if (culture == null)
             {
                 var buf = new byte[len * 2];
-                Random.NextBytes(buf);
+                random.NextBytes(buf);
                 str = Encoding.Unicode.GetString(buf).ToCharArray();
             }
             else
             {
                 var encoding = Encoding.GetEncoding(culture.TextInfo.ANSICodePage);
                 var buf = encoding.GetBytes(new string(' ', len));
-                Random.NextBytes(buf);
+                random.NextBytes(buf);
                 str = encoding.GetString(buf).ToCharArray();
             }
 
-            var dateTime = DateTime.Today.AddSeconds(Random.Next(1, 60 * 60 * 24));
+            var dateTime = DateTime.Today.AddSeconds(random.Next(1, 60 * 60 * 24));
             return new SettingsStructFields
             {
                 SampleString = new string(str),
-                SampleBool = Random.Next(1, 100) < 51,
+                SampleBool = random.Next(1, 100) < 51,
                 SampleDateTime = dateTime,
-                SampleTimeSpan = TimeSpan.FromSeconds(Random.NextDouble()),
-                SampleDecimal = (decimal)Random.NextDouble() / (decimal)Random.NextDouble(),
-                SampleDouble = Random.NextDouble(),
-                SampleEnum = (SettingEnum)Random.Next(0, 9),
-                SampleFlagEnum = (SettingFlagEnum)Random.Next(0, 1 << 10),
-                SampleFloat = (float)Random.NextDouble(),
-                SampleInt16 = (short)Random.Next(short.MinValue, short.MaxValue),
-                SampleInt32 = Random.Next() - Random.Next(),
-                SampleInt64 = (Random.Next() - (long)Random.Next()) * Random.Next(),
-                SampleInt8 = (sbyte)Random.Next(sbyte.MinValue, sbyte.MaxValue),
-                SampleUInt8 = (byte)Random.Next(byte.MinValue, byte.MaxValue),
-                SampleUInt16 = (ushort)Random.Next(ushort.MinValue, ushort.MaxValue),
-                SampleUInt32 = (uint)Random.Next() + (uint)Random.Next(),
-                SampleUInt64 = ((ulong)Random.Next() + (ulong)Random.Next()) * (ulong)Random.Next(),
-                SampleNullableUInt32 = Random.Next(1, 100) < 20 ? null : (uint?)Random.Next()
+                SampleTimeSpan = TimeSpan.FromSeconds(random.NextDouble()),
+                SampleDecimal = (decimal)random.NextDouble() / (decimal)random.NextDouble(),
+                SampleDouble = random.NextDouble(),
+                SampleEnum = (SettingEnum)random.Next(0, 9),
+                SampleFlagEnum = (SettingFlagEnum)random.Next(0, 1 << 10),
+                SampleFloat = (float)random.NextDouble(),
+                SampleInt16 = (short)random.Next(short.MinValue, short.MaxValue),
+                SampleInt32 = random.Next() - random.Next(),
+                SampleInt64 = (random.Next() - (long)random.Next()) * random.Next(),
+                SampleInt8 = (sbyte)random.Next(sbyte.MinValue, sbyte.MaxValue),
+                SampleUInt8 = (byte)random.Next(byte.MinValue, byte.MaxValue),
+                SampleUInt16 = (ushort)random.Next(ushort.MinValue, ushort.MaxValue),
+                SampleUInt32 = (uint)random.Next() + (uint)random.Next(),
+                SampleUInt64 = ((ulong)random.Next() + (ulong)random.Next()) * (ulong)random.Next(),
+                SampleNullableUInt32 = random.Next(1, 100) < 20 ? null : (uint?)random.Next()
             };
         }
 

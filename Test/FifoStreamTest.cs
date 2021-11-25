@@ -41,17 +41,17 @@ namespace Test.Cave.IO
         [Test]
         public void Test2()
         {
-            const int Items = 256;
+            const int items = 256;
             var fifo = new FifoStream();
-            for (var i = 0; i < Items; i++) fifo.WriteByte((byte)i);
+            for (var i = 0; i < items; i++) fifo.WriteByte((byte)i);
 
             Assert.AreEqual(0, fifo.ReadByte());
             Assert.AreEqual(255, fifo.Available);
             Assert.AreEqual(255, fifo[254]);
 
-            for (var i = 1; i < Items; i++)
+            for (var i = 1; i < items; i++)
             {
-                for (var n = i; n < Items; n++)
+                for (var n = i; n < items; n++)
                 {
                     Assert.AreEqual(n, fifo[n - i]);
                 }

@@ -12,13 +12,24 @@ namespace Cave.IO
     {
         #region Private Fields
 
-        readonly LinkedList<byte[]> Buffers = new();
         LinkedListNode<byte[]> currentBuffer;
+
         int currentBufferPosition;
+
         int realLength;
+
         int realPosition;
 
         #endregion Private Fields
+
+        #region Protected Fields
+
+        /// <summary>
+        /// Gets the underlying buffer instance.
+        /// </summary>
+        protected readonly LinkedList<byte[]> Buffers = new();
+
+        #endregion Protected Fields
 
         #region Public Properties
 
@@ -182,19 +193,19 @@ namespace Cave.IO
                     throw new ArgumentNullException(nameof(source));
                 }
 
-                const int BufferSize = 1024 * 1024;
+                const int bufferSize = 1024 * 1024;
                 long result = 0;
                 while (true)
                 {
-                    var buffer = new byte[BufferSize];
-                    var count = source.Read(buffer, 0, BufferSize);
+                    var buffer = new byte[bufferSize];
+                    var count = source.Read(buffer, 0, bufferSize);
                     if (count == 0)
                     {
                         break;
                     }
 
                     result += count;
-                    if (count != BufferSize)
+                    if (count != bufferSize)
                     {
                         Array.Resize(ref buffer, count);
                     }

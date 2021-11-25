@@ -3,33 +3,39 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Cave.IO
 {
-    /// <summary>Provides Endian Tools.</summary>
+    /// <summary>
+    /// Provides Endian Tools.
+    /// </summary>
     public static class Endian
     {
-        /// <summary>Gets the machine endian type.</summary>
+        #region Public Properties
+
+        /// <summary>
+        /// Gets the machine endian type.
+        /// </summary>
         [ExcludeFromCodeCoverage]
         public static EndianType MachineType
         {
             get
             {
                 var bytes = new byte[] { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0 };
-                const ulong BigEndianValue = 0x123456789ABCDEF0;
-                const ulong LittleEndianValue = 0xF0DEBC9A78563412;
+                const ulong bigEndianValue = 0x123456789ABCDEF0;
+                const ulong littleEndianValue = 0xF0DEBC9A78563412;
                 ulong value;
                 unsafe
                 {
                     fixed (byte* ptr = &bytes[0])
                     {
-                        value = *(ulong*) ptr;
+                        value = *(ulong*)ptr;
                     }
                 }
 
-                if (value == LittleEndianValue)
+                if (value == littleEndianValue)
                 {
                     return EndianType.LittleEndian;
                 }
 
-                if (value == BigEndianValue)
+                if (value == bigEndianValue)
                 {
                     return EndianType.BigEndian;
                 }
@@ -38,7 +44,13 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>Swaps the endian type of the specified data.</summary>
+        #endregion Public Properties
+
+        #region Public Methods
+
+        /// <summary>
+        /// Swaps the endian type of the specified data.
+        /// </summary>
         /// <param name="data">The data.</param>
         /// <param name="bytes">The bytes to swap (2..x).</param>
         /// <returns>The swapped data.</returns>
@@ -68,21 +80,29 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>Swaps the byte order of a value.</summary>
+        /// <summary>
+        /// Swaps the byte order of a value.
+        /// </summary>
         /// <param name="value">Value to swap the byte order of.</param>
         /// <returns>Byte order-swapped value.</returns>
-        public static ushort Swap(ushort value) => (ushort) ((value >> 8) | ((value & 0xFF) << 8));
+        public static ushort Swap(ushort value) => (ushort)((value >> 8) | ((value & 0xFF) << 8));
 
-        /// <summary>Swaps the byte order of a value.</summary>
+        /// <summary>
+        /// Swaps the byte order of a value.
+        /// </summary>
         /// <param name="value">Value to swap the byte order of.</param>
         /// <returns>Byte order-swapped value.</returns>
         public static uint Swap(uint value) => (value >> 24) | ((value & 0xFF00) << 8) | ((value >> 8) & 0xFF00) | (value << 24);
 
-        /// <summary>Swaps the byte order of a value.</summary>
+        /// <summary>
+        /// Swaps the byte order of a value.
+        /// </summary>
         /// <param name="value">Value to swap the byte order of.</param>
         /// <returns>Byte order-swapped value.</returns>
         public static ulong Swap(ulong value) =>
             (value >> 56) | (0xFF00 & (value >> 40)) | (0xFF0000 & (value >> 24)) | (0xFF000000 & (value >> 8)) |
             ((value & 0xFF000000) << 8) | ((value & 0xFF0000) << 24) | ((value & 0xFF00) << 40) | (value << 56);
+
+        #endregion Public Methods
     }
 }

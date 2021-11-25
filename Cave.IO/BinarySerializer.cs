@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace Cave.IO
 {
@@ -20,12 +19,16 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>Gets or sets flags for structure field and property (de-)serialization.</summary> <remarks>By default this is set to (de-)serialize all
-        /// non-&public fields of structures.</remarks>
+        /// <summary>
+        /// Gets or sets flags for structure field and property (de-)serialization.
+        /// </summary>
+        /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of structures.</remarks>
         public SerializerFlags StructFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
 
-        /// <summary>Gets or sets flags for class field and property (de-)serialization.</summary> <remarks>By default this is set to (de-)serialize all
-        /// non-&public fields of classes.</remarks>
+        /// <summary>
+        /// Gets or sets flags for class field and property (de-)serialization.
+        /// </summary>
+        /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of classes.</remarks>
         public SerializerFlags ClassFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
 
         #region Private Enums
