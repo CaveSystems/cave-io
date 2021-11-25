@@ -3,18 +3,43 @@ using System.Threading;
 
 namespace Cave.IO
 {
-    /// <summary>Provides a lock free ring buffer without overflow checking.</summary>
+    /// <summary>
+    /// Provides a lock free ring buffer without overflow checking.
+    /// </summary>
     /// <typeparam name="TValue">Item type.</typeparam>
     public class UncheckedRingBuffer<TValue> : IRingBuffer<TValue> where TValue : class
     {
-        readonly TValue[] Buffer;
-        readonly int Mask;
+        #region Private Fields
+
         long readCount;
+
         int readPosition;
+
         long writeCount;
+
         int writePosition = -1;
 
-        /// <summary>Initializes a new instance of the <see cref="UncheckedRingBuffer{TValue}" /> class.</summary>
+        #endregion Private Fields
+
+        #region Protected Fields
+
+        /// <summary>
+        /// Gets the underlying buffer instance.
+        /// </summary>
+        protected readonly TValue[] Buffer;
+
+        /// <summary>
+        /// Gets the mask for indices.
+        /// </summary>
+        protected readonly int Mask;
+
+        #endregion Protected Fields
+
+        #region Public Constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UncheckedRingBuffer{TValue}"/> class.
+        /// </summary>
         /// <param name="bits">Number of bits to use for item capacity (defaults to 12 = 4096 items).</param>
         public UncheckedRingBuffer(int bits = 12)
         {
@@ -26,6 +51,10 @@ namespace Cave.IO
             Buffer = new TValue[1 << bits];
             Mask = Capacity - 1;
         }
+
+        #endregion Public Constructors
+
+        #region Public Properties
 
         /// <inheritdoc/>
         public int Available
@@ -58,6 +87,10 @@ namespace Cave.IO
 
         /// <inheritdoc/>
         public int WritePosition => writePosition;
+
+        #endregion Public Properties
+
+        #region Public Methods
 
         /// <inheritdoc/>
         public void CopyTo(TValue[] array, int index) => Buffer.CopyTo(array, index);
@@ -100,5 +133,7 @@ namespace Cave.IO
             Interlocked.Increment(ref writeCount);
             return true;
         }
+
+        #endregion Public Methods
     }
 }

@@ -8,13 +8,16 @@ namespace Cave.IO
     /// <summary>
     /// Provides a simple byte[] buffer queue able to work with buffers of any size.
     /// </summary>
-    public sealed class FifoBuffer
+    public class FifoBuffer
     {
-        #region Private Fields
+        #region Protected Fields
 
-        readonly LinkedList<byte[]> Buffers = new();
+        /// <summary>
+        /// Gets the underlying buffers.
+        /// </summary>
+        protected readonly LinkedList<byte[]> Buffers = new();
 
-        #endregion Private Fields
+        #endregion Protected Fields
 
         #region Public Properties
 
