@@ -1,10 +1,42 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Test.Cave.IO
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 8, CharSet = CharSet.Ansi)]
-    public struct InteropTestStruct
+    [StructLayout(LayoutKind.Sequential, Pack = 8, CharSet = CharSet.Unicode)]
+    public struct InteropTestStruct : IEquatable<InteropTestStruct>
     {
+        #region Public Fields
+
+        public byte B;
+
+        int underlyingChar;
+
+        public char C { get => (char)underlyingChar; set => underlyingChar = value; }
+
+        public double D;
+
+        public float F;
+
+        public int I;
+
+        public long ID;
+
+        public short S;
+
+        public sbyte SB;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
+        public string Text;
+
+        public uint UI;
+
+        public ushort US;
+
+        #endregion Public Fields
+
+        #region Public Methods
+
         public static InteropTestStruct Create(int i)
         {
             var t = new InteropTestStruct()
@@ -23,27 +55,36 @@ namespace Test.Cave.IO
             return t;
         }
 
-        public long ID;
+        public bool Equals(InteropTestStruct other) =>
+            (other.ID == ID) &&
+            (other.B == B) &&
+            (other.SB == SB) &&
+            (other.C == C) &&
+            (other.S == S) &&
+            (other.US == US) &&
+            (other.I == I) &&
+            (other.UI == UI) &&
+            (other.D == D) &&
+            (other.F == F) &&
+            (other.Text == Text);
 
-        public byte B;
+        public override bool Equals(object obj) => obj is InteropTestStruct && Equals((InteropTestStruct)obj);
 
-        public sbyte SB;
+        public override int GetHashCode() =>
+            ID.GetHashCode() ^
+            B.GetHashCode() ^
+            SB.GetHashCode() ^
+            C.GetHashCode() ^
+            S.GetHashCode() ^
+            US.GetHashCode() ^
+            I.GetHashCode() ^
+            UI.GetHashCode() ^
+            D.GetHashCode() ^
+            F.GetHashCode() ^
+            (Text?.GetHashCode() ?? 0);
 
-        public char C;
+        public override string ToString() => Text.ToString() + " Hash:" + GetHashCode();
 
-        public short S;
-
-        public ushort US;
-
-        public int I;
-
-        public uint UI;
-
-        public double D;
-
-        public float F;
-
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 16)]
-        public string Text;
+        #endregion Public Methods
     }
 }

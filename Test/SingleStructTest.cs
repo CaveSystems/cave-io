@@ -1,6 +1,6 @@
 ﻿using System;
-using NUnit.Framework;
 using Cave.IO;
+using NUnit.Framework;
 
 namespace Test.Cave.IO
 {
@@ -10,7 +10,7 @@ namespace Test.Cave.IO
         #region Public Methods
 
         [Test]
-        public void Test_SingleStruct_ToInt64()
+        public void ToInt64()
         {
             foreach (var value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
             {
@@ -20,7 +20,7 @@ namespace Test.Cave.IO
         }
 
         [Test]
-        public void Test_SingleStruct_ToSingle()
+        public void ToSingle()
         {
             foreach (var value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
             {
@@ -44,7 +44,7 @@ namespace Test.Cave.IO
         }
 
         [Test]
-        public void Test_SingleStruct_ToUInt64()
+        public void ToUInt64()
         {
             foreach (var value in new float[] { float.Epsilon, float.MaxValue, float.MinValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity, 0f })
             {

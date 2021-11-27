@@ -1,7 +1,6 @@
 ﻿using System;
-using Cave;
-using NUnit.Framework;
 using Cave.IO;
+using NUnit.Framework;
 
 namespace Test.Cave.IO
 {
@@ -11,7 +10,7 @@ namespace Test.Cave.IO
         #region Public Methods
 
         [Test]
-        public void Test_DoubleStruct_ToDouble()
+        public void ToDouble()
         {
             foreach (var value in new double[]
             {
@@ -44,7 +43,7 @@ namespace Test.Cave.IO
         }
 
         [Test]
-        public void Test_DoubleStruct_ToInt64()
+        public void ToInt64()
         {
             foreach (var value in new double[] { double.Epsilon, double.MaxValue, double.MinValue, double.NaN, double.NegativeInfinity, double.PositiveInfinity, 0d })
             {
@@ -54,7 +53,7 @@ namespace Test.Cave.IO
         }
 
         [Test]
-        public void Test_DoubleStruct_ToUInt64()
+        public void ToUInt64()
         {
             foreach (var value in new double[] { double.Epsilon, double.MaxValue, double.MinValue, double.NaN, double.NegativeInfinity, double.PositiveInfinity, 0d })
             {

@@ -104,6 +104,30 @@ namespace Test.Cave.IO
 
         public override bool Equals(object obj) => obj is SettingsStructProperties && Equals((SettingsStructProperties)obj);
 
+        public override int GetHashCode()
+        {
+            var hashCode = 1836983495;
+            hashCode = hashCode * -1521134295 + SampleBool.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleDateTime.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleDecimal.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleDouble.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleEnum.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleFlagEnum.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleFloat.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleInt16.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleInt32.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleInt64.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleInt8.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleNullableUInt32.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleString?.GetHashCode() ?? 0;
+            hashCode = hashCode * -1521134295 + SampleTimeSpan.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleUInt16.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleUInt32.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleUInt64.GetHashCode();
+            hashCode = hashCode * -1521134295 + SampleUInt8.GetHashCode();
+            return hashCode;
+        }
+
         #endregion Public Methods
     }
 }
