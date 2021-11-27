@@ -6,11 +6,11 @@ using System.Reflection;
 
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides fast and efficient field and property de-/serialization.
-    /// </summary>
+    /// <summary>Provides fast and efficient field and property de-/serialization.</summary>
     public class BinarySerializer
     {
+        #region Private Methods
+
         BindingFlags GetBindingFlags(SerializerFlags flags)
         {
             var result = BindingFlags.Instance;
@@ -19,17 +19,19 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Gets or sets flags for structure field and property (de-)serialization.
-        /// </summary>
+        #endregion Private Methods
+
+        #region Public Properties
+
+        /// <summary>Gets or sets flags for class field and property (de-)serialization.</summary>
+        /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of classes.</remarks>
+        public SerializerFlags ClassFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
+
+        /// <summary>Gets or sets flags for structure field and property (de-)serialization.</summary>
         /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of structures.</remarks>
         public SerializerFlags StructFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
 
-        /// <summary>
-        /// Gets or sets flags for class field and property (de-)serialization.
-        /// </summary>
-        /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of classes.</remarks>
-        public SerializerFlags ClassFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
+        #endregion Public Properties
 
         #region Private Enums
 
@@ -76,6 +78,8 @@ namespace Cave.IO
         }
 
         #endregion Private Enums
+
+
 
         #region Private Methods
 
@@ -202,15 +206,9 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Deserializes an array of primitive types.
-        /// </summary>
-        /// <param name="reader">The reader.</param>
-        /// <returns></returns>
-        /// <exception cref="NotSupportedException"></exception>
         Array DeserializeArray(Type elementType, DataReader reader)
         {
-            if (reader == null) throw new ArgumentNullException("reader");
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
             var elementTypeCode = (TypeCode)reader.ReadByte();
             var length = reader.Read7BitEncodedInt32();
             var array = Array.CreateInstance(elementType, length);
@@ -245,65 +243,61 @@ namespace Cave.IO
 
         #region Public Properties
 
-        /// <summary>
-        /// Gets or sets the serializers used.
-        /// </summary>
+        /// <summary>Gets or sets the serializers used.</summary>
         public IList<IBinaryTypeSerializer> Serializers { get; set; }
 
         #endregion Public Properties
 
         #region Public Methods
 
-        /// <summary>
-        /// Deserializes the specified type from a <see cref="DataReader"/>.
-        /// </summary>
+        readonly Dictionary<Type, MethodBase> staticParseLookup = new();
+
+        readonly Dictionary<string, Type> typeLookup = new();
+
+        MethodBase GetParse(Type type)
+        {
+            staticParseLookup.TryGetValue(type, out var parse);
+            return parse;
+        }
+
+        /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
         /// <param name="type">The type to deserialize</param>
         /// <param name="stream">The stream to deserialize from</param>
         /// <returns></returns>
         public object Deserialize(Type type, Stream stream) => Deserialize(type, new DataReader(stream));
 
-        /// <summary>
-        /// Deserializes the specified type from a byte block.
-        /// </summary>
+        /// <summary>Deserializes the specified type from a byte block.</summary>
         /// <param name="block">The data block to deserialize from</param>
         /// <typeparam name="T">The type to deserialize</typeparam>
         /// <returns></returns>
         public T Deserialize<T>(byte[] block) => (T)Deserialize(typeof(T), new MemoryStream(block));
 
-        /// <summary>
-        /// Deserializes the specified type from a <see cref="DataReader"/>.
-        /// </summary>
+        /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
         /// <param name="stream">The stream to deserialize from</param>
         /// <typeparam name="T">The type to deserialize</typeparam>
         /// <returns></returns>
         public T Deserialize<T>(Stream stream) => (T)Deserialize(typeof(T), new DataReader(stream));
 
-        /// <summary>
-        /// Deserializes the specified type from a <see cref="DataReader"/>.
-        /// </summary>
+        /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
         /// <param name="reader">The reader to deserialize from</param>
         /// <typeparam name="T">The type to deserialize</typeparam>
         /// <returns></returns>
         public T Deserialize<T>(DataReader reader) => (T)Deserialize(typeof(T), reader);
 
-        /// <summary>
-        /// Deserializes the specified type from a given data block
-        /// </summary>
+        /// <summary>Deserializes the specified type from a given data block</summary>
         /// <param name="type">The type to deserialize</param>
         /// <param name="block">The data block to deserialize from</param>
         /// <returns></returns>
         public object Deserialize(Type type, byte[] block) => Deserialize(type, new MemoryStream(block));
 
-        /// <summary>
-        /// Deserializes the specified type from a <see cref="DataReader"/>.
-        /// </summary>
+        /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
         /// <param name="type">The type to deserialize</param>
         /// <param name="reader">The reader to deserialize from</param>
         /// <returns></returns>
         public object Deserialize(Type type, DataReader reader)
         {
-            if (type == null) throw new ArgumentNullException("type");
-            if (reader == null) throw new ArgumentNullException("reader");
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
 
             var expectedTypeCode = FromType(type);
             var objTypeCode = (TypeCode)reader.ReadByte();
@@ -347,7 +341,10 @@ namespace Cave.IO
                     if (StructFlags.HasFlag(SerializerFlags.TypeName) || StructFlags.HasFlag(SerializerFlags.AssemblyName))
                     {
                         var className = reader.ReadString();
-                        type = AppDom.FindType(className, AppDom.LoadFlags.None);
+                        if (!typeLookup.TryGetValue(className, out type))
+                        {
+                            typeLookup[className] = type = AppDom.FindType(className, AppDom.LoadFlags.None);
+                        }
                     }
 
                     var result = Activator.CreateInstance(type);
@@ -377,7 +374,10 @@ namespace Cave.IO
                     if (ClassFlags.HasFlag(SerializerFlags.TypeName) || ClassFlags.HasFlag(SerializerFlags.AssemblyName))
                     {
                         var className = reader.ReadString();
-                        type = AppDom.FindType(className, AppDom.LoadFlags.None);
+                        if (!typeLookup.TryGetValue(className, out type))
+                        {
+                            typeLookup[className] = type = AppDom.FindType(className, AppDom.LoadFlags.None);
+                        }
                     }
 
                     var parse = GetParse(type);
@@ -419,12 +419,9 @@ namespace Cave.IO
             throw new NotImplementedException($"Unknown TypeCode {objTypeCode} at element type {type}!");
         }
 
-        /// <summary>
-        /// Serializes the specified object
-        /// </summary>
+        /// <summary>Serializes the specified object</summary>
         /// <param name="value">The object to serialize</param>
         /// <param name="stream">The stream to serialize to</param>
-        /// <returns></returns>
         public void Serialize(object value, Stream stream)
         {
             var writer = new DataWriter(stream);
@@ -432,11 +429,9 @@ namespace Cave.IO
             writer.Flush();
         }
 
-        /// <summary>
-        /// Serializes the specified object
-        /// </summary>
+        /// <summary>Serializes the specified object</summary>
         /// <param name="value">The object to serialize</param>
-        /// <returns></returns>
+        /// <param name="data">Returns the serialized data.</param>
         public void Serialize(object value, out byte[] data)
         {
             using var result = new MemoryStream();
@@ -444,15 +439,12 @@ namespace Cave.IO
             data = result.ToArray();
         }
 
-        /// <summary>
-        /// Serializes the specified object to a <see cref="DataWriter"/>
-        /// </summary>
+        /// <summary>Serializes the specified object to a <see cref="DataWriter"/></summary>
         /// <param name="value">The object to serialize</param>
         /// <param name="writer">The writer to serialize to</param>
-        /// <returns></returns>
         public void Serialize(object value, DataWriter writer)
         {
-            if (writer == null) throw new ArgumentNullException("writer");
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
             var objTypeCode = FromObject(value);
             writer.Write((byte)objTypeCode);
 
@@ -589,19 +581,8 @@ namespace Cave.IO
             throw new NotImplementedException($"Unknown TypeCode {objTypeCode} at element type {value?.GetType()}!");
         }
 
-        MethodBase GetParse(Type type)
-        {
-            staticParseLookup.TryGetValue(type, out var parse);
-            return parse;
-        }
-
-        public void UseToStringAndParse(Type type)
-        {
-            var parse = type.GetMethod("Parse", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public, null, new[] { typeof(string) }, null);
-            if (parse == null) throw new ArgumentException("Could not find a matching static Parse(string) method!");
-            staticParseLookup.Add(type, parse);
-        }
-
+        /// <summary>Registers the specified type for ToString() serialization and Cctor(string) deserialization.</summary>
+        /// <param name="type">The type to register.</param>
         public void UseToStringAndCctor(Type type)
         {
             var parse = type.GetConstructor(new[] { typeof(string) });
@@ -609,7 +590,14 @@ namespace Cave.IO
             staticParseLookup.Add(type, parse);
         }
 
-        readonly Dictionary<Type, MethodBase> staticParseLookup = new();
+        /// <summary>Registers the specified type for ToString() serialization and static Parse(string) deserialization.</summary>
+        /// <param name="type">The type to register.</param>
+        public void UseToStringAndParse(Type type)
+        {
+            var parse = type.GetMethod("Parse", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public, null, new[] { typeof(string) }, null);
+            if (parse == null) throw new ArgumentException("Could not find a matching static Parse(string) method!");
+            staticParseLookup.Add(type, parse);
+        }
 
         #endregion Public Methods
     }
