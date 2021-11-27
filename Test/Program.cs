@@ -3,17 +3,18 @@ using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 
-namespace Test.Cave.IO
+namespace Test
 {
     class Program
     {
         #region Private Methods
 
-        static int Main()
+        static int Main(string[] args)
         {
+            Verbose = args.Contains("-v") || args.Contains("--verbose");
             var errors = 0;
             var types = typeof(Program).Assembly.GetTypes();
-            foreach (var type in types.OrderByDescending(t => t.Name))
+            foreach (var type in types.OrderBy(t => t.Name))
             {
                 if (!type.GetCustomAttributes(typeof(TestFixtureAttribute), false).Any())
                 {
@@ -30,20 +31,20 @@ namespace Test.Cave.IO
 
                     GC.Collect(999, GCCollectionMode.Default);
                     Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine($"{method.DeclaringType.Name}.cs: info TI0001: Start {method.Name}");
+                    Console.WriteLine($"{method.DeclaringType.Name}.cs: info TI0001: Start {method.Name} framework {Environment.Version}");
                     Console.ResetColor();
                     try
                     {
                         method.Invoke(instance, null);
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"{method.DeclaringType.Name}.cs: info TI0002: Success {method.Name}");
+                        Console.WriteLine($"{method.DeclaringType.Name}.cs: info TI0002: Success {method.Name} framework {Environment.Version}");
                         Console.ResetColor();
                     }
                     catch (Exception ex)
                     {
                         Debug.WriteLine(ex);
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"{method.DeclaringType.Name}.cs: error TE0001: {ex.Message}");
+                        Console.WriteLine($"{method.DeclaringType.Name}.cs: error TE0001: {ex.Message} framework {Environment.Version}");
                         Console.WriteLine(ex);
                         Console.ResetColor();
                         errors++;
@@ -56,12 +57,12 @@ namespace Test.Cave.IO
             if (errors == 0)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("---: info TI9999: All tests successfully completed.");
+                Console.WriteLine($"---: info TI9999: All tests successfully completed at framework {Environment.Version}.");
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"---: error TE9999: {errors} tests failed!");
+                Console.WriteLine($"---: error TE9999: {errors} tests failed framework {Environment.Version}!");
             }
 
             Console.ResetColor();
@@ -81,6 +82,8 @@ namespace Test.Cave.IO
                 ;
             }
         }
+
+        public static bool Verbose { get; private set; }
 
         #endregion Private Methods
     }
