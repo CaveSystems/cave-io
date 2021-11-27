@@ -18,18 +18,6 @@
         <DelaySign>false</DelaySign>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)'=='net40' OR '$(TargetFramework)'=='net45' OR '$(TargetFramework)'=='net46' OR '$(TargetFramework)'=='net47'">
-        <Reference Include="System" />
-        <Reference Include="System.Core" />
-        <Reference Include="Microsoft.CSharp" />
-        <Reference Include="System.Data" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)'=='net20' OR '$(TargetFramework)'=='net35'">
-        <Reference Include="System" />
-        <Reference Include="System.Data" />
-    </ItemGroup>
-
     <ItemGroup>
         <PackageReference Include="Cave.Extensions" Version="2.1.3" />
     </ItemGroup>
