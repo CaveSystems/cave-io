@@ -3,9 +3,7 @@ using System.Threading;
 
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides a lock free ring buffer without overflow checking.
-    /// </summary>
+    /// <summary>Provides a lock free ring buffer without overflow checking.</summary>
     /// <typeparam name="TValue">Item type.</typeparam>
     public class UncheckedRingBuffer<TValue> : IRingBuffer<TValue> where TValue : class
     {
@@ -23,27 +21,21 @@ namespace Cave.IO
 
         #region Protected Fields
 
-        /// <summary>
-        /// Gets the underlying buffer instance.
-        /// </summary>
+        /// <summary>Gets the underlying buffer instance.</summary>
         protected readonly TValue[] Buffer;
 
-        /// <summary>
-        /// Gets the mask for indices.
-        /// </summary>
+        /// <summary>Gets the mask for indices.</summary>
         protected readonly int Mask;
 
         #endregion Protected Fields
 
         #region Public Constructors
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UncheckedRingBuffer{TValue}"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="UncheckedRingBuffer{TValue}"/> class.</summary>
         /// <param name="bits">Number of bits to use for item capacity (defaults to 12 = 4096 items).</param>
         public UncheckedRingBuffer(int bits = 12)
         {
-            if (bits < 1 || bits > 31)
+            if (bits is < 1 or > 31)
             {
                 throw new ArgumentOutOfRangeException(nameof(bits));
             }

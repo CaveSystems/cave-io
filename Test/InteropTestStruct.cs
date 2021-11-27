@@ -68,7 +68,7 @@ namespace Test.Cave.IO
             (other.F == F) &&
             (other.Text == Text);
 
-        public override bool Equals(object obj) => obj is InteropTestStruct && Equals((InteropTestStruct)obj);
+        public override bool Equals(object obj) => obj is InteropTestStruct @struct && Equals(@struct);
 
         public override int GetHashCode() =>
             ID.GetHashCode() ^
@@ -84,6 +84,10 @@ namespace Test.Cave.IO
             (Text?.GetHashCode() ?? 0);
 
         public override string ToString() => Text.ToString() + " Hash:" + GetHashCode();
+
+        public static bool operator ==(InteropTestStruct left, InteropTestStruct right) => left.Equals(right);
+
+        public static bool operator !=(InteropTestStruct left, InteropTestStruct right) => !(left == right);
 
         #endregion Public Methods
     }

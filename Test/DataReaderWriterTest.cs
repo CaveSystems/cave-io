@@ -13,7 +13,7 @@ namespace Test.Cave.IO
     {
         #region Private Methods
 
-        void TestReaderWriter(EncodingInfo encoding)
+        static void TestReaderWriter(EncodingInfo encoding)
         {
             var stream = new MemoryStream();
             var writer = new DataWriter(stream, encoding.GetEncoding());
@@ -21,7 +21,7 @@ namespace Test.Cave.IO
             TestReaderWriter(reader, writer);
         }
 
-        void TestReaderWriter(DataReader reader, DataWriter writer)
+        static void TestReaderWriter(DataReader reader, DataWriter writer)
         {
             var buffer = new byte[16 * 1024];
             new Random().NextBytes(buffer);
@@ -328,7 +328,7 @@ namespace Test.Cave.IO
 
         #region Public Methods
 
-        public void TestReaderWriter(StringEncoding stringEncoding)
+        public static void TestReaderWriter(StringEncoding stringEncoding)
         {
             if (stringEncoding == 0)
             {

@@ -5,6 +5,8 @@ namespace Cave.IO
     /// <summary>Provides an interface for bit converter implementations.</summary>
     public interface IBitConverter
     {
+        #region Public Methods
+
         /// <summary>Obtains the bytes of a 7 bit encoded integer.</summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
@@ -196,5 +198,7 @@ namespace Cave.IO
         /// <exception cref="ArgumentNullException">data is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">out of range.</exception>
         ulong ToUInt64(byte[] data, int index);
+
+        #endregion Public Methods
     }
 }

@@ -2,72 +2,56 @@ using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-#pragma warning disable CA1720
-
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides a globally used random number generator instance.
-    /// </summary>
+    /// <summary>Provides a globally used random number generator instance.</summary>
     [ComVisible(false)]
     public static class DefaultRNG
     {
+        #region Private Fields
+
         static RandomNumberGenerator generator = RandomNumberGenerator.Create();
 
-        /// <summary>
-        /// Gets or sets the currently used generator.
-        /// </summary>
+        #endregion Private Fields
+
+        #region Public Properties
+
+        /// <summary>Gets or sets the currently used generator.</summary>
         public static RandomNumberGenerator Generator { get => generator; set => generator = value ?? throw new ArgumentNullException(nameof(value)); }
 
-        /// <summary>
-        /// Gets a random 8 bit signed integer.
-        /// </summary>
-        public static sbyte Int8 => (sbyte)Get(1)[0];
-
-        /// <summary>
-        /// Gets a random 8 bit unsigned integer.
-        /// </summary>
-        public static byte UInt8 => Get(1)[0];
-
-        /// <summary>
-        /// Gets a random 16 bit signed integer.
-        /// </summary>
+        /// <summary>Gets a random 16 bit signed integer.</summary>
         public static short Int16 => BitConverter.ToInt16(Get(2), 0);
 
-        /// <summary>
-        /// Gets a random 16 bit unsigned integer.
-        /// </summary>
-        public static ushort UInt16 => BitConverter.ToUInt16(Get(2), 0);
-
-        /// <summary>
-        /// Gets a random 32 bit signed integer.
-        /// </summary>
+        /// <summary>Gets a random 32 bit signed integer.</summary>
         public static int Int32 => BitConverter.ToInt32(Get(4), 0);
 
-        /// <summary>
-        /// Gets a random 32 bit unsigned integer.
-        /// </summary>
-        public static uint UInt32 => BitConverter.ToUInt32(Get(4), 0);
-
-        /// <summary>
-        /// Gets a random 64 bit signed integer.
-        /// </summary>
+        /// <summary>Gets a random 64 bit signed integer.</summary>
         public static long Int64 => BitConverter.ToInt64(Get(8), 0);
 
-        /// <summary>
-        /// Gets a random 64 bit unsigned integer.
-        /// </summary>
+        /// <summary>Gets a random 8 bit signed integer.</summary>
+        public static sbyte Int8 => (sbyte)Get(1)[0];
+
+        /// <summary>Gets a random 16 bit unsigned integer.</summary>
+        public static ushort UInt16 => BitConverter.ToUInt16(Get(2), 0);
+
+        /// <summary>Gets a random 32 bit unsigned integer.</summary>
+        public static uint UInt32 => BitConverter.ToUInt32(Get(4), 0);
+
+        /// <summary>Gets a random 64 bit unsigned integer.</summary>
         public static ulong UInt64 => BitConverter.ToUInt64(Get(8), 0);
 
-        /// <summary>
-        /// Fills the specified array with random data.
-        /// </summary>
+        /// <summary>Gets a random 8 bit unsigned integer.</summary>
+        public static byte UInt8 => Get(1)[0];
+
+        #endregion Public Properties
+
+        #region Public Methods
+
+        /// <summary>Fills the specified array with random data.</summary>
         /// <param name="array">The byte array to fill.</param>
         public static void Fill(byte[] array) => Generator.GetBytes(array);
 
-        /// <summary>
-        /// Gets a byte array containing secure random bytes with the specified size.
-        /// </summary>
+        /// <summary>Gets a byte array containing secure random bytes with the specified size.</summary>
         /// <param name="size">The size in bytes.</param>
         /// <returns>Returns a new randomized byte array.</returns>
         public static byte[] Get(int size)
@@ -77,9 +61,7 @@ namespace Cave.IO
             return array;
         }
 
-        /// <summary>
-        /// Creates a random password using ascii printable characters.
-        /// </summary>
+        /// <summary>Creates a random password using ascii printable characters.</summary>
         /// <param name="count">Length of the desired password.</param>
         /// <param name="characters">The characters.</param>
         /// <returns>The password string.</returns>
@@ -128,7 +110,7 @@ namespace Cave.IO
 
             return new string(result);
         }
+
+        #endregion Public Methods
     }
 }
-
-#pragma warning restore CA1720

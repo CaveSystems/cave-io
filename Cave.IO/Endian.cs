@@ -3,16 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides Endian Tools.
-    /// </summary>
+    /// <summary>Provides Endian Tools.</summary>
     public static class Endian
     {
         #region Public Properties
 
-        /// <summary>
-        /// Gets the machine endian type.
-        /// </summary>
+        /// <summary>Gets the machine endian type.</summary>
         [ExcludeFromCodeCoverage]
         public static EndianType MachineType
         {
@@ -48,9 +44,7 @@ namespace Cave.IO
 
         #region Public Methods
 
-        /// <summary>
-        /// Swaps the endian type of the specified data.
-        /// </summary>
+        /// <summary>Swaps the endian type of the specified data.</summary>
         /// <param name="data">The data.</param>
         /// <param name="bytes">The bytes to swap (2..x).</param>
         /// <returns>The swapped data.</returns>
@@ -80,23 +74,17 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Swaps the byte order of a value.
-        /// </summary>
+        /// <summary>Swaps the byte order of a value.</summary>
         /// <param name="value">Value to swap the byte order of.</param>
         /// <returns>Byte order-swapped value.</returns>
         public static ushort Swap(ushort value) => (ushort)((value >> 8) | ((value & 0xFF) << 8));
 
-        /// <summary>
-        /// Swaps the byte order of a value.
-        /// </summary>
+        /// <summary>Swaps the byte order of a value.</summary>
         /// <param name="value">Value to swap the byte order of.</param>
         /// <returns>Byte order-swapped value.</returns>
         public static uint Swap(uint value) => (value >> 24) | ((value & 0xFF00) << 8) | ((value >> 8) & 0xFF00) | (value << 24);
 
-        /// <summary>
-        /// Swaps the byte order of a value.
-        /// </summary>
+        /// <summary>Swaps the byte order of a value.</summary>
         /// <param name="value">Value to swap the byte order of.</param>
         /// <returns>Byte order-swapped value.</returns>
         public static ulong Swap(ulong value) =>
