@@ -5,15 +5,13 @@
         <IsPackable>false</IsPackable>
         <ApplicationIcon />
         <OutputType>Exe</OutputType>
-        <RootNamespace>Test.Cave.IO</RootNamespace>
-        <AssemblyName>Test.Cave.IO</AssemblyName>
-
-        <GenerateDocumentation>false</GenerateDocumentation>
-        <NoWarn>CS1591;CA1707</NoWarn>
+        <StartupObject>Test.Program</StartupObject>
+        <RootNamespace>Test</RootNamespace>
+        <AssemblyName>Test</AssemblyName>
+        <NoWarn>IDE0130;CS1591;CA1806;CA1825;</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Cave.Extensions" Version="2.1.3" />
         <PackageReference Include="NUnit" Version="2.6.4" />
         <PackageReference Include="NUnitTestAdapter" Version="2.3.0" />
     </ItemGroup>
@@ -21,4 +19,5 @@
     <ItemGroup>
         <ProjectReference Include="..\Cave.IO\Cave.IO.csproj" />
     </ItemGroup>
+    
 </Project>
