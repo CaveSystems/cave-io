@@ -138,41 +138,30 @@ namespace Cave.IO
             return TypeCode.UNKNOWN;
         }
 
-        static bool IsPrimitive(TypeCode objTypeCode)
+        static bool IsPrimitive(TypeCode objTypeCode) => ((int)objTypeCode) < 0x60;
+
+        static object ReadPrimitive(TypeCode objTypeCode, DataReader reader) => objTypeCode switch
         {
-            return ((int)objTypeCode) < 0x60;
-        }
-
-        static object ReadPrimitive(TypeCode objTypeCode, DataReader reader)
-        {
-            switch (objTypeCode)
-            {
-                case TypeCode.NULL: return null;
-
-                case TypeCode.BOOL: return reader.ReadBool();
-                case TypeCode.SBYTE: return reader.ReadInt8();
-                case TypeCode.BYTE: return reader.ReadByte();
-                case TypeCode.SHORT: return reader.ReadInt16();
-                case TypeCode.USHORT: return reader.ReadUInt16();
-                case TypeCode.INT: return reader.ReadInt32();
-                case TypeCode.UINT: return reader.ReadUInt32();
-                case TypeCode.LONG: return reader.ReadInt64();
-                case TypeCode.ULONG: return reader.ReadUInt64();
-
-                case TypeCode.FLOAT: return reader.ReadSingle();
-                case TypeCode.DOUBLE: return reader.ReadDouble();
-                case TypeCode.DECIMAL: return reader.ReadDecimal();
-
-                case TypeCode.DATETIME: return reader.ReadDateTime();
-                case TypeCode.TIMESPAN: return reader.ReadTimeSpan();
-
-                case TypeCode.CHAR: return reader.ReadChar();
-                case TypeCode.STRING: return reader.ReadString();
-                case TypeCode.GUID: return new Guid(reader.ReadBytes(16));
-
-                default: throw new NotSupportedException(string.Format("Serialization of ObjectTypeCode {0} is not supported!", objTypeCode));
-            }
-        }
+            TypeCode.NULL => null,
+            TypeCode.BOOL => reader.ReadBool(),
+            TypeCode.SBYTE => reader.ReadInt8(),
+            TypeCode.BYTE => reader.ReadByte(),
+            TypeCode.SHORT => reader.ReadInt16(),
+            TypeCode.USHORT => reader.ReadUInt16(),
+            TypeCode.INT => reader.ReadInt32(),
+            TypeCode.UINT => reader.ReadUInt32(),
+            TypeCode.LONG => reader.ReadInt64(),
+            TypeCode.ULONG => reader.ReadUInt64(),
+            TypeCode.FLOAT => reader.ReadSingle(),
+            TypeCode.DOUBLE => reader.ReadDouble(),
+            TypeCode.DECIMAL => reader.ReadDecimal(),
+            TypeCode.DATETIME => reader.ReadDateTime(),
+            TypeCode.TIMESPAN => reader.ReadTimeSpan(),
+            TypeCode.CHAR => reader.ReadChar(),
+            TypeCode.STRING => reader.ReadString(),
+            TypeCode.GUID => new Guid(reader.ReadBytes(16)),
+            _ => throw new NotSupportedException(string.Format("Serialization of ObjectTypeCode {0} is not supported!", objTypeCode)),
+        };
 
         static void WritePrimitive(bool writeTypeCode, TypeCode objTypeCode, object obj, DataWriter writer)
         {

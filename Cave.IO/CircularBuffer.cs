@@ -4,9 +4,7 @@ using System.Threading;
 
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides a lock free circular buffer with overflow checking.
-    /// </summary>
+    /// <summary>Provides a lock free circular buffer with overflow checking.</summary>
     /// <typeparam name="TValue">Item type.</typeparam>
     public class CircularBuffer<TValue> : IRingBuffer<TValue> where TValue : class
     {
@@ -23,27 +21,21 @@ namespace Cave.IO
 
         #region Protected Fields
 
-        /// <summary>
-        /// Gets the underlying buffer instance.
-        /// </summary>
+        /// <summary>Gets the underlying buffer instance.</summary>
         protected readonly TValue[] Buffer;
 
-        /// <summary>
-        /// Gets the mask for indices.
-        /// </summary>
+        /// <summary>Gets the mask for indices.</summary>
         protected readonly int Mask;
 
         #endregion Protected Fields
 
         #region Public Constructors
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CircularBuffer{TValue}"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="CircularBuffer{TValue}"/> class.</summary>
         /// <param name="bits">Number of bits to use for item capacity (defaults to 12 = 4096 items).</param>
         public CircularBuffer(int bits = 12)
         {
-            if (bits < 1 || bits > 31)
+            if (bits is < 1 or > 31)
             {
                 throw new ArgumentOutOfRangeException(nameof(bits));
             }
@@ -73,19 +65,13 @@ namespace Cave.IO
         /// <inheritdoc/>
         public long LostCount => 0;
 
-        /// <summary>
-        /// Gets the maximum number of items queued.
-        /// </summary>
+        /// <summary>Gets the maximum number of items queued.</summary>
         public int MaxQueuedCount { get; set; }
 
-        /// <summary>
-        /// Throw exceptions at <see cref="Write"/> on overflow (buffer under run)
-        /// </summary>
+        /// <summary>Throw exceptions at <see cref="Write"/> on overflow (buffer under run)</summary>
         public bool OverflowExceptions { get; set; }
 
-        /// <summary>
-        /// Write overflow (buffer under run) to <see cref="Trace"/>.
-        /// </summary>
+        /// <summary>Write overflow (buffer under run) to <see cref="Trace"/>.</summary>
         public bool OverflowTrace { get; set; }
 
         /// <inheritdoc/>

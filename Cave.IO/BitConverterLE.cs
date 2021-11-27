@@ -2,16 +2,12 @@ using System;
 
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides an alternate <see cref="BitConverter"/> class providing additional functionality.
-    /// </summary>
+    /// <summary>Provides an alternate <see cref="BitConverter"/> class providing additional functionality.</summary>
     public class BitConverterLE : BitConverterBase
     {
         #region Public Properties
 
-        /// <summary>
-        /// Gets the default instance.
-        /// </summary>
+        /// <summary>Gets the default instance.</summary>
         /// <value>The default instance.</value>
         [Obsolete("Use instance instead of singleton.")]
         public static BitConverterLE Instance { get; } = new();
@@ -20,16 +16,12 @@ namespace Cave.IO
 
         #region Public Methods
 
-        /// <summary>
-        /// Retrieves the specified value as byte array with the specified endiantype.
-        /// </summary>
+        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public override byte[] GetBytes(ushort value) => new[] { (byte)(value % 256), (byte)(value / 256) };
 
-        /// <summary>
-        /// Retrieves the specified value as byte array with the specified endiantype.
-        /// </summary>
+        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public override byte[] GetBytes(uint value)
@@ -44,9 +36,7 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Retrieves the specified value as byte array with the specified endiantype.
-        /// </summary>
+        /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
         /// <param name="value">The value.</param>
         /// <returns>The value as encoded byte array.</returns>
         public override byte[] GetBytes(ulong value)
@@ -61,9 +51,7 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Returns a value converted from the specified data at a specified index.
-        /// </summary>
+        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>
@@ -84,9 +72,7 @@ namespace Cave.IO
             return unchecked((ushort)(data[index] + (data[index + 1] * 256)));
         }
 
-        /// <summary>
-        /// Returns a value converted from the specified data at a specified index.
-        /// </summary>
+        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>
@@ -110,9 +96,7 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Returns a value converted from the specified data at a specified index.
-        /// </summary>
+        /// <summary>Returns a value converted from the specified data at a specified index.</summary>
         /// <param name="data">The data as byte array.</param>
         /// <param name="index">The index.</param>
         /// <returns>The converted value.</returns>

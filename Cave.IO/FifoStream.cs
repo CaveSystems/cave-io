@@ -24,18 +24,14 @@ namespace Cave.IO
 
         #region Protected Fields
 
-        /// <summary>
-        /// Gets the underlying buffer instance.
-        /// </summary>
+        /// <summary>Gets the underlying buffer instance.</summary>
         protected readonly LinkedList<byte[]> Buffers = new();
 
         #endregion Protected Fields
 
         #region Public Properties
 
-        /// <summary>
-        /// Gets the number of bytes available from the current read position to the end of the stream.
-        /// </summary>
+        /// <summary>Gets the number of bytes available from the current read position to the end of the stream.</summary>
         public virtual int Available
         {
             get
@@ -47,9 +43,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Gets the number of buffers in the stream.
-        /// </summary>
+        /// <summary>Gets the number of buffers in the stream.</summary>
         public int BufferCount
         {
             get
@@ -61,38 +55,26 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Gets a value indicating whether this stream can always be read.
-        /// </summary>
+        /// <summary>Gets a value indicating whether this stream can always be read.</summary>
         public override bool CanRead => true;
 
-        /// <summary>
-        /// Gets a value indicating whether this stream can seek.
-        /// </summary>
+        /// <summary>Gets a value indicating whether this stream can seek.</summary>
         public override bool CanSeek => true;
 
-        /// <summary>
-        /// Gets a value indicating whether this stream can not be written.
-        /// </summary>
+        /// <summary>Gets a value indicating whether this stream can not be written.</summary>
         public override bool CanWrite => false;
 
-        /// <summary>
-        /// Gets provides the current length of the stream.
-        /// </summary>
+        /// <summary>Gets provides the current length of the stream.</summary>
         public override long Length => realLength;
 
-        /// <summary>
-        /// Gets or sets the current read/write position.
-        /// </summary>
+        /// <summary>Gets or sets the current read/write position.</summary>
         public override long Position { get => realPosition; set => Seek(value, SeekOrigin.Begin); }
 
         #endregion Public Properties
 
         #region Public Indexers
 
-        /// <summary>
-        /// Gets the byte at the specified index.
-        /// </summary>
+        /// <summary>Gets the byte at the specified index.</summary>
         /// <param name="index">Index in range [0.. <see cref="Available"/>]</param>
         /// <returns>Returns the byte value.</returns>
         public byte this[int index]
@@ -126,9 +108,7 @@ namespace Cave.IO
 
         #region Public Methods
 
-        /// <summary>
-        /// appends a buffer at the end of the stream (always copies the buffer).
-        /// </summary>
+        /// <summary>appends a buffer at the end of the stream (always copies the buffer).</summary>
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
@@ -152,9 +132,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Appends a byte buffer of the specified length from the specified Source stream to the end of the stream.
-        /// </summary>
+        /// <summary>Appends a byte buffer of the specified length from the specified Source stream to the end of the stream.</summary>
         /// <param name="source">The source stream.</param>
         /// <param name="count">The number of bytes to append.</param>
         /// <returns>The number of bytes written.</returns>
@@ -179,9 +157,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Appends a whole stream to the end of the stream.
-        /// </summary>
+        /// <summary>Appends a whole stream to the end of the stream.</summary>
         /// <param name="source">The source stream.</param>
         /// <returns>The number of bytes written.</returns>
         public long AppendStream(Stream source)
@@ -217,9 +193,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Clears the buffer.
-        /// </summary>
+        /// <summary>Clears the buffer.</summary>
         public void Clear()
         {
             lock (this)
@@ -232,9 +206,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Determines whether the buffer contains the specified byte.
-        /// </summary>
+        /// <summary>Determines whether the buffer contains the specified byte.</summary>
         /// <param name="b">The byte.</param>
         /// <returns><c>true</c> if the buffer contains the specified byte; otherwise, <c>false</c>.</returns>
         public bool Contains(byte b)
@@ -261,9 +233,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Determines whether the buffer contains the specified data.
-        /// </summary>
+        /// <summary>Determines whether the buffer contains the specified data.</summary>
         /// <param name="data">The data.</param>
         /// <returns><c>true</c> if the buffer contains the specified data; otherwise, <c>false</c>.</returns>
         public bool Contains(byte[] data)
@@ -299,14 +269,10 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Does nothing.
-        /// </summary>
+        /// <summary>Does nothing.</summary>
         public override void Flush() { }
 
-        /// <summary>
-        /// Removes all buffers in front of the current position.
-        /// </summary>
+        /// <summary>Removes all buffers in front of the current position.</summary>
         /// <returns>Bytes freed.</returns>
         public virtual int FreeBuffers()
         {
@@ -332,9 +298,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// removes all buffers in front of the current position but keeps at least the specified number of bytes.
-        /// </summary>
+        /// <summary>removes all buffers in front of the current position but keeps at least the specified number of bytes.</summary>
         /// <param name="sizeToKeep">The number of bytes to keep at the buffer.</param>
         public virtual void FreeBuffers(int sizeToKeep)
         {
@@ -363,9 +327,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Determines whether the buffer contains the specified byte.
-        /// </summary>
+        /// <summary>Determines whether the buffer contains the specified byte.</summary>
         /// <param name="b">The byte.</param>
         /// <returns>the index (a value &gt;=0) if the buffer contains the specified byte; otherwise, -1.</returns>
         public int IndexOf(byte b)
@@ -393,9 +355,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Determines whether the buffer contains the specified data.
-        /// </summary>
+        /// <summary>Determines whether the buffer contains the specified data.</summary>
         /// <param name="data">The data.</param>
         /// <returns>the index (a value &gt;=0) if the buffer contains the specified bytes; otherwise, -1.</returns>
         public int IndexOf(byte[] data)
@@ -432,9 +392,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Peeks at the next byte in the buffer. Returns -1 if no more data available.
-        /// </summary>
+        /// <summary>Peeks at the next byte in the buffer. Returns -1 if no more data available.</summary>
         /// <returns>The next byte if available.</returns>
         public virtual int PeekByte()
         {
@@ -449,9 +407,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Puts a buffer to the end of the stream without copying.
-        /// </summary>
+        /// <summary>Puts a buffer to the end of the stream without copying.</summary>
         /// <param name="buffer">The byte buffer to add.</param>
         public virtual void PutBuffer(byte[] buffer)
         {
@@ -471,9 +427,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Reads some bytes at the current position from the stream.
-        /// </summary>
+        /// <summary>Reads some bytes at the current position from the stream.</summary>
         /// <param name="buffer">An array of bytes.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin storing the data read from the current stream.</param>
         /// <param name="count">The maximum number of bytes to be read from the current stream.</param>
@@ -505,9 +459,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Reads the next byte in the buffer (much faster than <see cref="Read"/>). Returns -1 if no more data available.
-        /// </summary>
+        /// <summary>Reads the next byte in the buffer (much faster than <see cref="Read"/>). Returns -1 if no more data available.</summary>
         /// <returns>The next byte if available.</returns>
         public override int ReadByte()
         {
@@ -523,9 +475,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Moves the read / write position in the stream.
-        /// </summary>
+        /// <summary>Moves the read / write position in the stream.</summary>
         /// <param name="offset">A byte offset relative to the origin parameter.</param>
         /// <param name="origin">A value indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
@@ -607,15 +557,11 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Throws new NotSupportedException().
-        /// </summary>
+        /// <summary>Throws new NotSupportedException().</summary>
         /// <param name="value">Not supported.</param>
         public override void SetLength(long value) => throw new NotSupportedException();
 
-        /// <summary>
-        /// Retrieves all data at the buffer as array (peek).
-        /// </summary>
+        /// <summary>Retrieves all data at the buffer as array (peek).</summary>
         /// <returns>An array of bytes.</returns>
         public byte[] ToArray()
         {
@@ -644,9 +590,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Uses <see cref="AppendBuffer"/> to add data to the fifo.
-        /// </summary>
+        /// <summary>Uses <see cref="AppendBuffer"/> to add data to the fifo.</summary>
         /// <param name="buffer">An array of bytes.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>

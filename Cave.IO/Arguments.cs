@@ -18,18 +18,14 @@ namespace Cave.IO
     {
         #region Private Constructors
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Arguments"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="Arguments"/> class.</summary>
         Arguments() { }
 
         #endregion Private Constructors
 
         #region Private Methods
 
-        /// <summary>
-        /// Reads the parameters and options from an array of parameters / options.
-        /// </summary>
+        /// <summary>Reads the parameters and options from an array of parameters / options.</summary>
         /// <param name="args">The parameters and options.</param>
         /// <param name="opt">Options for the parser.</param>
         void ReadFromArray(string[] args, ParseOptions opt)
@@ -69,9 +65,7 @@ namespace Cave.IO
             Parameters = new ParameterCollection(pars.ToArray());
         }
 
-        /// <summary>
-        /// Reads the parameters and options from a commandline string.
-        /// </summary>
+        /// <summary>Reads the parameters and options from a commandline string.</summary>
         /// <param name="text">The commandline string containing the command, parameters and options.</param>
         /// <param name="opt">Options for the parser.</param>
         /// <exception cref="ArgumentException">
@@ -141,25 +135,17 @@ namespace Cave.IO
 
         #region Public Enums
 
-        /// <summary>
-        /// Provides options for the parser.
-        /// </summary>
+        /// <summary>Provides options for the parser.</summary>
         [Flags]
         public enum ParseOptions
         {
-            /// <summary>
-            /// No options
-            /// </summary>
+            /// <summary>No options</summary>
             None = 0,
 
-            /// <summary>
-            /// Given arguments contain the command (and parameters and options)
-            /// </summary>
+            /// <summary>Given arguments contain the command (and parameters and options)</summary>
             ContainsCommand = 0x01,
 
-            /// <summary>
-            /// Options are options even if the prefix is missing (--, /)
-            /// </summary>
+            /// <summary>Options are options even if the prefix is missing (--, /)</summary>
             AllowMissingPrefix = 0x02
         }
 
@@ -167,14 +153,10 @@ namespace Cave.IO
 
         #region Public Properties
 
-        /// <summary>
-        /// Gets the command used to start the program. This may be null or empty if not set!.
-        /// </summary>
+        /// <summary>Gets the command used to start the program. This may be null or empty if not set!.</summary>
         public string Command { get; private set; }
 
-        /// <summary>
-        /// Gets the number of parameters and options used. The command counts too, if it is set (not null or empty)!.
-        /// </summary>
+        /// <summary>Gets the number of parameters and options used. The command counts too, if it is set (not null or empty)!.</summary>
         public int Count
         {
             get
@@ -189,40 +171,28 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Gets a value indicating whether these arguments are empty or not.
-        /// </summary>
+        /// <summary>Gets a value indicating whether these arguments are empty or not.</summary>
         public bool IsEmpty => string.IsNullOrEmpty(Command) && ((Parameters.Count + Options.Count) == 0);
 
-        /// <summary>
-        /// Gets all <see cref="Option"/> s found.
-        /// </summary>
+        /// <summary>Gets all <see cref="Option"/> s found.</summary>
         public OptionCollection Options { get; private set; }
 
-        /// <summary>
-        /// Gets all parameters found.
-        /// </summary>
+        /// <summary>Gets all parameters found.</summary>
         public ParameterCollection Parameters { get; private set; }
 
-        /// <summary>
-        /// Gets a <see cref="ProcessStartInfo"/>.
-        /// </summary>
+        /// <summary>Gets a <see cref="ProcessStartInfo"/>.</summary>
         public ProcessStartInfo ProcessStartInfo => new(Command, ToString(false));
 
         #endregion Public Properties
 
         #region Public Methods
 
-        /// <summary>
-        /// Creates an <see cref="Arguments"/> instance from the specified string array.
-        /// </summary>
+        /// <summary>Creates an <see cref="Arguments"/> instance from the specified string array.</summary>
         /// <param name="args">The string array containing the parameters and options.</param>
         /// <returns>Returns a new <see cref="Arguments"/> instance.</returns>
         public static Arguments FromArray(params string[] args) => FromArray(ParseOptions.AllowMissingPrefix, args);
 
-        /// <summary>
-        /// Creates an <see cref="Arguments"/> instance from the specified string array.
-        /// </summary>
+        /// <summary>Creates an <see cref="Arguments"/> instance from the specified string array.</summary>
         /// <param name="opt">Options for the parser.</param>
         /// <param name="args">The string array containing the parameters and options.</param>
         /// <returns>Returns a new <see cref="Arguments"/> instance.</returns>
@@ -233,9 +203,7 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Creates an <see cref="Arguments"/> instance from the environment.
-        /// </summary>
+        /// <summary>Creates an <see cref="Arguments"/> instance from the environment.</summary>
         /// <returns>Returns a new <see cref="Arguments"/> instance.</returns>
         public static Arguments FromEnvironment()
         {
@@ -245,9 +213,7 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Creates an <see cref="Arguments"/> instance from the specified commandline string.
-        /// </summary>
+        /// <summary>Creates an <see cref="Arguments"/> instance from the specified commandline string.</summary>
         /// <param name="opt">Options for the parser.</param>
         /// <param name="cmdLine">The string containing the full commandline.</param>
         /// <exception cref="ArgumentException">Thrown if single and double quotes are used at the commandline simultaneously.</exception>
@@ -260,17 +226,13 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Creates an <see cref="Arguments"/> instance from the specified commandline string.
-        /// </summary>
+        /// <summary>Creates an <see cref="Arguments"/> instance from the specified commandline string.</summary>
         /// <param name="cmdLine">The string containing the full commandline.</param>
         /// <exception cref="ArgumentException">Thrown if single and double quotes are used at the commandline simultaneously.</exception>
         /// <returns>Returns a new <see cref="Arguments"/> instance.</returns>
         public static Arguments FromString(string cmdLine) => FromString(ParseOptions.AllowMissingPrefix | ParseOptions.ContainsCommand, cmdLine);
 
-        /// <summary>
-        /// Checks whether all specified options are present. This function uses <see cref="StringComparison.InvariantCultureIgnoreCase"/>.
-        /// </summary>
+        /// <summary>Checks whether all specified options are present. This function uses <see cref="StringComparison.InvariantCultureIgnoreCase"/>.</summary>
         /// <param name="optionNames">The options to search.</param>
         /// <returns>Returns true if options are present, false otherwise.</returns>
         public bool AreOptionsPresent(params string[] optionNames)
@@ -291,16 +253,12 @@ namespace Cave.IO
             return true;
         }
 
-        /// <summary>
-        /// Determines whether the specified object is equal to the current object.
-        /// </summary>
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
         /// <param name="obj">Object to check for equality.</param>
         /// <returns>Returns true if the specified instance equals this.</returns>
         public override bool Equals(object obj) => Equals(obj as Arguments);
 
-        /// <summary>
-        /// Determines whether the specified object is equal to the current object.
-        /// </summary>
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
         /// <param name="other">Arguments instance to check against.</param>
         /// <returns>Returns true if the specified instance equals this.</returns>
         public bool Equals(Arguments other) =>
@@ -310,9 +268,7 @@ namespace Cave.IO
          && Options.Equals(other.Options)
          && Parameters.Equals(other.Parameters);
 
-        /// <summary>
-        /// Gets the first matching option or null.
-        /// </summary>
+        /// <summary>Gets the first matching option or null.</summary>
         /// <param name="optionNames">Option name to retrieve.</param>
         /// <returns>Returns a matching option instance or null.</returns>
         public Option GetFirstOption(params string[] optionNames)
@@ -328,22 +284,16 @@ namespace Cave.IO
             return null;
         }
 
-        /// <summary>
-        /// Gets the value of the first matching option or null.
-        /// </summary>
+        /// <summary>Gets the value of the first matching option or null.</summary>
         /// <param name="optionNames">Option name to retrieve.</param>
         /// <returns>Returns the option value or null.</returns>
         public string GetFirstOptionValue(params string[] optionNames) => GetFirstOption(optionNames)?.Value;
 
-        /// <summary>
-        /// Gets the hash code for this instance.
-        /// </summary>
+        /// <summary>Gets the hash code for this instance.</summary>
         /// <returns>Returns a hash code.</returns>
         public override int GetHashCode() => Command.GetHashCode() ^ Options.GetHashCode() ^ Parameters.GetHashCode();
 
-        /// <summary>
-        /// Gets a list with invalid options by checking all options against a list with valid ones.
-        /// </summary>
+        /// <summary>Gets a list with invalid options by checking all options against a list with valid ones.</summary>
         /// <param name="textComparison">Provides the used <see cref="StringComparison"/>.</param>
         /// <param name="validOpts">The list of valid options.</param>
         /// <returns>Returns an <see cref="OptionCollection"/> containing all invalid <see cref="Options"/>.</returns>
@@ -377,16 +327,12 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Gets a list with invalid options by checking all options against a list with valid ones. This function uses <see cref="StringComparison.CurrentCultureIgnoreCase"/>!.
-        /// </summary>
+        /// <summary>Gets a list with invalid options by checking all options against a list with valid ones. This function uses <see cref="StringComparison.CurrentCultureIgnoreCase"/>!.</summary>
         /// <param name="validOpts">The list of valid options.</param>
         /// <returns>Returns an <see cref="OptionCollection"/> containing all invalid <see cref="Options"/>.</returns>
         public OptionCollection GetInvalidOptions(params string[] validOpts) => GetInvalidOptions(StringComparison.CurrentCultureIgnoreCase, validOpts);
 
-        /// <summary>
-        /// Gets a list with invalid parameters by checking all paramters against a list with valid ones.
-        /// </summary>
+        /// <summary>Gets a list with invalid parameters by checking all paramters against a list with valid ones.</summary>
         /// <param name="textComparison">Provides the used <see cref="StringComparison"/>.</param>
         /// <param name="validParams">The list of valid paramters.</param>
         /// <returns>Returns an string[] containing all invalid <see cref="Parameters"/>.</returns>
@@ -420,33 +366,25 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Gets a list with invalid parameters by checking all paramters against a list with valid ones.
-        /// </summary>
+        /// <summary>Gets a list with invalid parameters by checking all paramters against a list with valid ones.</summary>
         /// <param name="validParams">The list of valid paramters.</param>
         /// <returns>Returns an string[] containing all invalid <see cref="Parameters"/>.</returns>
         public ParameterCollection GetInvalidParameters(params string[] validParams) =>
             GetInvalidParameters(StringComparison.CurrentCultureIgnoreCase, validParams);
 
-        /// <summary>
-        /// Checks for presence of any (/help -help --help, /h, -h, /?, -?, ...) known help options.
-        /// </summary>
+        /// <summary>Checks for presence of any (/help -help --help, /h, -h, /?, -?, ...) known help options.</summary>
         /// <returns>Returns true if any help option is found.</returns>
         public bool IsHelpOptionFound() =>
             IsOptionPresent("help", StringComparison.OrdinalIgnoreCase) ||
             IsOptionPresent("?", StringComparison.OrdinalIgnoreCase) ||
             IsOptionPresent("h", StringComparison.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// Checks for presence of an option. This function uses <see cref="StringComparison.InvariantCultureIgnoreCase"/>.
-        /// </summary>
+        /// <summary>Checks for presence of an option. This function uses <see cref="StringComparison.InvariantCultureIgnoreCase"/>.</summary>
         /// <param name="optionName">The option to search.</param>
         /// <returns>Returns true if the specified option is present.</returns>
         public bool IsOptionPresent(string optionName) => IsOptionPresent(optionName, StringComparison.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// Checks for presence of an option. This function uses <see cref="StringComparison.InvariantCultureIgnoreCase"/>.
-        /// </summary>
+        /// <summary>Checks for presence of an option. This function uses <see cref="StringComparison.InvariantCultureIgnoreCase"/>.</summary>
         /// <param name="optionName">The option to search.</param>
         /// <param name="textComparison">StringComparison to use.</param>
         /// <returns>Returns true if the specified option is present.</returns>
@@ -463,16 +401,12 @@ namespace Cave.IO
             return false;
         }
 
-        /// <summary>
-        /// Checks whether a specified parameter is present or not. This function uses <see cref="StringComparison.InvariantCultureIgnoreCase"/>.
-        /// </summary>
+        /// <summary>Checks whether a specified parameter is present or not. This function uses <see cref="StringComparison.InvariantCultureIgnoreCase"/>.</summary>
         /// <param name="paramName">The parameter to search.</param>
         /// <returns>Returns true if the specified parameter is present.</returns>
         public bool IsParameterPresent(string paramName) => IsParameterPresent(paramName, StringComparison.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// Check whether a specified parameter is present or not.
-        /// </summary>
+        /// <summary>Check whether a specified parameter is present or not.</summary>
         /// <param name="paramName">The parameter to search.</param>
         /// <param name="textComparison">Provides the used <see cref="StringComparison"/>.</param>
         /// <returns>Returns true if the specified parameter is present.</returns>
@@ -489,18 +423,14 @@ namespace Cave.IO
             return false;
         }
 
-        /// <summary>
-        /// Gets a string array containing the <see cref="Command"/> (first element), <see cref="Parameters"/> and at last the <see cref="Options"/>.
-        /// </summary>
+        /// <summary>Gets a string array containing the <see cref="Command"/> (first element), <see cref="Parameters"/> and at last the <see cref="Options"/>.</summary>
         /// <returns>
         /// A string array containing the <see cref="Arguments"/> in the form "Command (first element), [Parameter1, [Parameter2, ..]], and at last [-Option1,
         /// [-Option2, ..]]".
         /// </returns>
         public string[] ToArray() => ToArray(true);
 
-        /// <summary>
-        /// Gets a string array containing the <see cref="Command"/> (first element, optional), <see cref="Parameters"/> and at last the <see cref="Options"/>.
-        /// </summary>
+        /// <summary>Gets a string array containing the <see cref="Command"/> (first element, optional), <see cref="Parameters"/> and at last the <see cref="Options"/>.</summary>
         /// <param name="includeCmd">Set to true to include the optional <see cref="Command"/> part.</param>
         /// <returns>
         /// A string array containing the <see cref="Arguments"/> in the form "Command (first element, optional), [Parameter1, [Parameter2, ..]], and at last
@@ -541,15 +471,11 @@ namespace Cave.IO
             return result.ToArray();
         }
 
-        /// <summary>
-        /// Gets a string containing the <see cref="Command"/>, <see cref="Parameters"/> and <see cref="Options"/>.
-        /// </summary>
+        /// <summary>Gets a string containing the <see cref="Command"/>, <see cref="Parameters"/> and <see cref="Options"/>.</summary>
         /// <returns>A string containing the <see cref="Arguments"/> in the form "Command [Parameter1 [Parameter2 ..]] [-Option1 [-Option2 ..]]".</returns>
         public override string ToString() => ToString(true);
 
-        /// <summary>
-        /// Gets a string containing the <see cref="Command"/> (optional), <see cref="Parameters"/> and <see cref="Options"/>.
-        /// </summary>
+        /// <summary>Gets a string containing the <see cref="Command"/> (optional), <see cref="Parameters"/> and <see cref="Options"/>.</summary>
         /// <param name="includeCmd">Set to true to include the optional <see cref="Command"/> part.</param>
         /// <returns>Returns a string containing the <see cref="Arguments"/> in the form "Command [Parameter1 [Parameter2 ..]] [-Option1 [-Option2 ..]]".</returns>
         public string ToString(bool includeCmd)

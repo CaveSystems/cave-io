@@ -4,17 +4,13 @@ using System.Threading;
 
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides a error resistant file stream for read operations.
-    /// </summary>
+    /// <summary>Provides a error resistant file stream for read operations.</summary>
     /// <seealso cref="Stream"/>
     public class ResistantFileStream : Stream
     {
         #region constructor
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ResistantFileStream"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="ResistantFileStream"/> class.</summary>
         /// <param name="filename">The filename.</param>
         /// <param name="mode">The mode.</param>
         /// <param name="access">The access.</param>
@@ -33,19 +29,20 @@ namespace Cave.IO
 
         #endregion constructor
 
-        /// <summary>
-        /// Opens a new <see cref="ResistantFileStream"/> for sequential reading with a buffer of 128kib.
-        /// </summary>
+        #region Public Methods
+
+        /// <summary>Opens a new <see cref="ResistantFileStream"/> for sequential reading with a buffer of 128kib.</summary>
         /// <param name="filename">The filename.</param>
         /// <returns>Returns a new <see cref="ResistantFileStream"/> instance.</returns>
         public static ResistantFileStream OpenSequentialRead(string filename) => new(filename);
+
+        #endregion Public Methods
 
         #region protected overrides
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-#pragma warning disable CA1031
             try
             {
                 if (stream != null)
@@ -55,7 +52,6 @@ namespace Cave.IO
                 }
             }
             catch { }
-#pragma warning restore CA1031
             base.Dispose(disposing);
         }
 
@@ -71,13 +67,11 @@ namespace Cave.IO
         {
             if (stream != null)
             {
-#pragma warning disable CA1031
                 try
                 {
                     stream.Dispose();
                 }
                 catch { }
-#pragma warning restore CA1031
             }
 
             stream = new FileStream(FileName, FileMode, FileAccess, FileShare, 128 * 1024, FileOptions) { Position = streamPosition };
@@ -90,7 +84,6 @@ namespace Cave.IO
             Exception exception = null;
             for (var i = 0; i < FileMaxErrors; i++)
             {
-#pragma warning disable CA1031
                 try
                 {
                     var result = function();
@@ -113,7 +106,6 @@ namespace Cave.IO
 #endif
                     }
                 }
-#pragma warning restore CA1031
             }
 
             throw exception;
@@ -124,7 +116,6 @@ namespace Cave.IO
             Exception exception = null;
             for (var i = 0; i < FileMaxErrors; i++)
             {
-#pragma warning disable CA1031
                 try
                 {
                     action();
@@ -139,7 +130,6 @@ namespace Cave.IO
                     }
                     catch { }
                 }
-#pragma warning restore CA1031
             }
 
             throw exception;
@@ -149,46 +139,7 @@ namespace Cave.IO
 
         #region additional properties
 
-        /// <summary>
-        /// Gets the name of the file.
-        /// </summary>
-        /// <value>The name of the file.</value>
-        public string FileName { get; }
-
-        /// <summary>
-        /// Gets the file mode.
-        /// </summary>
-        /// <value>The file mode.</value>
-        public FileMode FileMode { get; }
-
-        /// <summary>
-        /// Gets the file access.
-        /// </summary>
-        /// <value>The file access.</value>
-        public FileAccess FileAccess { get; }
-
-        /// <summary>
-        /// Gets the file share.
-        /// </summary>
-        /// <value>The file share.</value>
-        public FileShare FileShare { get; }
-
-        /// <summary>
-        /// Gets the file options.
-        /// </summary>
-        /// <value>The file options.</value>
-        public FileOptions FileOptions { get; }
-
-        /// <summary>
-        /// Gets or sets the file access maximum error rate.
-        /// </summary>
-        /// <remarks>Any operation needing more than <see cref="FileMaxErrors"/> retries will fail with the original exception.</remarks>
-        /// <value>The file maximum error rate.</value>
-        public int FileMaxErrors { get; set; } = 50;
-
-        /// <summary>
-        /// Gets the file stream.
-        /// </summary>
+        /// <summary>Gets the file stream.</summary>
         /// <value>The file stream.</value>
         /// <exception cref="ObjectDisposedException">Thrown if object is already disposed.</exception>
         public FileStream BaseStream
@@ -204,43 +155,54 @@ namespace Cave.IO
             }
         }
 
+        /// <summary>Gets the file access.</summary>
+        /// <value>The file access.</value>
+        public FileAccess FileAccess { get; }
+
+        /// <summary>Gets or sets the file access maximum error rate.</summary>
+        /// <remarks>Any operation needing more than <see cref="FileMaxErrors"/> retries will fail with the original exception.</remarks>
+        /// <value>The file maximum error rate.</value>
+        public int FileMaxErrors { get; set; } = 50;
+
+        /// <summary>Gets the file mode.</summary>
+        /// <value>The file mode.</value>
+        public FileMode FileMode { get; }
+
+        /// <summary>Gets the name of the file.</summary>
+        /// <value>The name of the file.</value>
+        public string FileName { get; }
+
+        /// <summary>Gets the file options.</summary>
+        /// <value>The file options.</value>
+        public FileOptions FileOptions { get; }
+
+        /// <summary>Gets the file share.</summary>
+        /// <value>The file share.</value>
+        public FileShare FileShare { get; }
+
         #endregion additional properties
 
         #region stream implementation
 
-        /// <summary>
-        /// Gets a value indicating whether the current stream supports reading.
-        /// </summary>
+        /// <summary>Gets a value indicating whether the current stream supports reading.</summary>
         public override bool CanRead => stream.CanRead;
 
-        /// <summary>
-        /// Gets a value indicating whether the current stream supports seeking.
-        /// </summary>
+        /// <summary>Gets a value indicating whether the current stream supports seeking.</summary>
         public override bool CanSeek => stream.CanSeek;
 
-        /// <summary>
-        /// Gets a value indicating whether the current stream supports writing.
-        /// </summary>
+        /// <summary>Gets a value indicating whether the current stream supports writing.</summary>
         public override bool CanWrite => stream.CanWrite;
 
-        /// <summary>
-        /// Gets the length in bytes of the stream.
-        /// </summary>
+        /// <summary>Gets the length in bytes of the stream.</summary>
         public override long Length => streamLength;
 
-        /// <summary>
-        /// Gets or sets the current position of this stream.
-        /// </summary>
+        /// <summary>Gets or sets the current position of this stream.</summary>
         public override long Position { get => streamPosition; set => Seek(value, SeekOrigin.Begin); }
 
-        /// <summary>
-        /// Clears buffers for this stream and causes any buffered data to be written to the file.
-        /// </summary>
+        /// <summary>Clears buffers for this stream and causes any buffered data to be written to the file.</summary>
         public override void Flush() => Resistant(() => stream.Flush());
 
-        /// <summary>
-        /// Reads a block of bytes from the stream and writes the data in a given buffer.
-        /// </summary>
+        /// <summary>Reads a block of bytes from the stream and writes the data in a given buffer.</summary>
         /// <param name="buffer">
         /// When this method returns, contains the specified byte array with the values between offset and (offset + count - 1) replaced by the bytes read from
         /// the current source.
@@ -253,23 +215,17 @@ namespace Cave.IO
         /// </returns>
         public override int Read(byte[] buffer, int offset, int count) => Resistant(() => stream.Read(buffer, offset, count));
 
-        /// <summary>
-        /// Sets the current position of this stream to the given value.
-        /// </summary>
+        /// <summary>Sets the current position of this stream to the given value.</summary>
         /// <param name="offset">The point relative to origin from which to begin seeking.</param>
         /// <param name="origin">Specifies the beginning, the end, or the current position as a reference point for offset, using a value of type SeekOrigin.</param>
         /// <returns>The new position in the stream.</returns>
         public override long Seek(long offset, SeekOrigin origin) => Resistant(() => stream.Seek(offset, origin));
 
-        /// <summary>
-        /// Sets the length of this stream to the given value.
-        /// </summary>
+        /// <summary>Sets the length of this stream to the given value.</summary>
         /// <param name="value">The new length of the stream.</param>
         public override void SetLength(long value) => Resistant(() => stream.SetLength(value));
 
-        /// <summary>
-        /// Writes a block of bytes to the file stream.
-        /// </summary>
+        /// <summary>Writes a block of bytes to the file stream.</summary>
         /// <param name="buffer">The buffer containing data to write to the stream.</param>
         /// <param name="offset">The zero-based byte offset in array from which to begin copying bytes to the stream.</param>
         /// <param name="count">The maximum number of bytes to write.</param>

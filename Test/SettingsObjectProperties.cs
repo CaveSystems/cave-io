@@ -79,52 +79,49 @@ namespace Test.Cave.IO
             };
         }
 
-        public bool Equals(SettingsObjectProperties other)
-        {
-            return
-                Equals(other.SampleString, SampleString) &&
-                Equals(other.SampleBool, SampleBool) &&
-                Equals(other.SampleDateTime, SampleDateTime) &&
-                Equals(other.SampleTimeSpan, SampleTimeSpan) &&
-                Equals(other.SampleDecimal, SampleDecimal) &&
-                Equals(other.SampleDouble, SampleDouble) &&
-                Equals(other.SampleEnum, SampleEnum) &&
-                Equals(other.SampleFlagEnum, SampleFlagEnum) &&
-                Equals(other.SampleFloat, SampleFloat) &&
-                Equals(other.SampleInt16, SampleInt16) &&
-                Equals(other.SampleInt32, SampleInt32) &&
-                Equals(other.SampleInt64, SampleInt64) &&
-                Equals(other.SampleInt8, SampleInt8) &&
-                Equals(other.SampleUInt8, SampleUInt8) &&
-                Equals(other.SampleUInt16, SampleUInt16) &&
-                Equals(other.SampleUInt32, SampleUInt32) &&
-                Equals(other.SampleUInt64, SampleUInt64) &&
-                Equals(other.SampleNullableUInt32, SampleNullableUInt32);
-        }
+        public bool Equals(SettingsObjectProperties other) =>
+            Equals(other.SampleString, SampleString) &&
+            Equals(other.SampleBool, SampleBool) &&
+            Equals(other.SampleDateTime, SampleDateTime) &&
+            Equals(other.SampleTimeSpan, SampleTimeSpan) &&
+            Equals(other.SampleDecimal, SampleDecimal) &&
+            Equals(other.SampleDouble, SampleDouble) &&
+            Equals(other.SampleEnum, SampleEnum) &&
+            Equals(other.SampleFlagEnum, SampleFlagEnum) &&
+            Equals(other.SampleFloat, SampleFloat) &&
+            Equals(other.SampleInt16, SampleInt16) &&
+            Equals(other.SampleInt32, SampleInt32) &&
+            Equals(other.SampleInt64, SampleInt64) &&
+            Equals(other.SampleInt8, SampleInt8) &&
+            Equals(other.SampleUInt8, SampleUInt8) &&
+            Equals(other.SampleUInt16, SampleUInt16) &&
+            Equals(other.SampleUInt32, SampleUInt32) &&
+            Equals(other.SampleUInt64, SampleUInt64) &&
+            Equals(other.SampleNullableUInt32, SampleNullableUInt32);
 
         public override bool Equals(object obj) => Equals(obj as SettingsObjectProperties);
 
         public override int GetHashCode()
         {
             var hashCode = 1836983495;
-            hashCode = hashCode * -1521134295 + SampleBool.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleDateTime.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleDecimal.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleDouble.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleEnum.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleFlagEnum.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleFloat.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleInt16.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleInt32.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleInt64.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleInt8.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleNullableUInt32.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleString?.GetHashCode() ?? 0;
-            hashCode = hashCode * -1521134295 + SampleTimeSpan.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleUInt16.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleUInt32.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleUInt64.GetHashCode();
-            hashCode = hashCode * -1521134295 + SampleUInt8.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleBool.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleDateTime.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleDecimal.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleDouble.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleEnum.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleFlagEnum.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleFloat.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleInt16.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleInt32.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleInt64.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleInt8.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleNullableUInt32.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleString?.GetHashCode() ?? 0;
+            hashCode = (hashCode * -1521134295) + SampleTimeSpan.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleUInt16.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleUInt32.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleUInt64.GetHashCode();
+            hashCode = (hashCode * -1521134295) + SampleUInt8.GetHashCode();
             return hashCode;
         }
 

@@ -70,32 +70,27 @@ namespace Test.Cave.IO
             return t;
         }
 
-        public override bool Equals(object obj)
-        {
-            if (!(obj is TestStruct))
-            {
-                return false;
-            }
+        public static bool operator !=(TestStruct left, TestStruct right) => !(left == right);
 
-            var other = (TestStruct)obj;
-            return
-                Arr.SequenceEqual(other.Arr) &&
-                Equals(B, other.B) &&
-                Equals(C, other.C) &&
-                Equals(ConStr, other.ConStr) &&
-                Equals(D, other.D) &&
-                Equals(Date.ToUniversalTime(), other.Date.ToUniversalTime()) &&
-                Equals(Dec, other.Dec) &&
-                Equals(F, other.F) &&
-                Equals(I, other.I) &&
-                Equals(S, other.S) &&
-                Equals(SB, other.SB) &&
-                Equals(Text, other.Text) &&
-                Equals(Time, other.Time) &&
-                Equals(UI, other.UI) &&
-                Equals(Uri, other.Uri) &&
-                Equals(US, other.US);
-        }
+        public static bool operator ==(TestStruct left, TestStruct right) => left.Equals(right);
+
+        public override bool Equals(object obj) => obj is TestStruct other
+            && Arr.SequenceEqual(other.Arr) &&
+            Equals(B, other.B) &&
+            Equals(C, other.C) &&
+            Equals(ConStr, other.ConStr) &&
+            Equals(D, other.D) &&
+            Equals(Date.ToUniversalTime(), other.Date.ToUniversalTime()) &&
+            Equals(Dec, other.Dec) &&
+            Equals(F, other.F) &&
+            Equals(I, other.I) &&
+            Equals(S, other.S) &&
+            Equals(SB, other.SB) &&
+            Equals(Text, other.Text) &&
+            Equals(Time, other.Time) &&
+            Equals(UI, other.UI) &&
+            Equals(Uri, other.Uri) &&
+            Equals(US, other.US);
 
         public override int GetHashCode() => ID.GetHashCode();
 

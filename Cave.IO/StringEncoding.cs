@@ -22,7 +22,7 @@ namespace Cave.IO
         /// <summary>Little Endian 32 Bit per Character Unicode.</summary>
         UTF32 = 4,
 
-        #endregion
+        #endregion internally handled fast encodings
 
         /// <summary>Arabisch (ASMO 708).</summary>
         /// <remarks>Codepage: 708, Windows Codepage: 1256</remarks>

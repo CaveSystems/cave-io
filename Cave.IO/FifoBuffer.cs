@@ -5,34 +5,26 @@ using System.Runtime.InteropServices;
 
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides a simple byte[] buffer queue able to work with buffers of any size.
-    /// </summary>
+    /// <summary>Provides a simple byte[] buffer queue able to work with buffers of any size.</summary>
     public class FifoBuffer
     {
         #region Protected Fields
 
-        /// <summary>
-        /// Gets the underlying buffers.
-        /// </summary>
+        /// <summary>Gets the underlying buffers.</summary>
         protected readonly LinkedList<byte[]> Buffers = new();
 
         #endregion Protected Fields
 
         #region Public Properties
 
-        /// <summary>
-        /// Gets number of bytes currently buffered.
-        /// </summary>
+        /// <summary>Gets number of bytes currently buffered.</summary>
         public int Length { get; private set; }
 
         #endregion Public Properties
 
         #region Public Methods
 
-        /// <summary>
-        /// Reads a byte array of specified length from the source address starting at the specified byte offset.
-        /// </summary>
+        /// <summary>Reads a byte array of specified length from the source address starting at the specified byte offset.</summary>
         /// <param name="source">The source address.</param>
         /// <param name="offset">The byte offset for the read position.</param>
         /// <param name="count">The number of bytes to read.</param>
@@ -45,18 +37,14 @@ namespace Cave.IO
             return buffer;
         }
 
-        /// <summary>
-        /// Clears the buffer.
-        /// </summary>
+        /// <summary>Clears the buffer.</summary>
         public void Clear()
         {
             Buffers.Clear();
             Length = 0;
         }
 
-        /// <summary>
-        /// Dequeues the first buffer (may be of any size &gt; 0).
-        /// </summary>
+        /// <summary>Dequeues the first buffer (may be of any size &gt; 0).</summary>
         /// <returns>Returns a dequeued buffer (may be of any size &gt; 0).</returns>
         public byte[] Dequeue()
         {
@@ -66,9 +54,7 @@ namespace Cave.IO
             return buffer;
         }
 
-        /// <summary>
-        /// Dequeues the specified number of bytes as new byte[] buffer.
-        /// </summary>
+        /// <summary>Dequeues the specified number of bytes as new byte[] buffer.</summary>
         /// <param name="size">The number of bytes to dequeue.</param>
         /// <returns>Returns a dequeued buffer of the specified size.</returns>
         public byte[] Dequeue(int size)
@@ -107,9 +93,7 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Dequeues the specified number of bytes and writes them to the specified location.
-        /// </summary>
+        /// <summary>Dequeues the specified number of bytes and writes them to the specified location.</summary>
         /// <param name="size">The number of bytes to dequeue.</param>
         /// <param name="address">The location to start writing at.</param>
         public void Dequeue(int size, IntPtr address)
@@ -137,9 +121,7 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Enqueues a number of bytes from the specified stream.
-        /// </summary>
+        /// <summary>Enqueues a number of bytes from the specified stream.</summary>
         /// <param name="stream">The stream to read from.</param>
         /// <param name="count">The number of bytes to enqueue.</param>
         public void Enqueue(Stream stream, int count)
@@ -161,16 +143,12 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Directly enqueues the specified byte buffer.
-        /// </summary>
+        /// <summary>Directly enqueues the specified byte buffer.</summary>
         /// <param name="buffer">The buffer to add.</param>
         [Obsolete("Use Enqueue(byte[] buffer, bool doNotCopy) instead.")]
         public void Enqueue(byte[] buffer) => Enqueue(buffer, false);
 
-        /// <summary>
-        /// Directly enqueues the specified byte buffer.
-        /// </summary>
+        /// <summary>Directly enqueues the specified byte buffer.</summary>
         /// <param name="buffer">The buffer to add.</param>
         /// <param name="doNotCopy">Prevents copying of the <paramref name="buffer"/> data. Use only when you know what you are doing.</param>
         public void Enqueue(byte[] buffer, bool doNotCopy)
@@ -189,9 +167,7 @@ namespace Cave.IO
             Length += buffer.Length;
         }
 
-        /// <summary>
-        /// Enqueues data from the specified buffer (will be copied).
-        /// </summary>
+        /// <summary>Enqueues data from the specified buffer (will be copied).</summary>
         /// <param name="buffer">The buffer.</param>
         /// <param name="offset">The byte offset to start reading from.</param>
         /// <param name="count">The number of bytes to copy.</param>
@@ -207,30 +183,22 @@ namespace Cave.IO
             Enqueue(newBuffer, true);
         }
 
-        /// <summary>
-        /// Enqueues data from the specified address.
-        /// </summary>
+        /// <summary>Enqueues data from the specified address.</summary>
         /// <param name="address">The location to start reading at.</param>
         /// <param name="count">The number of bytes to copy.</param>
         public void Enqueue(IntPtr address, int count) => Enqueue(Read(address, 0, count), true);
 
-        /// <summary>
-        /// Enqueues data from the specified address.
-        /// </summary>
+        /// <summary>Enqueues data from the specified address.</summary>
         /// <param name="address">The location to start reading at.</param>
         /// <param name="offset">The byte offset to start reading from.</param>
         /// <param name="count">The number of bytes to copy.</param>
         public void Enqueue(IntPtr address, int offset, int count) => Enqueue(Read(address, offset, count), true);
 
-        /// <summary>
-        /// Peeks at the first buffer (may be of any size &gt; 0).
-        /// </summary>
+        /// <summary>Peeks at the first buffer (may be of any size &gt; 0).</summary>
         /// <returns>Returns the first buffer (may be of any size &gt; 0).</returns>
         public byte[] Peek() => Buffers.First.Value;
 
-        /// <summary>
-        /// Peeks at the buffer returning the specified number of bytes as new byte[] buffer.
-        /// </summary>
+        /// <summary>Peeks at the buffer returning the specified number of bytes as new byte[] buffer.</summary>
         /// <param name="size">The number of bytes to peek at.</param>
         /// <returns>Returns a new buffer of the specified size.</returns>
         public byte[] Peek(int size)
@@ -255,9 +223,7 @@ namespace Cave.IO
             return result;
         }
 
-        /// <summary>
-        /// Peeks at the buffer and writes the data to the specified location.
-        /// </summary>
+        /// <summary>Peeks at the buffer and writes the data to the specified location.</summary>
         /// <param name="size">The number of bytes to peek at.</param>
         /// <param name="address">The location to start writing at.</param>
         public void Peek(int size, IntPtr address)
@@ -280,16 +246,12 @@ namespace Cave.IO
             }
         }
 
-        /// <summary>
-        /// Directly prepends a copy of the specified byte buffer.
-        /// </summary>
+        /// <summary>Directly prepends a copy of the specified byte buffer.</summary>
         /// <param name="buffer">The buffer to add (will not be copied).</param>
         [Obsolete("Use Prepend(byte[] buffer, bool doNotCopy) instead.")]
         public void Prepend(byte[] buffer) => Prepend(buffer, false);
 
-        /// <summary>
-        /// Directly prepends the specified byte buffer.
-        /// </summary>
+        /// <summary>Directly prepends the specified byte buffer.</summary>
         /// <param name="buffer">The buffer to add.</param>
         /// <param name="doNotCopy">Prevents copying of the <paramref name="buffer"/> data. Use only when you know what you are doing.</param>
         public void Prepend(byte[] buffer, bool doNotCopy)
@@ -308,9 +270,7 @@ namespace Cave.IO
             Length += buffer.Length;
         }
 
-        /// <summary>
-        /// Gets a byte[] array containing all currently buffered bytes.
-        /// </summary>
+        /// <summary>Gets a byte[] array containing all currently buffered bytes.</summary>
         /// <returns>Returns a byte[] array size = <see cref="Length"/>.</returns>
         public byte[] ToArray()
         {
