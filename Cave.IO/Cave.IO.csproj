@@ -6,7 +6,15 @@
         <AssemblyOriginatorKeyFile>cave-io.snk</AssemblyOriginatorKeyFile>
         <Product>CaveSystems IO Library</Product>
         <PackageTags>CaveSystems IO</PackageTags>
-        <Description>CaveSystems IO Library. This package contains fast non buffering data readers and writers, endian conversion, stream buffers (fifo, ring) and fast struct marshalling.</Description>
+        <Description>
+            CaveSystems IO Library. 
+            This package contains:
+            * Fast non buffering data readers and writers.
+            * Endian conversion.
+            * Stream buffers (fifo, ring).
+            * Fast struct marshalling.
+            * Ini (Settings) readers and writers.
+        </Description>
         <PackageProjectUrl>https://github.com/CaveSystems/cave-io</PackageProjectUrl>
         <RepositoryUrl>https://github.com/CaveSystems/cave-io</RepositoryUrl>
 

@@ -37,7 +37,7 @@ namespace Test.Cave.IO
 
         #region Public Methods
 
-        public static SettingsObjectProperties RandomStruct(CultureInfo culture = null)
+        public static SettingsObjectProperties Random(CultureInfo culture = null)
         {
             var len = random.Next(0, 90);
             char[] str;

@@ -41,7 +41,7 @@ namespace Test.Cave.IO
 
         public static bool operator ==(SettingsStructProperties left, SettingsStructProperties right) => left.Equals(right);
 
-        public static SettingsStructProperties RandomStruct(CultureInfo culture = null)
+        public static SettingsStructProperties Random(CultureInfo culture = null)
         {
             var len = random.Next(0, 90);
             char[] str;
