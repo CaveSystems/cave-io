@@ -38,7 +38,7 @@ namespace Test.Cave.IO
             {
                 var serializer = new BinarySerializer();
                 var stream = new MemoryStream();
-                var test = SettingsObjectFields.RandomStruct();
+                var test = SettingsObjectFields.Random();
                 serializer.Serialize(test, stream);
                 stream.Position = 0;
                 var read = serializer.Deserialize<SettingsObjectFields>(stream);
@@ -53,7 +53,7 @@ namespace Test.Cave.IO
             {
                 var serializer = new BinarySerializer();
                 var stream = new MemoryStream();
-                var test = SettingsObjectProperties.RandomStruct();
+                var test = SettingsObjectProperties.Random();
                 serializer.Serialize(test, stream);
                 stream.Position = 0;
                 var read = serializer.Deserialize<SettingsObjectProperties>(stream);
@@ -79,7 +79,7 @@ namespace Test.Cave.IO
             {
                 var serializer = new BinarySerializer();
                 var stream = new MemoryStream();
-                var test = SettingsStructFields.RandomStruct();
+                var test = SettingsStructFields.Random();
                 serializer.Serialize(test, stream);
                 stream.Position = 0;
                 var read = serializer.Deserialize<SettingsStructFields>(stream);
@@ -94,7 +94,7 @@ namespace Test.Cave.IO
             {
                 var serializer = new BinarySerializer();
                 var stream = new MemoryStream();
-                var test = SettingsStructProperties.RandomStruct();
+                var test = SettingsStructProperties.Random();
                 serializer.Serialize(test, stream);
                 stream.Position = 0;
                 var read = serializer.Deserialize<SettingsStructProperties>(stream);
