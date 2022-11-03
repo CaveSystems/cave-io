@@ -110,37 +110,8 @@ namespace Cave.IO
         /// <summary>Gets or sets encoding to use for characters and strings.</summary>
         public StringEncoding StringEncoding
         {
-            get => textDecoder.ToStringEncoding();
-            set
-            {
-                switch (value)
-                {
-                    case StringEncoding.Undefined: break;
-                    case StringEncoding.ASCII:
-                        textDecoder = new CheckedASCIIEncoding();
-                        break;
-
-                    case StringEncoding.UTF8:
-                        textDecoder = Encoding.UTF8;
-                        break;
-
-                    case StringEncoding.UTF16:
-                        textDecoder = Encoding.Unicode;
-                        break;
-
-                    case StringEncoding.UTF32:
-                        textDecoder = Encoding.UTF32;
-                        break;
-
-                    default:
-                        textDecoder = Encoding.GetEncoding((int)value);
-                        break;
-                }
-
-                newLineBytes = null;
-                newLineChars = null;
-                zeroBytes = null;
-            }
+            get => Encoding.ToStringEncoding();
+            set => Encoding = value.Create();
         }
 
         #endregion Public Properties
