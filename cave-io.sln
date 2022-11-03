@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28606.126
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cave.IO", "Cave.IO\Cave.IO.csproj", "{D38971D8-AD23-45E9-AAA6-88673AF858FE}"
 EndProject
@@ -23,13 +23,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_NET2x", "Test\Test_NET
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_NET4x", "Test\Test_NET4x.csproj", "{532D8043-35F1-45DA-80B9-DFE54FEAF49E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_NETCORE2", "Test\Test_NETCORE2.csproj", "{E41093E6-AFEC-4FF4-9941-DABEB91CB73D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{E98BD4FB-3364-43F6-BC59-DB2840A62C43}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test_NETCORE3", "Test\Test_NETCORE3.csproj", "{88F425DC-15AF-4AC2-AC92-744430293D3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StringEncodingGenerator", "StringEncodingGenerator\StringEncodingGenerator.csproj", "{E60316C6-6FAF-4071-95A5-A43ACF41307D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StringEncodingGenerator", "StringEncodingGenerator\StringEncodingGenerator.csproj", "{E60316C6-6FAF-4071-95A5-A43ACF41307D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,10 +47,6 @@ Global
 		{532D8043-35F1-45DA-80B9-DFE54FEAF49E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{532D8043-35F1-45DA-80B9-DFE54FEAF49E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{532D8043-35F1-45DA-80B9-DFE54FEAF49E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E41093E6-AFEC-4FF4-9941-DABEB91CB73D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E41093E6-AFEC-4FF4-9941-DABEB91CB73D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E41093E6-AFEC-4FF4-9941-DABEB91CB73D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E41093E6-AFEC-4FF4-9941-DABEB91CB73D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{88F425DC-15AF-4AC2-AC92-744430293D3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{88F425DC-15AF-4AC2-AC92-744430293D3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88F425DC-15AF-4AC2-AC92-744430293D3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -68,7 +62,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{03C62CE0-7261-4E08-9A66-773F342A8AD8} = {E98BD4FB-3364-43F6-BC59-DB2840A62C43}
 		{532D8043-35F1-45DA-80B9-DFE54FEAF49E} = {E98BD4FB-3364-43F6-BC59-DB2840A62C43}
-		{E41093E6-AFEC-4FF4-9941-DABEB91CB73D} = {E98BD4FB-3364-43F6-BC59-DB2840A62C43}
 		{88F425DC-15AF-4AC2-AC92-744430293D3F} = {E98BD4FB-3364-43F6-BC59-DB2840A62C43}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
