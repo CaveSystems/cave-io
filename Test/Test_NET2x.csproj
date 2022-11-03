@@ -9,6 +9,7 @@
         <RootNamespace>Test</RootNamespace>
         <AssemblyName>Test</AssemblyName>
         <NoWarn>IDE0130;CS1591;CA1806;CA1825;</NoWarn>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
