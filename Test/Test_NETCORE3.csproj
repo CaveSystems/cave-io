@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netcoreapp3.1;net5.0</TargetFrameworks>
+        <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <ApplicationIcon />
         <OutputType>Exe</OutputType>
@@ -9,6 +9,7 @@
         <AssemblyName>Test</AssemblyName>
         <StartupObject>Test.Program</StartupObject>
         <NoWarn>IDE0130;CS1591;CA1806;CA1825;</NoWarn>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
