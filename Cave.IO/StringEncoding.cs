@@ -1,7 +1,10 @@
+using System.ComponentModel;
+
 #pragma warning disable CA1707
 
 namespace Cave.IO
 {
+
     /// <summary>Provides supported string encodings.</summary>
     public enum StringEncoding
     {
@@ -10,544 +13,725 @@ namespace Cave.IO
 
         #region internally handled fast encodings
 
-        /// <summary>7 Bit per Character.</summary>
+        /// <summary>7 Bit per character.</summary>
+        [Description("US-ASCII | us-ascii")]
         ASCII = 1,
 
-        /// <summary>8 Bit per Character Unicode.</summary>
+        /// <summary>8 Bit per character Unicode</summary>
+        [Description("Unicode (UTF-8) | utf-8")]
         UTF8 = 2,
 
-        /// <summary>Little Endian 16 Bit per Character Unicode.</summary>
+        /// <summary>Little endian 16 Bit per character unicode.</summary>
+        [Description("Unicode | utf-16")]
         UTF16 = 3,
 
-        /// <summary>Little Endian 32 Bit per Character Unicode.</summary>
+        /// <summary>Little endian 32 Bit per character unicode.</summary>
+        [Description("Unicode (UTF-32) | utf-32")]
         UTF32 = 4,
 
         #endregion internally handled fast encodings
 
-        /// <summary>Arabisch (ASMO 708).</summary>
-        /// <remarks>Codepage: 708, Windows Codepage: 1256</remarks>
-        ASMO_708 = 708,
-
-        /// <summary>Chinesisch traditionell (Big5).</summary>
-        /// <remarks>Codepage: 950, Windows Codepage: 950</remarks>
-        BIG5 = 950,
-
-        /// <summary>IBM EBCDIC (Kyrillisch, Serbisch-Bulgarisch).</summary>
-        /// <remarks>Codepage: 21025, Windows Codepage: 1251</remarks>
-        CP1025 = 21025,
-
-        /// <summary>Kyrillisch (DOS).</summary>
-        /// <remarks>Codepage: 866, Windows Codepage: 1251</remarks>
-        CP866 = 866,
-
-        /// <summary>IBM EBCDIC (Griechisch, modern).</summary>
-        /// <remarks>Codepage: 875, Windows Codepage: 1253</remarks>
-        CP875 = 875,
-
-        /// <summary>Arabisch (DOS).</summary>
-        /// <remarks>Codepage: 720, Windows Codepage: 1256</remarks>
-        DOS_720 = 720,
-
-        /// <summary>Hebräisch (DOS).</summary>
-        /// <remarks>Codepage: 862, Windows Codepage: 1255</remarks>
-        DOS_862 = 862,
-
-        /// <summary>Chinesisch vereinfacht (EUC).</summary>
-        /// <remarks>Codepage: 51936, Windows Codepage: 936</remarks>
-        EUC_CN = 51936,
-
-        /// <summary>Japanisch (EUC).</summary>
-        /// <remarks>Codepage: 51932, Windows Codepage: 932</remarks>
-        EUC_JP = 51932,
-
-        /// <summary>Koreanisch (EUC).</summary>
-        /// <remarks>Codepage: 51949, Windows Codepage: 949</remarks>
-        EUC_KR = 51949,
-
-        /// <summary>Chinesisch vereinfacht (GB18030).</summary>
-        /// <remarks>Codepage: 54936, Windows Codepage: 936</remarks>
-        GB18030 = 54936,
-
-        /// <summary>Chinesisch vereinfacht (GB2312).</summary>
-        /// <remarks>Codepage: 936, Windows Codepage: 936</remarks>
-        GB2312 = 936,
-
-        /// <summary>Chinesisch vereinfacht (HZ).</summary>
-        /// <remarks>Codepage: 52936, Windows Codepage: 936</remarks>
-        HZ_GB_2312 = 52936,
-
-        /// <summary>IBM EBCDIC (Thailändisch).</summary>
-        /// <remarks>Codepage: 20838, Windows Codepage: 874</remarks>
-        IBM_THAI = 20838,
-
-        /// <summary>OEM Multilingual Lateinisch 1.</summary>
-        /// <remarks>Codepage: 858, Windows Codepage: 1252</remarks>
-        IBM00858 = 858,
-
-        /// <summary>IBM Lateinisch-1.</summary>
-        /// <remarks>Codepage: 20924, Windows Codepage: 1252</remarks>
-        IBM00924 = 20924,
-
-        /// <summary>IBM Lateinisch-1.</summary>
-        /// <remarks>Codepage: 1047, Windows Codepage: 1252</remarks>
-        IBM01047 = 1047,
-
-        /// <summary>IBM EBCDIC (USA-Kanada-Europäisch).</summary>
-        /// <remarks>Codepage: 1140, Windows Codepage: 1252</remarks>
-        IBM01140 = 1140,
-
-        /// <summary>IBM EBCDIC (Deutschland-Europäisch).</summary>
-        /// <remarks>Codepage: 1141, Windows Codepage: 1252</remarks>
-        IBM01141 = 1141,
-
-        /// <summary>IBM EBCDIC (Dänemark-Norwegen-Europäisch).</summary>
-        /// <remarks>Codepage: 1142, Windows Codepage: 1252</remarks>
-        IBM01142 = 1142,
-
-        /// <summary>IBM EBCDIC (Finnland-Schweden-Europäisch).</summary>
-        /// <remarks>Codepage: 1143, Windows Codepage: 1252</remarks>
-        IBM01143 = 1143,
-
-        /// <summary>IBM EBCDIC (Italien-Europäisch).</summary>
-        /// <remarks>Codepage: 1144, Windows Codepage: 1252</remarks>
-        IBM01144 = 1144,
-
-        /// <summary>IBM EBCDIC (Spanisch-Europäisch).</summary>
-        /// <remarks>Codepage: 1145, Windows Codepage: 1252</remarks>
-        IBM01145 = 1145,
-
-        /// <summary>IBM EBCDIC (Großbritannien-Europäisch).</summary>
-        /// <remarks>Codepage: 1146, Windows Codepage: 1252</remarks>
-        IBM01146 = 1146,
-
-        /// <summary>IBM EBCDIC (Frankreich-Europäisch).</summary>
-        /// <remarks>Codepage: 1147, Windows Codepage: 1252</remarks>
-        IBM01147 = 1147,
-
-        /// <summary>IBM EBCDIC (International-Europäisch).</summary>
-        /// <remarks>Codepage: 1148, Windows Codepage: 1252</remarks>
-        IBM01148 = 1148,
-
-        /// <summary>IBM EBCDIC (Isländisch-Europäisch).</summary>
-        /// <remarks>Codepage: 1149, Windows Codepage: 1252</remarks>
-        IBM01149 = 1149,
-
-        /// <summary>IBM EBCDIC (USA-Kanada).</summary>
+        #region autogenerated enum values
+        /// <summary>IBM EBCDIC (US-Canada)</summary>
         /// <remarks>Codepage: 37, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (US-Canada) | IBM037")]
         IBM037 = 37,
 
-        /// <summary>IBM EBCDIC (Türkisch, Lateinisch-5).</summary>
-        /// <remarks>Codepage: 1026, Windows Codepage: 1254</remarks>
-        IBM1026 = 1026,
-
-        /// <summary>IBM EBCDIC (Deutschland).</summary>
-        /// <remarks>Codepage: 20273, Windows Codepage: 1252</remarks>
-        IBM273 = 20273,
-
-        /// <summary>IBM EBCDIC (Dänemark-Norwegen).</summary>
-        /// <remarks>Codepage: 20277, Windows Codepage: 1252</remarks>
-        IBM277 = 20277,
-
-        /// <summary>IBM EBCDIC (Finnland-Schweden).</summary>
-        /// <remarks>Codepage: 20278, Windows Codepage: 1252</remarks>
-        IBM278 = 20278,
-
-        /// <summary>IBM EBCDIC (Italien).</summary>
-        /// <remarks>Codepage: 20280, Windows Codepage: 1252</remarks>
-        IBM280 = 20280,
-
-        /// <summary>IBM EBCDIC (Spanien).</summary>
-        /// <remarks>Codepage: 20284, Windows Codepage: 1252</remarks>
-        IBM284 = 20284,
-
-        /// <summary>IBM EBCDIC (UK).</summary>
-        /// <remarks>Codepage: 20285, Windows Codepage: 1252</remarks>
-        IBM285 = 20285,
-
-        /// <summary>IBM EBCDIC (Japanisch Katakana).</summary>
-        /// <remarks>Codepage: 20290, Windows Codepage: 932</remarks>
-        IBM290 = 20290,
-
-        /// <summary>IBM EBCDIC (Frankreich).</summary>
-        /// <remarks>Codepage: 20297, Windows Codepage: 1252</remarks>
-        IBM297 = 20297,
-
-        /// <summary>IBM EBCDIC (Arabisch).</summary>
-        /// <remarks>Codepage: 20420, Windows Codepage: 1256</remarks>
-        IBM420 = 20420,
-
-        /// <summary>IBM EBCDIC (Griechisch).</summary>
-        /// <remarks>Codepage: 20423, Windows Codepage: 1253</remarks>
-        IBM423 = 20423,
-
-        /// <summary>IBM EBCDIC (Hebräisch).</summary>
-        /// <remarks>Codepage: 20424, Windows Codepage: 1255</remarks>
-        IBM424 = 20424,
-
-        /// <summary>OEM USA.</summary>
+        /// <summary>OEM United States</summary>
         /// <remarks>Codepage: 437, Windows Codepage: 1252</remarks>
+        [Description("OEM United States | IBM437")]
         IBM437 = 437,
 
-        /// <summary>IBM EBCDIC (International).</summary>
+        /// <summary>IBM EBCDIC (International)</summary>
         /// <remarks>Codepage: 500, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (International) | IBM500")]
         IBM500 = 500,
 
-        /// <summary>Griechisch (DOS).</summary>
+        /// <summary>Arabic (ASMO 708)</summary>
+        /// <remarks>Codepage: 708, Windows Codepage: 1256</remarks>
+        [Description("Arabic (ASMO 708) | ASMO-708")]
+        ASMO_708 = 708,
+
+        /// <summary>Arabic (DOS)</summary>
+        /// <remarks>Codepage: 720, Windows Codepage: 1256</remarks>
+        [Description("Arabic (DOS) | DOS-720")]
+        DOS_720 = 720,
+
+        /// <summary>Greek (DOS)</summary>
         /// <remarks>Codepage: 737, Windows Codepage: 1253</remarks>
+        [Description("Greek (DOS) | ibm737")]
         IBM737 = 737,
 
-        /// <summary>Baltisch (DOS).</summary>
+        /// <summary>Baltic (DOS)</summary>
         /// <remarks>Codepage: 775, Windows Codepage: 1257</remarks>
+        [Description("Baltic (DOS) | ibm775")]
         IBM775 = 775,
 
-        /// <summary>Westeuropäisch (DOS).</summary>
+        /// <summary>Western European (DOS)</summary>
         /// <remarks>Codepage: 850, Windows Codepage: 1252</remarks>
+        [Description("Western European (DOS) | ibm850")]
         IBM850 = 850,
 
-        /// <summary>Mitteleuropäisch (DOS).</summary>
+        /// <summary>Central European (DOS)</summary>
         /// <remarks>Codepage: 852, Windows Codepage: 1250</remarks>
+        [Description("Central European (DOS) | ibm852")]
         IBM852 = 852,
 
-        /// <summary>OEM Kyrillisch.</summary>
+        /// <summary>OEM Cyrillic</summary>
         /// <remarks>Codepage: 855, Windows Codepage: 1252</remarks>
+        [Description("OEM Cyrillic | IBM855")]
         IBM855 = 855,
 
-        /// <summary>Türkisch (DOS).</summary>
+        /// <summary>Turkish (DOS)</summary>
         /// <remarks>Codepage: 857, Windows Codepage: 1254</remarks>
+        [Description("Turkish (DOS) | ibm857")]
         IBM857 = 857,
 
-        /// <summary>Portugiesisch (DOS).</summary>
+        /// <summary>OEM Multilingual Latin I</summary>
+        /// <remarks>Codepage: 858, Windows Codepage: 1252</remarks>
+        [Description("OEM Multilingual Latin I | IBM00858")]
+        IBM00858 = 858,
+
+        /// <summary>Portuguese (DOS)</summary>
         /// <remarks>Codepage: 860, Windows Codepage: 1252</remarks>
+        [Description("Portuguese (DOS) | IBM860")]
         IBM860 = 860,
 
-        /// <summary>Isländisch (DOS).</summary>
+        /// <summary>Icelandic (DOS)</summary>
         /// <remarks>Codepage: 861, Windows Codepage: 1252</remarks>
+        [Description("Icelandic (DOS) | ibm861")]
         IBM861 = 861,
 
-        /// <summary>Französisch, Kanada (DOS).</summary>
+        /// <summary>Hebrew (DOS)</summary>
+        /// <remarks>Codepage: 862, Windows Codepage: 1255</remarks>
+        [Description("Hebrew (DOS) | DOS-862")]
+        DOS_862 = 862,
+
+        /// <summary>French Canadian (DOS)</summary>
         /// <remarks>Codepage: 863, Windows Codepage: 1252</remarks>
+        [Description("French Canadian (DOS) | IBM863")]
         IBM863 = 863,
 
-        /// <summary>Arabisch (864).</summary>
+        /// <summary>Arabic (864)</summary>
         /// <remarks>Codepage: 864, Windows Codepage: 1256</remarks>
+        [Description("Arabic (864) | IBM864")]
         IBM864 = 864,
 
-        /// <summary>Nordisch (DOS).</summary>
+        /// <summary>Nordic (DOS)</summary>
         /// <remarks>Codepage: 865, Windows Codepage: 1252</remarks>
+        [Description("Nordic (DOS) | IBM865")]
         IBM865 = 865,
 
-        /// <summary>Griechisch, modern (DOS).</summary>
+        /// <summary>Cyrillic (DOS)</summary>
+        /// <remarks>Codepage: 866, Windows Codepage: 1251</remarks>
+        [Description("Cyrillic (DOS) | cp866")]
+        CP866 = 866,
+
+        /// <summary>Greek, Modern (DOS)</summary>
         /// <remarks>Codepage: 869, Windows Codepage: 1253</remarks>
+        [Description("Greek, Modern (DOS) | ibm869")]
         IBM869 = 869,
 
-        /// <summary>IBM EBCDIC (Multilingual Lateinisch-2).</summary>
+        /// <summary>IBM EBCDIC (Multilingual Latin-2)</summary>
         /// <remarks>Codepage: 870, Windows Codepage: 1250</remarks>
+        [Description("IBM EBCDIC (Multilingual Latin-2) | IBM870")]
         IBM870 = 870,
 
-        /// <summary>IBM EBCDIC (Isländisch).</summary>
-        /// <remarks>Codepage: 20871, Windows Codepage: 1252</remarks>
-        IBM871 = 20871,
-
-        /// <summary>IBM EBCDIC (Kyrillisch, Russisch).</summary>
-        /// <remarks>Codepage: 20880, Windows Codepage: 1251</remarks>
-        IBM880 = 20880,
-
-        /// <summary>IBM EBCDIC (Türkisch).</summary>
-        /// <remarks>Codepage: 20905, Windows Codepage: 1254</remarks>
-        IBM905 = 20905,
-
-        /// <summary>Japanisch (JIS, 1 Byte Kana erlaubt - SO/SI).</summary>
-        /// <remarks>Codepage: 50222, Windows Codepage: 932</remarks>
-        ISO_2022_JP = 50222,
-
-        /// <summary>Koreanisch (ISO).</summary>
-        /// <remarks>Codepage: 50225, Windows Codepage: 949</remarks>
-        ISO_2022_KR = 50225,
-
-        /// <summary>Westeuropäisch (ISO).</summary>
-        /// <remarks>Codepage: 28591, Windows Codepage: 1252</remarks>
-        ISO_8859_1 = 28591,
-
-        /// <summary>Estnisch (ISO).</summary>
-        /// <remarks>Codepage: 28603, Windows Codepage: 1257</remarks>
-        ISO_8859_13 = 28603,
-
-        /// <summary>Lateinisch 9 (ISO).</summary>
-        /// <remarks>Codepage: 28605, Windows Codepage: 1252</remarks>
-        ISO_8859_15 = 28605,
-
-        /// <summary>Mitteleuropäisch (ISO).</summary>
-        /// <remarks>Codepage: 28592, Windows Codepage: 1250</remarks>
-        ISO_8859_2 = 28592,
-
-        /// <summary>Lateinisch 3 (ISO).</summary>
-        /// <remarks>Codepage: 28593, Windows Codepage: 1254</remarks>
-        ISO_8859_3 = 28593,
-
-        /// <summary>Baltisch (ISO).</summary>
-        /// <remarks>Codepage: 28594, Windows Codepage: 1257</remarks>
-        ISO_8859_4 = 28594,
-
-        /// <summary>Kyrillisch (ISO).</summary>
-        /// <remarks>Codepage: 28595, Windows Codepage: 1251</remarks>
-        ISO_8859_5 = 28595,
-
-        /// <summary>Arabisch (ISO).</summary>
-        /// <remarks>Codepage: 28596, Windows Codepage: 1256</remarks>
-        ISO_8859_6 = 28596,
-
-        /// <summary>Griechisch (ISO).</summary>
-        /// <remarks>Codepage: 28597, Windows Codepage: 1253</remarks>
-        ISO_8859_7 = 28597,
-
-        /// <summary>Hebräisch (ISO-Visual).</summary>
-        /// <remarks>Codepage: 28598, Windows Codepage: 1255</remarks>
-        ISO_8859_8 = 28598,
-
-        /// <summary>Hebräisch (ISO-Logical).</summary>
-        /// <remarks>Codepage: 38598, Windows Codepage: 1255</remarks>
-        ISO_8859_8_I = 38598,
-
-        /// <summary>Türkisch (ISO).</summary>
-        /// <remarks>Codepage: 28599, Windows Codepage: 1254</remarks>
-        ISO_8859_9 = 28599,
-
-        /// <summary>Koreanisch (Johab).</summary>
-        /// <remarks>Codepage: 1361, Windows Codepage: 949</remarks>
-        JOHAB = 1361,
-
-        /// <summary>Kyrillisch (KOI8-R).</summary>
-        /// <remarks>Codepage: 20866, Windows Codepage: 1251</remarks>
-        KOI8_R = 20866,
-
-        /// <summary>Kyrillisch (KOI8-U).</summary>
-        /// <remarks>Codepage: 21866, Windows Codepage: 1251</remarks>
-        KOI8_U = 21866,
-
-        /// <summary>Koreanisch.</summary>
-        /// <remarks>Codepage: 949, Windows Codepage: 949</remarks>
-        KS_C_5601_1987 = 949,
-
-        /// <summary>Westeuropäisch (Mac).</summary>
-        /// <remarks>Codepage: 10000, Windows Codepage: 1252</remarks>
-        MACINTOSH = 10000,
-
-        /// <summary>US-ASCII.</summary>
-        /// <remarks>Codepage: 20127, Windows Codepage: 1252</remarks>
-        US_ASCII = 20127,
-
-        /// <summary>Unicode.</summary>
-        /// <remarks>Codepage: 1200, Windows Codepage: 1200</remarks>
-        UTF_16 = 1200,
-
-        /// <summary>Unicode (Big-Endian).</summary>
-        /// <remarks>Codepage: 1201, Windows Codepage: 1200</remarks>
-        UTF_16BE = 1201,
-
-        /// <summary>Unicode (UTF-32).</summary>
-        /// <remarks>Codepage: 12000, Windows Codepage: 1200</remarks>
-        UTF_32 = 12000,
-
-        /// <summary>Unicode (UTF-32 Big-Endian).</summary>
-        /// <remarks>Codepage: 12001, Windows Codepage: 1200</remarks>
-        UTF_32BE = 12001,
-
-        /// <summary>Unicode (UTF-7).</summary>
-        /// <remarks>Codepage: 65000, Windows Codepage: 1200</remarks>
-        UTF_7 = 65000,
-
-        /// <summary>Unicode (UTF-8).</summary>
-        /// <remarks>Codepage: 65001, Windows Codepage: 1200</remarks>
-        UTF_8 = 65001,
-
-        /// <summary>Hebräisch (Windows).</summary>
-        /// <remarks>Codepage: 1255, Windows Codepage: 1255</remarks>
-        WINDOWS_1255 = 1255,
-
-        /// <summary>Arabisch (Windows).</summary>
-        /// <remarks>Codepage: 1256, Windows Codepage: 1256</remarks>
-        WINDOWS_1256 = 1256,
-
-        /// <summary>Baltisch (Windows).</summary>
-        /// <remarks>Codepage: 1257, Windows Codepage: 1257</remarks>
-        WINDOWS_1257 = 1257,
-
-        /// <summary>Vietnamesisch (Windows).</summary>
-        /// <remarks>Codepage: 1258, Windows Codepage: 1258</remarks>
-        WINDOWS_1258 = 1258,
-
-        /// <summary>Thailändisch (Windows).</summary>
+        /// <summary>Thai (Windows)</summary>
         /// <remarks>Codepage: 874, Windows Codepage: 874</remarks>
+        [Description("Thai (Windows) | windows-874")]
         WINDOWS_874 = 874,
 
-        /// <summary>Chinesisch traditionell (CNS).</summary>
-        /// <remarks>Codepage: 20000, Windows Codepage: 950</remarks>
-        X_CHINESE_CNS = 20000,
+        /// <summary>IBM EBCDIC (Greek Modern)</summary>
+        /// <remarks>Codepage: 875, Windows Codepage: 1253</remarks>
+        [Description("IBM EBCDIC (Greek Modern) | cp875")]
+        CP875 = 875,
 
-        /// <summary>Chinesisch traditionell (Eten).</summary>
-        /// <remarks>Codepage: 20002, Windows Codepage: 950</remarks>
-        X_CHINESE_ETEN = 20002,
+        /// <summary>Japanese (Shift-JIS)</summary>
+        /// <remarks>Codepage: 932, Windows Codepage: 932</remarks>
+        [Description("Japanese (Shift-JIS) | shift_jis")]
+        SHIFT_JIS = 932,
 
-        /// <summary>TCA Taiwan.</summary>
-        /// <remarks>Codepage: 20001, Windows Codepage: 950</remarks>
-        X_CP20001 = 20001,
+        /// <summary>Chinese Simplified (GB2312)</summary>
+        /// <remarks>Codepage: 936, Windows Codepage: 936</remarks>
+        [Description("Chinese Simplified (GB2312) | gb2312")]
+        GB2312 = 936,
 
-        /// <summary>IBM5550 Taiwan.</summary>
-        /// <remarks>Codepage: 20003, Windows Codepage: 950</remarks>
-        X_CP20003 = 20003,
+        /// <summary>Korean</summary>
+        /// <remarks>Codepage: 949, Windows Codepage: 949</remarks>
+        [Description("Korean | ks_c_5601-1987")]
+        KS_C_5601_1987 = 949,
 
-        /// <summary>TeleText Taiwan.</summary>
-        /// <remarks>Codepage: 20004, Windows Codepage: 950</remarks>
-        X_CP20004 = 20004,
+        /// <summary>Chinese Traditional (Big5)</summary>
+        /// <remarks>Codepage: 950, Windows Codepage: 950</remarks>
+        [Description("Chinese Traditional (Big5) | big5")]
+        BIG5 = 950,
 
-        /// <summary>Wang Taiwan.</summary>
-        /// <remarks>Codepage: 20005, Windows Codepage: 950</remarks>
-        X_CP20005 = 20005,
+        /// <summary>IBM EBCDIC (Turkish Latin-5)</summary>
+        /// <remarks>Codepage: 1026, Windows Codepage: 1254</remarks>
+        [Description("IBM EBCDIC (Turkish Latin-5) | IBM1026")]
+        IBM1026 = 1026,
 
-        /// <summary>T.61.</summary>
-        /// <remarks>Codepage: 20261, Windows Codepage: 1252</remarks>
-        X_CP20261 = 20261,
+        /// <summary>IBM Latin-1</summary>
+        /// <remarks>Codepage: 1047, Windows Codepage: 1252</remarks>
+        [Description("IBM Latin-1 | IBM01047")]
+        IBM01047 = 1047,
 
-        /// <summary>ISO-6937.</summary>
-        /// <remarks>Codepage: 20269, Windows Codepage: 1252</remarks>
-        X_CP20269 = 20269,
+        /// <summary>IBM EBCDIC (US-Canada-Euro)</summary>
+        /// <remarks>Codepage: 1140, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (US-Canada-Euro) | IBM01140")]
+        IBM01140 = 1140,
 
-        /// <summary>GB2312-80 Chinesisch (vereinfacht).</summary>
-        /// <remarks>Codepage: 20936, Windows Codepage: 936</remarks>
-        X_CP20936 = 20936,
+        /// <summary>IBM EBCDIC (Germany-Euro)</summary>
+        /// <remarks>Codepage: 1141, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Germany-Euro) | IBM01141")]
+        IBM01141 = 1141,
 
-        /// <summary>Koreanisch Wansung.</summary>
-        /// <remarks>Codepage: 20949, Windows Codepage: 949</remarks>
-        X_CP20949 = 20949,
+        /// <summary>IBM EBCDIC (Denmark-Norway-Euro)</summary>
+        /// <remarks>Codepage: 1142, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Denmark-Norway-Euro) | IBM01142")]
+        IBM01142 = 1142,
 
-        /// <summary>Chinesisch vereinfacht (ISO-2022).</summary>
-        /// <remarks>Codepage: 50227, Windows Codepage: 936</remarks>
-        X_CP50227 = 50227,
+        /// <summary>IBM EBCDIC (Finland-Sweden-Euro)</summary>
+        /// <remarks>Codepage: 1143, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Finland-Sweden-Euro) | IBM01143")]
+        IBM01143 = 1143,
 
-        /// <summary>IBM EBCDIC (Koreanisch, erweitert).</summary>
-        /// <remarks>Codepage: 20833, Windows Codepage: 949</remarks>
-        X_EBCDIC_KOREANEXTENDED = 20833,
+        /// <summary>IBM EBCDIC (Italy-Euro)</summary>
+        /// <remarks>Codepage: 1144, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Italy-Euro) | IBM01144")]
+        IBM01144 = 1144,
 
-        /// <summary>Europa.</summary>
-        /// <remarks>Codepage: 29001, Windows Codepage: 1252</remarks>
-        X_EUROPA = 29001,
+        /// <summary>IBM EBCDIC (Spain-Euro)</summary>
+        /// <remarks>Codepage: 1145, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Spain-Euro) | IBM01145")]
+        IBM01145 = 1145,
 
-        /// <summary>Westeuropäisch (IA5).</summary>
-        /// <remarks>Codepage: 20105, Windows Codepage: 1252</remarks>
-        X_IA5 = 20105,
+        /// <summary>IBM EBCDIC (UK-Euro)</summary>
+        /// <remarks>Codepage: 1146, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (UK-Euro) | IBM01146")]
+        IBM01146 = 1146,
 
-        /// <summary>Deutsch (IA5).</summary>
-        /// <remarks>Codepage: 20106, Windows Codepage: 1252</remarks>
-        X_IA5_GERMAN = 20106,
+        /// <summary>IBM EBCDIC (France-Euro)</summary>
+        /// <remarks>Codepage: 1147, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (France-Euro) | IBM01147")]
+        IBM01147 = 1147,
 
-        /// <summary>Norwegisch (IA5).</summary>
-        /// <remarks>Codepage: 20108, Windows Codepage: 1252</remarks>
-        X_IA5_NORWEGIAN = 20108,
+        /// <summary>IBM EBCDIC (International-Euro)</summary>
+        /// <remarks>Codepage: 1148, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (International-Euro) | IBM01148")]
+        IBM01148 = 1148,
 
-        /// <summary>Schwedisch (IA5).</summary>
-        /// <remarks>Codepage: 20107, Windows Codepage: 1252</remarks>
-        X_IA5_SWEDISH = 20107,
+        /// <summary>IBM EBCDIC (Icelandic-Euro)</summary>
+        /// <remarks>Codepage: 1149, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Icelandic-Euro) | IBM01149")]
+        IBM01149 = 1149,
 
-        /// <summary>ISCII Assamesisch.</summary>
-        /// <remarks>Codepage: 57006, Windows Codepage: 57006</remarks>
-        X_ISCII_AS = 57006,
+        /// <summary>Unicode</summary>
+        /// <remarks>Codepage: 1200, Windows Codepage: 1200</remarks>
+        [Description("Unicode | utf-16")]
+        UTF_16 = 1200,
 
-        /// <summary>ISCII Bangla.</summary>
-        /// <remarks>Codepage: 57003, Windows Codepage: 57003</remarks>
-        X_ISCII_BE = 57003,
+        /// <summary>Unicode (Big-Endian)</summary>
+        /// <remarks>Codepage: 1201, Windows Codepage: 1200</remarks>
+        [Description("Unicode (Big-Endian) | utf-16BE")]
+        UTF_16BE = 1201,
 
-        /// <summary>ISCII Devanagari.</summary>
-        /// <remarks>Codepage: 57002, Windows Codepage: 57002</remarks>
-        X_ISCII_DE = 57002,
+        /// <summary>Central European (Windows)</summary>
+        /// <remarks>Codepage: 1250, Windows Codepage: 1250</remarks>
+        [Description("Central European (Windows) | windows-1250")]
+        WINDOWS_1250 = 1250,
 
-        /// <summary>ISCII Gujarati.</summary>
-        /// <remarks>Codepage: 57010, Windows Codepage: 57010</remarks>
-        X_ISCII_GU = 57010,
+        /// <summary>Cyrillic (Windows)</summary>
+        /// <remarks>Codepage: 1251, Windows Codepage: 1251</remarks>
+        [Description("Cyrillic (Windows) | windows-1251")]
+        WINDOWS_1251 = 1251,
 
-        /// <summary>ISCII Kannada.</summary>
-        /// <remarks>Codepage: 57008, Windows Codepage: 57008</remarks>
-        X_ISCII_KA = 57008,
+        /// <summary>Western European (Windows)</summary>
+        /// <remarks>Codepage: 1252, Windows Codepage: 1252</remarks>
+        [Description("Western European (Windows) | Windows-1252")]
+        WINDOWS_1252 = 1252,
 
-        /// <summary>ISCII Malayalam.</summary>
-        /// <remarks>Codepage: 57009, Windows Codepage: 57009</remarks>
-        X_ISCII_MA = 57009,
+        /// <summary>Greek (Windows)</summary>
+        /// <remarks>Codepage: 1253, Windows Codepage: 1253</remarks>
+        [Description("Greek (Windows) | windows-1253")]
+        WINDOWS_1253 = 1253,
 
-        /// <summary>ISCII Odia.</summary>
-        /// <remarks>Codepage: 57007, Windows Codepage: 57007</remarks>
-        X_ISCII_OR = 57007,
+        /// <summary>Turkish (Windows)</summary>
+        /// <remarks>Codepage: 1254, Windows Codepage: 1254</remarks>
+        [Description("Turkish (Windows) | windows-1254")]
+        WINDOWS_1254 = 1254,
 
-        /// <summary>ISCII Punjabi.</summary>
-        /// <remarks>Codepage: 57011, Windows Codepage: 57011</remarks>
-        X_ISCII_PA = 57011,
+        /// <summary>Hebrew (Windows)</summary>
+        /// <remarks>Codepage: 1255, Windows Codepage: 1255</remarks>
+        [Description("Hebrew (Windows) | windows-1255")]
+        WINDOWS_1255 = 1255,
 
-        /// <summary>ISCII Tamil.</summary>
-        /// <remarks>Codepage: 57004, Windows Codepage: 57004</remarks>
-        X_ISCII_TA = 57004,
+        /// <summary>Arabic (Windows)</summary>
+        /// <remarks>Codepage: 1256, Windows Codepage: 1256</remarks>
+        [Description("Arabic (Windows) | windows-1256")]
+        WINDOWS_1256 = 1256,
 
-        /// <summary>ISCII Telugu.</summary>
-        /// <remarks>Codepage: 57005, Windows Codepage: 57005</remarks>
-        X_ISCII_TE = 57005,
+        /// <summary>Baltic (Windows)</summary>
+        /// <remarks>Codepage: 1257, Windows Codepage: 1257</remarks>
+        [Description("Baltic (Windows) | windows-1257")]
+        WINDOWS_1257 = 1257,
 
-        /// <summary>Arabisch (Mac).</summary>
-        /// <remarks>Codepage: 10004, Windows Codepage: 1256</remarks>
-        X_MAC_ARABIC = 10004,
+        /// <summary>Vietnamese (Windows)</summary>
+        /// <remarks>Codepage: 1258, Windows Codepage: 1258</remarks>
+        [Description("Vietnamese (Windows) | windows-1258")]
+        WINDOWS_1258 = 1258,
 
-        /// <summary>Mitteleuropäisch (Mac).</summary>
-        /// <remarks>Codepage: 10029, Windows Codepage: 1250</remarks>
-        X_MAC_CE = 10029,
+        /// <summary>Korean (Johab)</summary>
+        /// <remarks>Codepage: 1361, Windows Codepage: 949</remarks>
+        [Description("Korean (Johab) | Johab")]
+        JOHAB = 1361,
 
-        /// <summary>Chinesisch vereinfacht (Mac).</summary>
-        /// <remarks>Codepage: 10008, Windows Codepage: 936</remarks>
-        X_MAC_CHINESESIMP = 10008,
+        /// <summary>Western European (Mac)</summary>
+        /// <remarks>Codepage: 10000, Windows Codepage: 1252</remarks>
+        [Description("Western European (Mac) | macintosh")]
+        MACINTOSH = 10000,
 
-        /// <summary>Chinesisch traditionell (Mac).</summary>
-        /// <remarks>Codepage: 10002, Windows Codepage: 950</remarks>
-        X_MAC_CHINESETRAD = 10002,
-
-        /// <summary>Kroatisch (Mac).</summary>
-        /// <remarks>Codepage: 10082, Windows Codepage: 1250</remarks>
-        X_MAC_CROATIAN = 10082,
-
-        /// <summary>Kyrillisch (Mac).</summary>
-        /// <remarks>Codepage: 10007, Windows Codepage: 1251</remarks>
-        X_MAC_CYRILLIC = 10007,
-
-        /// <summary>Griechisch (Mac).</summary>
-        /// <remarks>Codepage: 10006, Windows Codepage: 1253</remarks>
-        X_MAC_GREEK = 10006,
-
-        /// <summary>Hebräisch (Mac).</summary>
-        /// <remarks>Codepage: 10005, Windows Codepage: 1255</remarks>
-        X_MAC_HEBREW = 10005,
-
-        /// <summary>Isländisch (Mac).</summary>
-        /// <remarks>Codepage: 10079, Windows Codepage: 1252</remarks>
-        X_MAC_ICELANDIC = 10079,
-
-        /// <summary>Japanisch (Mac).</summary>
+        /// <summary>Japanese (Mac)</summary>
         /// <remarks>Codepage: 10001, Windows Codepage: 932</remarks>
+        [Description("Japanese (Mac) | x-mac-japanese")]
         X_MAC_JAPANESE = 10001,
 
-        /// <summary>Koreanisch (Mac).</summary>
+        /// <summary>Chinese Traditional (Mac)</summary>
+        /// <remarks>Codepage: 10002, Windows Codepage: 950</remarks>
+        [Description("Chinese Traditional (Mac) | x-mac-chinesetrad")]
+        X_MAC_CHINESETRAD = 10002,
+
+        /// <summary>Korean (Mac)</summary>
         /// <remarks>Codepage: 10003, Windows Codepage: 949</remarks>
+        [Description("Korean (Mac) | x-mac-korean")]
         X_MAC_KOREAN = 10003,
 
-        /// <summary>Rumänisch (Mac).</summary>
+        /// <summary>Arabic (Mac)</summary>
+        /// <remarks>Codepage: 10004, Windows Codepage: 1256</remarks>
+        [Description("Arabic (Mac) | x-mac-arabic")]
+        X_MAC_ARABIC = 10004,
+
+        /// <summary>Hebrew (Mac)</summary>
+        /// <remarks>Codepage: 10005, Windows Codepage: 1255</remarks>
+        [Description("Hebrew (Mac) | x-mac-hebrew")]
+        X_MAC_HEBREW = 10005,
+
+        /// <summary>Greek (Mac)</summary>
+        /// <remarks>Codepage: 10006, Windows Codepage: 1253</remarks>
+        [Description("Greek (Mac) | x-mac-greek")]
+        X_MAC_GREEK = 10006,
+
+        /// <summary>Cyrillic (Mac)</summary>
+        /// <remarks>Codepage: 10007, Windows Codepage: 1251</remarks>
+        [Description("Cyrillic (Mac) | x-mac-cyrillic")]
+        X_MAC_CYRILLIC = 10007,
+
+        /// <summary>Chinese Simplified (Mac)</summary>
+        /// <remarks>Codepage: 10008, Windows Codepage: 936</remarks>
+        [Description("Chinese Simplified (Mac) | x-mac-chinesesimp")]
+        X_MAC_CHINESESIMP = 10008,
+
+        /// <summary>Romanian (Mac)</summary>
         /// <remarks>Codepage: 10010, Windows Codepage: 1250</remarks>
+        [Description("Romanian (Mac) | x-mac-romanian")]
         X_MAC_ROMANIAN = 10010,
 
-        /// <summary>Thailändisch (Mac).</summary>
+        /// <summary>Ukrainian (Mac)</summary>
+        /// <remarks>Codepage: 10017, Windows Codepage: 1251</remarks>
+        [Description("Ukrainian (Mac) | x-mac-ukrainian")]
+        X_MAC_UKRAINIAN = 10017,
+
+        /// <summary>Thai (Mac)</summary>
         /// <remarks>Codepage: 10021, Windows Codepage: 874</remarks>
+        [Description("Thai (Mac) | x-mac-thai")]
         X_MAC_THAI = 10021,
 
-        /// <summary>Türkisch (Mac).</summary>
+        /// <summary>Central European (Mac)</summary>
+        /// <remarks>Codepage: 10029, Windows Codepage: 1250</remarks>
+        [Description("Central European (Mac) | x-mac-ce")]
+        X_MAC_CE = 10029,
+
+        /// <summary>Icelandic (Mac)</summary>
+        /// <remarks>Codepage: 10079, Windows Codepage: 1252</remarks>
+        [Description("Icelandic (Mac) | x-mac-icelandic")]
+        X_MAC_ICELANDIC = 10079,
+
+        /// <summary>Turkish (Mac)</summary>
         /// <remarks>Codepage: 10081, Windows Codepage: 1254</remarks>
+        [Description("Turkish (Mac) | x-mac-turkish")]
         X_MAC_TURKISH = 10081,
 
-        /// <summary>Ukrainisch (Mac).</summary>
-        /// <remarks>Codepage: 10017, Windows Codepage: 1251</remarks>
-        X_MAC_UKRAINIAN = 10017
+        /// <summary>Croatian (Mac)</summary>
+        /// <remarks>Codepage: 10082, Windows Codepage: 1250</remarks>
+        [Description("Croatian (Mac) | x-mac-croatian")]
+        X_MAC_CROATIAN = 10082,
+
+        /// <summary>Unicode (UTF-32)</summary>
+        /// <remarks>Codepage: 12000, Windows Codepage: 1200</remarks>
+        [Description("Unicode (UTF-32) | utf-32")]
+        UTF_32 = 12000,
+
+        /// <summary>Unicode (UTF-32 Big-Endian)</summary>
+        /// <remarks>Codepage: 12001, Windows Codepage: 1200</remarks>
+        [Description("Unicode (UTF-32 Big-Endian) | utf-32BE")]
+        UTF_32BE = 12001,
+
+        /// <summary>Chinese Traditional (CNS)</summary>
+        /// <remarks>Codepage: 20000, Windows Codepage: 950</remarks>
+        [Description("Chinese Traditional (CNS) | x-Chinese-CNS")]
+        X_CHINESE_CNS = 20000,
+
+        /// <summary>TCA Taiwan</summary>
+        /// <remarks>Codepage: 20001, Windows Codepage: 950</remarks>
+        [Description("TCA Taiwan | x-cp20001")]
+        X_CP20001 = 20001,
+
+        /// <summary>Chinese Traditional (Eten)</summary>
+        /// <remarks>Codepage: 20002, Windows Codepage: 950</remarks>
+        [Description("Chinese Traditional (Eten) | x-Chinese-Eten")]
+        X_CHINESE_ETEN = 20002,
+
+        /// <summary>IBM5550 Taiwan</summary>
+        /// <remarks>Codepage: 20003, Windows Codepage: 950</remarks>
+        [Description("IBM5550 Taiwan | x-cp20003")]
+        X_CP20003 = 20003,
+
+        /// <summary>TeleText Taiwan</summary>
+        /// <remarks>Codepage: 20004, Windows Codepage: 950</remarks>
+        [Description("TeleText Taiwan | x-cp20004")]
+        X_CP20004 = 20004,
+
+        /// <summary>Wang Taiwan</summary>
+        /// <remarks>Codepage: 20005, Windows Codepage: 950</remarks>
+        [Description("Wang Taiwan | x-cp20005")]
+        X_CP20005 = 20005,
+
+        /// <summary>Western European (IA5)</summary>
+        /// <remarks>Codepage: 20105, Windows Codepage: 1252</remarks>
+        [Description("Western European (IA5) | x-IA5")]
+        X_IA5 = 20105,
+
+        /// <summary>German (IA5)</summary>
+        /// <remarks>Codepage: 20106, Windows Codepage: 1252</remarks>
+        [Description("German (IA5) | x-IA5-German")]
+        X_IA5_GERMAN = 20106,
+
+        /// <summary>Swedish (IA5)</summary>
+        /// <remarks>Codepage: 20107, Windows Codepage: 1252</remarks>
+        [Description("Swedish (IA5) | x-IA5-Swedish")]
+        X_IA5_SWEDISH = 20107,
+
+        /// <summary>Norwegian (IA5)</summary>
+        /// <remarks>Codepage: 20108, Windows Codepage: 1252</remarks>
+        [Description("Norwegian (IA5) | x-IA5-Norwegian")]
+        X_IA5_NORWEGIAN = 20108,
+
+        /// <summary>US-ASCII</summary>
+        /// <remarks>Codepage: 20127, Windows Codepage: 1252</remarks>
+        [Description("US-ASCII | us-ascii")]
+        US_ASCII = 20127,
+
+        /// <summary>T.61</summary>
+        /// <remarks>Codepage: 20261, Windows Codepage: 1252</remarks>
+        [Description("T.61 | x-cp20261")]
+        X_CP20261 = 20261,
+
+        /// <summary>ISO-6937</summary>
+        /// <remarks>Codepage: 20269, Windows Codepage: 1252</remarks>
+        [Description("ISO-6937 | x-cp20269")]
+        X_CP20269 = 20269,
+
+        /// <summary>IBM EBCDIC (Germany)</summary>
+        /// <remarks>Codepage: 20273, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Germany) | IBM273")]
+        IBM273 = 20273,
+
+        /// <summary>IBM EBCDIC (Denmark-Norway)</summary>
+        /// <remarks>Codepage: 20277, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Denmark-Norway) | IBM277")]
+        IBM277 = 20277,
+
+        /// <summary>IBM EBCDIC (Finland-Sweden)</summary>
+        /// <remarks>Codepage: 20278, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Finland-Sweden) | IBM278")]
+        IBM278 = 20278,
+
+        /// <summary>IBM EBCDIC (Italy)</summary>
+        /// <remarks>Codepage: 20280, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Italy) | IBM280")]
+        IBM280 = 20280,
+
+        /// <summary>IBM EBCDIC (Spain)</summary>
+        /// <remarks>Codepage: 20284, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Spain) | IBM284")]
+        IBM284 = 20284,
+
+        /// <summary>IBM EBCDIC (UK)</summary>
+        /// <remarks>Codepage: 20285, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (UK) | IBM285")]
+        IBM285 = 20285,
+
+        /// <summary>IBM EBCDIC (Japanese katakana)</summary>
+        /// <remarks>Codepage: 20290, Windows Codepage: 932</remarks>
+        [Description("IBM EBCDIC (Japanese katakana) | IBM290")]
+        IBM290 = 20290,
+
+        /// <summary>IBM EBCDIC (France)</summary>
+        /// <remarks>Codepage: 20297, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (France) | IBM297")]
+        IBM297 = 20297,
+
+        /// <summary>IBM EBCDIC (Arabic)</summary>
+        /// <remarks>Codepage: 20420, Windows Codepage: 1256</remarks>
+        [Description("IBM EBCDIC (Arabic) | IBM420")]
+        IBM420 = 20420,
+
+        /// <summary>IBM EBCDIC (Greek)</summary>
+        /// <remarks>Codepage: 20423, Windows Codepage: 1253</remarks>
+        [Description("IBM EBCDIC (Greek) | IBM423")]
+        IBM423 = 20423,
+
+        /// <summary>IBM EBCDIC (Hebrew)</summary>
+        /// <remarks>Codepage: 20424, Windows Codepage: 1255</remarks>
+        [Description("IBM EBCDIC (Hebrew) | IBM424")]
+        IBM424 = 20424,
+
+        /// <summary>IBM EBCDIC (Korean Extended)</summary>
+        /// <remarks>Codepage: 20833, Windows Codepage: 949</remarks>
+        [Description("IBM EBCDIC (Korean Extended) | x-EBCDIC-KoreanExtended")]
+        X_EBCDIC_KOREANEXTENDED = 20833,
+
+        /// <summary>IBM EBCDIC (Thai)</summary>
+        /// <remarks>Codepage: 20838, Windows Codepage: 874</remarks>
+        [Description("IBM EBCDIC (Thai) | IBM-Thai")]
+        IBM_THAI = 20838,
+
+        /// <summary>Cyrillic (KOI8-R)</summary>
+        /// <remarks>Codepage: 20866, Windows Codepage: 1251</remarks>
+        [Description("Cyrillic (KOI8-R) | koi8-r")]
+        KOI8_R = 20866,
+
+        /// <summary>IBM EBCDIC (Icelandic)</summary>
+        /// <remarks>Codepage: 20871, Windows Codepage: 1252</remarks>
+        [Description("IBM EBCDIC (Icelandic) | IBM871")]
+        IBM871 = 20871,
+
+        /// <summary>IBM EBCDIC (Cyrillic Russian)</summary>
+        /// <remarks>Codepage: 20880, Windows Codepage: 1251</remarks>
+        [Description("IBM EBCDIC (Cyrillic Russian) | IBM880")]
+        IBM880 = 20880,
+
+        /// <summary>IBM EBCDIC (Turkish)</summary>
+        /// <remarks>Codepage: 20905, Windows Codepage: 1254</remarks>
+        [Description("IBM EBCDIC (Turkish) | IBM905")]
+        IBM905 = 20905,
+
+        /// <summary>IBM Latin-1</summary>
+        /// <remarks>Codepage: 20924, Windows Codepage: 1252</remarks>
+        [Description("IBM Latin-1 | IBM00924")]
+        IBM00924 = 20924,
+
+        /// <summary>Japanese (JIS 0208-1990 and 0212-1990)</summary>
+        /// <remarks>Codepage: 20932, Windows Codepage: 932</remarks>
+        [Description("Japanese (JIS 0208-1990 and 0212-1990) | EUC-JP")]
+        EUC_JP = 20932,
+
+        /// <summary>Chinese Simplified (GB2312-80)</summary>
+        /// <remarks>Codepage: 20936, Windows Codepage: 936</remarks>
+        [Description("Chinese Simplified (GB2312-80) | x-cp20936")]
+        X_CP20936 = 20936,
+
+        /// <summary>Korean Wansung</summary>
+        /// <remarks>Codepage: 20949, Windows Codepage: 949</remarks>
+        [Description("Korean Wansung | x-cp20949")]
+        X_CP20949 = 20949,
+
+        /// <summary>IBM EBCDIC (Cyrillic Serbian-Bulgarian)</summary>
+        /// <remarks>Codepage: 21025, Windows Codepage: 1251</remarks>
+        [Description("IBM EBCDIC (Cyrillic Serbian-Bulgarian) | cp1025")]
+        CP1025 = 21025,
+
+        /// <summary>Cyrillic (KOI8-U)</summary>
+        /// <remarks>Codepage: 21866, Windows Codepage: 1251</remarks>
+        [Description("Cyrillic (KOI8-U) | koi8-u")]
+        KOI8_U = 21866,
+
+        /// <summary>Western European (ISO)</summary>
+        /// <remarks>Codepage: 28591, Windows Codepage: 1252</remarks>
+        [Description("Western European (ISO) | iso-8859-1")]
+        ISO_8859_1 = 28591,
+
+        /// <summary>Central European (ISO)</summary>
+        /// <remarks>Codepage: 28592, Windows Codepage: 1250</remarks>
+        [Description("Central European (ISO) | iso-8859-2")]
+        ISO_8859_2 = 28592,
+
+        /// <summary>Latin 3 (ISO)</summary>
+        /// <remarks>Codepage: 28593, Windows Codepage: 1254</remarks>
+        [Description("Latin 3 (ISO) | iso-8859-3")]
+        ISO_8859_3 = 28593,
+
+        /// <summary>Baltic (ISO)</summary>
+        /// <remarks>Codepage: 28594, Windows Codepage: 1257</remarks>
+        [Description("Baltic (ISO) | iso-8859-4")]
+        ISO_8859_4 = 28594,
+
+        /// <summary>Cyrillic (ISO)</summary>
+        /// <remarks>Codepage: 28595, Windows Codepage: 1251</remarks>
+        [Description("Cyrillic (ISO) | iso-8859-5")]
+        ISO_8859_5 = 28595,
+
+        /// <summary>Arabic (ISO)</summary>
+        /// <remarks>Codepage: 28596, Windows Codepage: 1256</remarks>
+        [Description("Arabic (ISO) | iso-8859-6")]
+        ISO_8859_6 = 28596,
+
+        /// <summary>Greek (ISO)</summary>
+        /// <remarks>Codepage: 28597, Windows Codepage: 1253</remarks>
+        [Description("Greek (ISO) | iso-8859-7")]
+        ISO_8859_7 = 28597,
+
+        /// <summary>Hebrew (ISO-Visual)</summary>
+        /// <remarks>Codepage: 28598, Windows Codepage: 1255</remarks>
+        [Description("Hebrew (ISO-Visual) | iso-8859-8")]
+        ISO_8859_8 = 28598,
+
+        /// <summary>Turkish (ISO)</summary>
+        /// <remarks>Codepage: 28599, Windows Codepage: 1254</remarks>
+        [Description("Turkish (ISO) | iso-8859-9")]
+        ISO_8859_9 = 28599,
+
+        /// <summary>Estonian (ISO)</summary>
+        /// <remarks>Codepage: 28603, Windows Codepage: 1257</remarks>
+        [Description("Estonian (ISO) | iso-8859-13")]
+        ISO_8859_13 = 28603,
+
+        /// <summary>Latin 9 (ISO)</summary>
+        /// <remarks>Codepage: 28605, Windows Codepage: 1252</remarks>
+        [Description("Latin 9 (ISO) | iso-8859-15")]
+        ISO_8859_15 = 28605,
+
+        /// <summary>Europa</summary>
+        /// <remarks>Codepage: 29001, Windows Codepage: 1252</remarks>
+        [Description("Europa | x-Europa")]
+        X_EUROPA = 29001,
+
+        /// <summary>Hebrew (ISO-Logical)</summary>
+        /// <remarks>Codepage: 38598, Windows Codepage: 1255</remarks>
+        [Description("Hebrew (ISO-Logical) | iso-8859-8-i")]
+        ISO_8859_8_I = 38598,
+
+        /// <summary>Japanese (JIS)</summary>
+        /// <remarks>Codepage: 50220, Windows Codepage: 932</remarks>
+        [Description("Japanese (JIS) | iso-2022-jp")]
+        ISO_2022_JP = 50220,
+
+        /// <summary>Japanese (JIS-Allow 1 byte Kana)</summary>
+        /// <remarks>Codepage: 50221, Windows Codepage: 932</remarks>
+        [Description("Japanese (JIS-Allow 1 byte Kana) | csISO2022JP")]
+        CSISO2022JP = 50221,
+
+        /// <summary>Japanese (JIS-Allow 1 byte Kana - SO/SI)</summary>
+        /// <remarks>Codepage: 50222, Windows Codepage: 932</remarks>
+        [Description("Japanese (JIS-Allow 1 byte Kana - SO/SI) | iso-2022-jp")]
+        ISO_2022_JP_2 = 50222,
+
+        /// <summary>Korean (ISO)</summary>
+        /// <remarks>Codepage: 50225, Windows Codepage: 949</remarks>
+        [Description("Korean (ISO) | iso-2022-kr")]
+        ISO_2022_KR = 50225,
+
+        /// <summary>Chinese Simplified (ISO-2022)</summary>
+        /// <remarks>Codepage: 50227, Windows Codepage: 936</remarks>
+        [Description("Chinese Simplified (ISO-2022) | x-cp50227")]
+        X_CP50227 = 50227,
+
+        /// <summary>Japanese (EUC)</summary>
+        /// <remarks>Codepage: 51932, Windows Codepage: 932</remarks>
+        [Description("Japanese (EUC) | euc-jp")]
+        EUC_JP_2 = 51932,
+
+        /// <summary>Chinese Simplified (EUC)</summary>
+        /// <remarks>Codepage: 51936, Windows Codepage: 936</remarks>
+        [Description("Chinese Simplified (EUC) | EUC-CN")]
+        EUC_CN = 51936,
+
+        /// <summary>Korean (EUC)</summary>
+        /// <remarks>Codepage: 51949, Windows Codepage: 949</remarks>
+        [Description("Korean (EUC) | euc-kr")]
+        EUC_KR = 51949,
+
+        /// <summary>Chinese Simplified (HZ)</summary>
+        /// <remarks>Codepage: 52936, Windows Codepage: 936</remarks>
+        [Description("Chinese Simplified (HZ) | hz-gb-2312")]
+        HZ_GB_2312 = 52936,
+
+        /// <summary>Chinese Simplified (GB18030)</summary>
+        /// <remarks>Codepage: 54936, Windows Codepage: 936</remarks>
+        [Description("Chinese Simplified (GB18030) | GB18030")]
+        GB18030 = 54936,
+
+        /// <summary>ISCII Devanagari</summary>
+        /// <remarks>Codepage: 57002, Windows Codepage: 57002</remarks>
+        [Description("ISCII Devanagari | x-iscii-de")]
+        X_ISCII_DE = 57002,
+
+        /// <summary>ISCII Bengali</summary>
+        /// <remarks>Codepage: 57003, Windows Codepage: 57003</remarks>
+        [Description("ISCII Bengali | x-iscii-be")]
+        X_ISCII_BE = 57003,
+
+        /// <summary>ISCII Tamil</summary>
+        /// <remarks>Codepage: 57004, Windows Codepage: 57004</remarks>
+        [Description("ISCII Tamil | x-iscii-ta")]
+        X_ISCII_TA = 57004,
+
+        /// <summary>ISCII Telugu</summary>
+        /// <remarks>Codepage: 57005, Windows Codepage: 57005</remarks>
+        [Description("ISCII Telugu | x-iscii-te")]
+        X_ISCII_TE = 57005,
+
+        /// <summary>ISCII Assamese</summary>
+        /// <remarks>Codepage: 57006, Windows Codepage: 57006</remarks>
+        [Description("ISCII Assamese | x-iscii-as")]
+        X_ISCII_AS = 57006,
+
+        /// <summary>ISCII Oriya</summary>
+        /// <remarks>Codepage: 57007, Windows Codepage: 57007</remarks>
+        [Description("ISCII Oriya | x-iscii-or")]
+        X_ISCII_OR = 57007,
+
+        /// <summary>ISCII Kannada</summary>
+        /// <remarks>Codepage: 57008, Windows Codepage: 57008</remarks>
+        [Description("ISCII Kannada | x-iscii-ka")]
+        X_ISCII_KA = 57008,
+
+        /// <summary>ISCII Malayalam</summary>
+        /// <remarks>Codepage: 57009, Windows Codepage: 57009</remarks>
+        [Description("ISCII Malayalam | x-iscii-ma")]
+        X_ISCII_MA = 57009,
+
+        /// <summary>ISCII Gujarati</summary>
+        /// <remarks>Codepage: 57010, Windows Codepage: 57010</remarks>
+        [Description("ISCII Gujarati | x-iscii-gu")]
+        X_ISCII_GU = 57010,
+
+        /// <summary>ISCII Punjabi</summary>
+        /// <remarks>Codepage: 57011, Windows Codepage: 57011</remarks>
+        [Description("ISCII Punjabi | x-iscii-pa")]
+        X_ISCII_PA = 57011,
+
+        /// <summary>Unicode (UTF-7)</summary>
+        /// <remarks>Codepage: 65000, Windows Codepage: 1200</remarks>
+        [Description("Unicode (UTF-7) | utf-7")]
+        UTF_7 = 65000,
+
+        /// <summary>Unicode (UTF-8)</summary>
+        /// <remarks>Codepage: 65001, Windows Codepage: 1200</remarks>
+        [Description("Unicode (UTF-8) | utf-8")]
+        UTF_8 = 65001,
+
+        #endregion autogenerated enum values
     }
 }
-
-#pragma warning restore CA1707
