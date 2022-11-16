@@ -24,7 +24,7 @@ namespace Cave.IO
 
         #region Internal Methods
 
-        static internal object ConvertValue(Type targetType, string value, IniProperties properties)
+        internal static object ConvertValue(Type targetType, string value, IniProperties properties)
         {
             if (targetType == typeof(DateTime))
             {

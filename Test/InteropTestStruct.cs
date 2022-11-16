@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Test.Cave.IO
+namespace Tests.Cave.IO
 {
     [StructLayout(LayoutKind.Sequential, Pack = 8, CharSet = CharSet.Unicode)]
     public struct InteropTestStruct : IEquatable<InteropTestStruct>

@@ -2,7 +2,7 @@
 using Cave.IO;
 using NUnit.Framework;
 
-namespace Test.Cave.IO
+namespace Tests.Cave.IO
 {
     [TestFixture]
     public class BinarySerializerWithAssemblyNameTest

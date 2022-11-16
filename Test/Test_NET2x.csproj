@@ -5,8 +5,8 @@
         <IsPackable>false</IsPackable>
         <ApplicationIcon />
         <OutputType>Exe</OutputType>
-        <StartupObject>Test.Program</StartupObject>
-        <RootNamespace>Test</RootNamespace>
+        <StartupObject>Tests.Program</StartupObject>
+        <RootNamespace>Tests</RootNamespace>
         <AssemblyName>Test</AssemblyName>
         <NoWarn>IDE0130;CS1591;CA1806;CA1825;</NoWarn>
         <LangVersion>preview</LangVersion>

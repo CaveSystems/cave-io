@@ -701,10 +701,7 @@ namespace Cave.IO
                 var b = ReadByte();
                 if (b == '+')
                 {
-                    if (buf == null)
-                    {
-                        buf = new byte[128];
-                    }
+                    buf ??= new byte[128];
 
                     var n = 0;
                     buf[n++] = b;
@@ -750,10 +747,7 @@ namespace Cave.IO
                 var b = ReadByte();
                 if (b == '+')
                 {
-                    if (buf == null)
-                    {
-                        buf = new byte[128];
-                    }
+                    buf ??= new byte[128];
 
                     var n = 0;
                     buf[n++] = b;

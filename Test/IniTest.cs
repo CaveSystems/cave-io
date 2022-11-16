@@ -5,9 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Test.Cave.IO;
 
-namespace Test.Cave.IO.IniFile
+namespace Tests.Cave.IO.IniFile
 {
     [TestFixture]
     public class IniTest
@@ -63,12 +62,9 @@ namespace Test.Cave.IO.IniFile
 
         #region Public Constructors
 
-        static IniTest()
-        {
 #if NET5_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        static IniTest() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
-        }
 
         #endregion Public Constructors
 

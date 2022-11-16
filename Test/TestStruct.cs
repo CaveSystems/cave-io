@@ -2,7 +2,7 @@
 using System.Linq;
 using Cave;
 
-namespace Test.Cave.IO
+namespace Tests.Cave.IO
 {
     public struct TestStruct
     {

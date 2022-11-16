@@ -262,7 +262,7 @@ namespace Cave.IO
         /// <param name="other">Arguments instance to check against.</param>
         /// <returns>Returns true if the specified instance equals this.</returns>
         public bool Equals(Arguments other) =>
-            !(other is null)
+            other is not null
          && (Count == other.Count)
          && (Command == other.Command)
          && Options.Equals(other.Options)

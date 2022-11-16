@@ -1,4 +1,4 @@
-﻿namespace Test.Cave.IO
+﻿namespace Tests.Cave.IO
 {
     public enum SettingEnum
     {

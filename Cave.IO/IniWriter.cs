@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -155,10 +154,7 @@ namespace Cave.IO
         /// <param name="fileName">The fileName to write to.</param>
         public void Save(string fileName = null)
         {
-            if (fileName == null)
-            {
-                fileName = FileName;
-            }
+            fileName ??= FileName;
 
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(fileName)));
             Stream stream = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
@@ -266,8 +262,8 @@ namespace Cave.IO
             {
                 throw new ArgumentNullException(nameof(item));
             }
-
-            foreach (var field in item.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            type ??= item.GetType();
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
                 if (field.HasAttribute<IniIgnoreAttribute>()) { continue; }
 
@@ -326,8 +322,8 @@ namespace Cave.IO
             {
                 throw new ArgumentNullException(nameof(item));
             }
-
-            foreach (var property in item.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            type ??= item.GetType();
+            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (property.HasAttribute<IniIgnoreAttribute>()) { continue; }
 

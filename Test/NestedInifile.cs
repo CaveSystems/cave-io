@@ -2,9 +2,8 @@
 using NUnit.Framework;
 using System;
 using System.Globalization;
-using Test.Cave.IO;
 
-namespace Test.Cave.IO.IniFile
+namespace Tests.Cave.IO.IniFile
 {
     [TestFixture]
     public class NestedInifile
