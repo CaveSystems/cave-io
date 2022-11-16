@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Test.Cave.IO
+namespace Tests.Cave.IO
 {
     [Flags]
     public enum SettingFlagEnum

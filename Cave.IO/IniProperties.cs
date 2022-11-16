@@ -108,10 +108,13 @@ namespace Cave.IO
         {
             var pbkdf2 = new PBKDF2(password, salt, iterations);
             var result = Default;
-            result.Encryption = new RijndaelManaged
-            {
-                BlockSize = 256,
-            };
+
+#if NET40_OR_GREATER || NETSTANDARD1_0_OR_GREATER || NET5_0_OR_GREATER
+            result.Encryption = Aes.Create();
+#else
+            result.Encryption = new RijndaelManaged();
+#endif
+            result.Encryption.BlockSize = 256;
             result.Encryption.Key = pbkdf2.GetBytes(result.Encryption.KeySize / 8);
             result.Encryption.IV = pbkdf2.GetBytes(result.Encryption.BlockSize / 8);
             (pbkdf2 as IDisposable)?.Dispose();

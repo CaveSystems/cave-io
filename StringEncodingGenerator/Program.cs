@@ -69,7 +69,7 @@ namespace StringEncodingGenerator
             WriteLine();
         }
 
-        static void Main(string[] args)
+        static void Main()
         {
             Thread.CurrentThread.CurrentUICulture =
                 Thread.CurrentThread.CurrentCulture =

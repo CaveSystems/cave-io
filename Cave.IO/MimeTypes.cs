@@ -9,7 +9,7 @@ namespace Cave.IO
     /// </summary>
     public static class MimeTypes
     {
-        readonly static Dictionary<string, string> items = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase)
+        static readonly Dictionary<string, string> items = new(StringComparer.InvariantCultureIgnoreCase)
         {
             { ".323", "text/h323"},
             { ".3g2", "video/3gpp2"},
@@ -581,8 +581,7 @@ namespace Cave.IO
         /// <returns></returns>
         public static string FromExtension(string extension)
         {
-            string result;
-            if (!items.TryGetValue(extension, out result))
+            if (!items.TryGetValue(extension, out var result))
             {
                 result = "application/octet-stream";
                 Debug.WriteLine(string.Format("Could not find MimeType for extension: {0}; using default: {1}!", extension, result));

@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cave.Extensions" Version="2.1.4" />
+    <PackageReference Include="Cave.Extensions" Version="2.1.12" />
   </ItemGroup>
 
 </Project>

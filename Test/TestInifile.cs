@@ -1,8 +1,7 @@
 ﻿using Cave.IO;
 using NUnit.Framework;
-using Test.Cave.IO;
 
-namespace Test.Cave.IO.IniFile
+namespace Tests.Cave.IO.IniFile
 {
     [TestFixture]
     public class TestInifile

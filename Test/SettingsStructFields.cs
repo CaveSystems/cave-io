@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Test.Cave.IO
+namespace Tests.Cave.IO
 {
     public struct SettingsStructFields : IEquatable<SettingsStructFields>
     {
