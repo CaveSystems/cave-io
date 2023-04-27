@@ -79,8 +79,6 @@ namespace Cave.IO
 
         #endregion Private Enums
 
-
-
         #region Private Methods
 
         static TypeCode FromObject(object obj)

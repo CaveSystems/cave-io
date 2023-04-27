@@ -19,7 +19,7 @@ namespace Tests.Cave.IO
         public decimal SampleDecimal;
         public double SampleDouble;
         public SettingEnum SampleEnum;
-        public SettingFlagEnum SampleFlagEnum;
+        public SettingFlags SampleFlagEnum;
         public float SampleFloat;
         public short SampleInt16;
         public int SampleInt32;
@@ -69,7 +69,7 @@ namespace Tests.Cave.IO
                 SampleDecimal = (decimal)random.NextDouble() / (decimal)random.NextDouble(),
                 SampleDouble = random.NextDouble(),
                 SampleEnum = (SettingEnum)random.Next(0, 9),
-                SampleFlagEnum = (SettingFlagEnum)random.Next(0, 1 << 10),
+                SampleFlagEnum = (SettingFlags)random.Next(0, 1 << 10),
                 SampleFloat = (float)random.NextDouble(),
                 SampleInt16 = (short)random.Next(short.MinValue, short.MaxValue),
                 SampleInt32 = random.Next() - random.Next(),

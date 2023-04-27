@@ -71,6 +71,9 @@ namespace StringEncodingGenerator
 
         static void Main()
         {
+#if NET5_0_OR_GREATER
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
             Thread.CurrentThread.CurrentUICulture =
                 Thread.CurrentThread.CurrentCulture =
                     CultureInfo.InvariantCulture;
@@ -83,8 +86,9 @@ namespace StringEncodingGenerator
             {
                 var encodingInfo = item.Value;
                 var encoding = item.Value.GetEncoding();
+                var windowsCodePage = TryGetCodePage(encoding);
                 WriteLine("\t\t/// <summary>{0}</summary>", encodingInfo.DisplayName);
-                WriteLine("\t\t/// <remarks>Codepage: {0}, Windows Codepage: {1}</remarks>", encoding.CodePage, encoding.WindowsCodePage);
+                WriteLine("\t\t/// <remarks>Codepage: {0}, Windows Codepage: {1}</remarks>", encoding.CodePage, windowsCodePage);
                 WriteLine("\t\t[Description(\"{0} | {1}\")]", encoding.EncodingName, encoding.WebName);
                 var name = encodingInfo.Name.ReplaceInvalidChars(ASCII.Strings.Letters + ASCII.Strings.Digits, "_").ToUpper();
                 names.TryGetValue(name, out var number);
@@ -98,5 +102,7 @@ namespace StringEncodingGenerator
             WriteLine("}");
             writer.Close();
         }
+
+        private static int TryGetCodePage(Encoding encoding) { try { return encoding.WindowsCodePage; } catch { return 0; } }
     }
 }
