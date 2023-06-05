@@ -29,14 +29,7 @@ namespace Cave.IO
             {
                 throw new ArgumentNullException(nameof(encoding));
             }
-            return encoding.CodePage switch
-            {
-                (int)StringEncoding.UTF_16 => StringEncoding.UTF16,
-                (int)StringEncoding.UTF_32 => StringEncoding.UTF32,
-                (int)StringEncoding.UTF_8 => StringEncoding.UTF8,
-                (int)StringEncoding.US_ASCII => StringEncoding.ASCII,
-                _ => (StringEncoding)encoding.CodePage
-            };
+            return (StringEncoding)encoding.CodePage;
         }
 
         /// <summary>Creates a new encoding instance for the specified <paramref name="encoding" />.</summary>
@@ -50,6 +43,10 @@ namespace Cave.IO
                 StringEncoding.UTF8 => Encoding.UTF8,
                 StringEncoding.UTF16 => Encoding.Unicode,
                 StringEncoding.UTF32 => Encoding.UTF32,
+                StringEncoding.US_ASCII => new CheckedASCIIEncoding(),
+                StringEncoding.UTF_8 => Encoding.UTF8,
+                StringEncoding.UTF_16 => Encoding.Unicode,
+                StringEncoding.UTF_32 => Encoding.UTF32,
                 _ => Encoding.GetEncoding((int)encoding)
             };
 

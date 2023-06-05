@@ -56,7 +56,7 @@ namespace Cave.IO
                     Culture = CultureInfo.InvariantCulture,
                     Compression = IniCompressionType.None,
                     Encoding = new UTF8Encoding(false),
-                    DateTimeFormat = StringExtensions.InterOpDateTimeFormat,
+                    DateTimeFormat = StringExtensions.InteropDateTimeFormat,
                     DateTimeKind = DateTimeKind.Local,
                     BoxCharacter = '"',
                 };
