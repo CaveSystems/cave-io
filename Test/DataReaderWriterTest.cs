@@ -365,6 +365,7 @@ namespace Tests.Cave.IO
                 }
                 catch (Exception ex)
                 {
+                    if (ex is not NotSupportedException) Console.Error.WriteLine(ex.ToString());
                     Assert.AreEqual(typeof(NotSupportedException), ex.GetType());
                     Console.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) ok - not supported");
                 }

@@ -32,7 +32,7 @@ namespace Cave.IO
         /// <exception cref="ArgumentNullException">output.</exception>
         /// <exception cref="ArgumentException">Stream does not support writing or is already closed.;output.</exception>
         /// <exception cref="NotSupportedException">StringEncoding {0} not supported! or EndianType {0} not supported!.</exception>
-        public DataReader(Stream input, StringEncoding encoding = StringEncoding.UTF8, NewLineMode newLineMode = NewLineMode.LF,
+        public DataReader(Stream input, StringEncoding encoding = StringEncoding.UTF_8, NewLineMode newLineMode = NewLineMode.LF,
             EndianType endian = EndianType.LittleEndian)
         {
             BaseStream = input ?? throw new ArgumentNullException(nameof(input));
