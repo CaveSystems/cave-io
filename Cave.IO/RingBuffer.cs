@@ -1,5 +1,5 @@
 ﻿using System;
-using System.CodeDom;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -123,8 +123,24 @@ public class RingBuffer<TValue> : IRingBuffer<TValue>
     /// <inheritdoc/>
     public TValue Read()
     {
-        TryRead(out var result);
-        return result;
+        while (true)
+        {
+            if (TryRead(out var result)) return result;
+            Thread.Sleep(1);
+        }
+    }
+
+    /// <inheritdoc/>
+    public IList<TValue> ReadList(int count = 0)
+    {
+        if (count <= 0) count = Available;
+        List<TValue> list = new(count);
+        for (var i = 0; i < count; i++)
+        {
+            if (!TryRead(out var value)) break;
+            list.Add(value);
+        }
+        return list;
     }
 
     /// <inheritdoc/>
