@@ -1,9 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>
-            netcoreapp3.1;
+            net20;net35;
+            net40;
+            net45;net451;net452;
+            net46;net461;net462;
+            net47;net471;net472;
+            net48;
             netstandard2.0;netstandard2.1;
-            net20;net35;net40;net45;net50;net60;net70
+            net5.0;net6.0;net7.0;
+            netcoreapp3.0;netcoreapp3.1;
+            netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;
         </TargetFrameworks>
         <!--project-->
         <RootNamespace>Cave.IO</RootNamespace>
@@ -11,7 +18,7 @@
         <Product>CaveSystems IO Library</Product>
         <PackageTags>CaveSystems IO</PackageTags>
         <Description>
-            CaveSystems IO Library. 
+            CaveSystems IO Library.
             This package contains:
             * Fast non buffering data readers and writers.
             * Endian conversion.
@@ -34,8 +41,12 @@
     <ItemGroup>
         <PackageReference Include="Cave.Extensions" Version="3.0.2" />
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+    </ItemGroup>
+
+     <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard1'))">
+        <PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0" />
     </ItemGroup>
 </Project>
