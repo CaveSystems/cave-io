@@ -1,4 +1,6 @@
-﻿namespace Cave.IO;
+﻿using System.Collections.Generic;
+
+namespace Cave.IO;
 
 #nullable enable
 
@@ -45,9 +47,15 @@ public interface IRingBuffer<TValue>
     /// <returns>Returns a new array instance.</returns>
     void CopyTo(TValue[] array, int index);
 
-    /// <summary>Reads an item from the buffer.</summary>
+    /// <summary>Reads an item from the buffer. This blocks until an item could be read.</summary>
     /// <returns>Returns the item read from the buffer.</returns>
     TValue Read();
+
+    /// <summary>Reads up to <paramref name="count"/> items from the buffer.</summary>
+    /// <param name="count">Number of items to read. (Optional: If unset or &lt;= 0 this will read all available items.)</param>
+    /// <returns>Returns the items read from the buffer.</returns>
+    /// <remarks>If multiple threads read from the buffer or the buffer does not contain enough items, this will return less than <paramref name="count"/> items.</remarks>
+    IList<TValue> ReadList(int count = 0);
 
     /// <summary>Tries to read an item from the buffer.</summary>
     /// <param name="value">Returns the item read from the buffer or default if none available.</param>
