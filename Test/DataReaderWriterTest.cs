@@ -354,6 +354,29 @@ namespace Tests.Cave.IO
         }
 
         [Test]
+        public void Utf7Test()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream, StringEncoding.UTF_7);
+                var reader = new DataReader(stream, StringEncoding.UTF_7);
+                var codepoints = new List<string>();
+                for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                {
+                    var character = char.ConvertFromUtf32(codepoint);
+                    var pos = stream.Position;
+                    writer.Write(character);
+                    codepoints.Add(character);
+                    stream.Position = pos;
+                    var test = reader.ReadChars(1);
+                    CollectionAssert.AreEqual(character, test);
+                }
+                stream.Position = 0;
+                CollectionAssert.AreEqual(codepoints.Join(), reader.ReadChars(codepoints.Count));
+            }
+        }
+
+        [Test]
         public void UnicodeTest()
         {
             var encodings = new[]
@@ -484,6 +507,26 @@ namespace Tests.Cave.IO
                 Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
             }
         }
+        
+        [Test]
+        public void Utf7AceOfSpadesTest()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream, StringEncoding.UTF_7);
+                var reader = new DataReader(stream, StringEncoding.UTF_7);
+                writer.WriteLine((UTF7)AceOfSpades);
+                writer.WriteZeroTerminated((UTF7)AceOfSpades);
+                writer.Write((UTF7)AceOfSpades);
+                writer.Write(AceOfSpades.ToCharArray());
+                stream.Position = 0;
+                Assert.AreEqual(AceOfSpades, reader.ReadLine());
+                Assert.AreEqual(AceOfSpades, reader.ReadZeroTerminatedString(128));
+                Assert.AreEqual(AceOfSpades, reader.ReadUTF7(2));
+                Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
+            }
+        }
+
 
         [Test]
         public void Utf8ReaderWriterTest() => TestReaderWriter(StringEncoding.UTF_8);
