@@ -156,7 +156,7 @@ namespace Cave.IO
             TypeCode.DATETIME => reader.ReadDateTime(),
             TypeCode.TIMESPAN => reader.ReadTimeSpan(),
             TypeCode.CHAR => reader.ReadChar(),
-            TypeCode.STRING => reader.ReadString(),
+            TypeCode.STRING => reader.ReadPrefixedString(),
             TypeCode.GUID => new Guid(reader.ReadBytes(16)),
             _ => throw new NotSupportedException(string.Format("Serialization of ObjectTypeCode {0} is not supported!", objTypeCode)),
         };
@@ -327,7 +327,7 @@ namespace Cave.IO
                 {
                     if (StructFlags.HasFlag(SerializerFlags.TypeName) || StructFlags.HasFlag(SerializerFlags.AssemblyName))
                     {
-                        var className = reader.ReadString();
+                        var className = reader.ReadPrefixedString();
                         if (!typeLookup.TryGetValue(className, out type))
                         {
                             typeLookup[className] = type = AppDom.FindType(className, AppDom.LoadFlags.None);
@@ -360,7 +360,7 @@ namespace Cave.IO
                 {
                     if (ClassFlags.HasFlag(SerializerFlags.TypeName) || ClassFlags.HasFlag(SerializerFlags.AssemblyName))
                     {
-                        var className = reader.ReadString();
+                        var className = reader.ReadPrefixedString();
                         if (!typeLookup.TryGetValue(className, out type))
                         {
                             typeLookup[className] = type = AppDom.FindType(className, AppDom.LoadFlags.None);
@@ -370,7 +370,7 @@ namespace Cave.IO
                     var parse = GetParse(type);
                     if (parse != null)
                     {
-                        var str = reader.ReadString();
+                        var str = reader.ReadPrefixedString();
                         if (parse.IsConstructor)
                         {
                             return ((ConstructorInfo)parse).Invoke(new[] { str });

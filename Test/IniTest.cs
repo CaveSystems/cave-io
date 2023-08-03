@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Tests.Cave.IO.IniFile
 {
@@ -19,7 +20,7 @@ namespace Tests.Cave.IO.IniFile
 
         #region Private Methods
 
-        private static void TestReader(IniReader reader, SettingsStructFields[] settings)
+        void TestReader(IniReader reader, SettingsStructFields[] settings)
         {
             var fields1 = typeof(SettingsStructFields).GetFields().OrderBy(f => f.Name).ToArray();
             var fields2 = typeof(SettingsObjectFields).GetFields().OrderBy(f => f.Name).ToArray();
@@ -109,39 +110,46 @@ namespace Tests.Cave.IO.IniFile
         [Test]
         public void IniReaderWriterTest()
         {
-            var temp = Path.GetTempFileName();
-            Console.WriteLine($"{nameof(IniReaderWriterTest)}.cs: info TI0002: TestFile {temp}");
-            foreach (var culture in allCultures)
+            object syncRoot = new();
+            Parallel.ForEach(allCultures, culture =>
             {
-                Console.WriteLine($"{nameof(IniReaderWriterTest)}.cs: info TI0002: Test {culture}");
-
-                if (culture.Calendar is not GregorianCalendar)
+                var temp = Path.GetTempFileName();
+                try
                 {
-                    Console.WriteLine($"- Skipping calendar {culture.Calendar}");
-                    continue;
+                    lock (syncRoot) Console.WriteLine($"{nameof(IniReaderWriterTest)}.cs: info TI0002: Test {culture}, file {temp}");
+
+                    if (culture.Calendar is not GregorianCalendar)
+                    {
+                        lock (syncRoot) Console.WriteLine($"- Skipping calendar {culture.Calendar}");
+                        return;
+                    }
+
+                    var settings = new SettingsStructFields[10];
+                    var properties = IniProperties.Default;
+                    properties.Culture = culture;
+                    var writer = new IniWriter(temp, properties);
+
+                    {
+                        var setting = SettingsStructFields.Random(null);
+                        settings[0] = setting;
+                        writer.WriteFields($"Section 0", setting);
+                    }
+                    for (var i = 1; i < settings.Length; i++)
+                    {
+                        var setting = SettingsStructFields.Random(culture);
+                        settings[i] = setting;
+                        writer.WriteFields($"Section {i}", setting);
+                    }
+                    writer.Save(temp);
+
+                    TestReader(writer.ToReader(), settings);
+                    TestReader(IniReader.FromFile(temp, properties), settings);
                 }
-
-                var settings = new SettingsStructFields[10];
-                var properties = IniProperties.Default;
-                properties.Culture = culture;
-                var writer = new IniWriter(temp, properties);
-
+                finally
                 {
-                    var setting = SettingsStructFields.Random(null);
-                    settings[0] = setting;
-                    writer.WriteFields($"Section 0", setting);
+                    File.Delete(temp);
                 }
-                for (var i = 1; i < settings.Length; i++)
-                {
-                    var setting = SettingsStructFields.Random(culture);
-                    settings[i] = setting;
-                    writer.WriteFields($"Section {i}", setting);
-                }
-                writer.Save(temp);
-
-                TestReader(writer.ToReader(), settings);
-                TestReader(IniReader.FromFile(temp, properties), settings);
-            }
+            });
         }
 
         #endregion Public Methods
