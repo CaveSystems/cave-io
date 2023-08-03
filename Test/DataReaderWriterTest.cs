@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
+using Cave;
 using Cave.IO;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace Tests.Cave.IO
 {
@@ -13,7 +18,7 @@ namespace Tests.Cave.IO
     {
         #region Private Methods
 
-        static void TestReaderWriter(EncodingInfo encoding)
+        void TestReaderWriter(EncodingInfo encoding)
         {
             var stream = new MemoryStream();
             var writer = new DataWriter(stream, encoding.GetEncoding());
@@ -21,35 +26,166 @@ namespace Tests.Cave.IO
             TestReaderWriter(reader, writer);
         }
 
-        static void TestReaderWriter(DataReader reader, DataWriter writer)
+        void TestStringsRead(DataReader reader, string randomString)
         {
-            var buffer = new byte[16 * 1024];
-            new Random().NextBytes(buffer);
+            var msg = $"{reader.StringEncoding}: Failed writer -> reader roundtrip!";
+            Assert.AreEqual("Testline", reader.ReadLine(), msg + " Preamble test failed!");
+            {
+                var expected = reader.StringEncoding.Decode(reader.StringEncoding.Encode("Test.Too.Long!").GetRange(0, 8));
+                Assert.AreEqual(expected, reader.ReadString(byteCount: 8).BeforeFirst('\0'), msg);
+            }
+
+            Assert.AreEqual(0x01020304, reader.ReadInt32(), msg);
+            Assert.AreEqual(randomString[0], reader.ReadChar(), msg);
+            Assert.AreEqual((byte)0, reader.ReadByte(), msg);
+            Assert.AreEqual(randomString[1], reader.ReadChar(), msg);
+            Assert.AreEqual((byte)1, reader.ReadByte(), msg);
+            {
+                var codepoints = randomString.CountCodepoints();
+                var readString = reader.ReadChars(codepoints);
+                CollectionAssert.AreEqual(randomString, readString, msg);
+            }
+            Assert.AreEqual((ushort)2, reader.ReadUInt16(), msg);
+            {
+                var codepoints = randomString.CountCodepoints();
+                var readChars = reader.ReadChars(codepoints);
+                CollectionAssert.AreEqual(randomString, readChars, msg);
+            }
+            Assert.AreEqual((uint)3, reader.ReadUInt32(), msg);
+
+            Assert.AreEqual(randomString.Replace("\0", ""), reader.ReadZeroTerminatedString(65536), msg);
+            Assert.AreEqual("", reader.ReadZeroTerminatedString(1024), msg);
+
+            Assert.AreEqual(randomString, reader.ReadString(), msg);
+            Assert.AreEqual("", reader.ReadString(), msg);
+            Assert.AreEqual(null, reader.ReadPrefixedString(), msg);
+
+            Assert.AreEqual(randomString.Replace(reader.LineFeed, ""), reader.ReadLine(), msg);
+            Assert.AreEqual("", reader.ReadLine(), msg);
+
+            switch (reader.NewLineMode)
+            {
+                case NewLineMode.CR:
+                {
+                    var expected = "\n\n\n";
+                    var readLine = reader.ReadLine();
+                    Assert.AreEqual(expected, readLine, msg);
+                    break;
+                }
+                case NewLineMode.CRLF:
+                case NewLineMode.LF:
+                {
+                    var expected = "\r\r\r";
+                    var readLine = reader.ReadLine();
+                    Assert.AreEqual(expected, readLine, msg);
+                    break;
+                }
+                default: throw new NotSupportedException();
+            }
+        }
+
+        string CreateString(StringEncoding encoding, byte[] randomBuffer)
+        {
+            var charArray = new char[128];
+            for (var i = 0; i < charArray.Length; i++)
+            {
+                charArray[i] = (char)(127 - i);
+            }
+            string randomString;
+            if (encoding is StringEncoding.ASCII or StringEncoding.US_ASCII)
+            {
+                return new(charArray);
+            }
+
+            //if charset supports > 127 characters
+            var sb = new StringBuilder();
+            sb.Append(charArray);
+            for (var n = 0; n < randomBuffer.Length;)
+            {
+                int codepoint = (randomBuffer[n++] * 256 + randomBuffer[n++]);
+                if (codepoint >= 0xD800) codepoint <<= 1;
+                sb.Append(char.ConvertFromUtf32(codepoint));
+            }
+            randomString = sb.ToString();
+            var randomStringBytes = encoding.Encode(randomString);
+            if (encoding.Decode(randomStringBytes) != randomString)
+            {
+                //cannot roundtrip high surrogates
+                //build a string with random characters supported by the specified encoding...
+                randomString = encoding.Decode(randomBuffer).Replace("?", "");
+                while (!encoding.CanRoundtrip(randomString))
+                {
+                    var newBuffer = encoding.Encode(randomString);
+                    randomString = encoding.Decode(newBuffer).Replace("?", "");
+                }
+                _ = encoding.Encode(randomString, withRoundtripTest: true);
+            }
+            return randomString;
+        }
+
+        void TestStringsWrite(DataWriter writer, string randomString)
+        {
+            if (writer.StringEncoding != StringEncoding.UTF_7)
+            {
+                writer.Write(writer.StringEncoding.GetByteOrderMark());
+            }
+            writer.WriteLine("Testline");
+            var pos = writer.BaseStream.Position;
+            writer.WriteString("Test.Too.Long!", byteCount: 8);
+            Assert.AreEqual(8, writer.BaseStream.Position - pos);
+            writer.Write(0x01020304);
+            writer.Write(randomString[0]);
+            writer.Write((byte)0);
+            writer.Write(randomString[1]);
+            writer.Write((byte)1);
+            writer.Write(randomString);
+            writer.Write((ushort)2);
+            writer.Write(randomString.ToArray());
+            writer.Write((uint)3);
+            writer.WriteZeroTerminated(randomString.Replace("\0", ""));
+            writer.WriteZeroTerminated("");
+            Assert.Throws<ArgumentNullException>(() => writer.WriteZeroTerminated((string)null));
+            writer.WritePrefixed(randomString);
+            writer.WritePrefixed("");
+            writer.WritePrefixed((string)null);
+            writer.WriteLine(randomString.Replace(writer.LineFeed, ""));
+            writer.WriteLine("");
+            Assert.Throws<ArgumentNullException>(() => writer.WriteLine((string)null));
+            switch (writer.NewLineMode)
+            {
+                case NewLineMode.CR:
+                {
+                    writer.WriteLine("\n\n\n");
+                    break;
+                }
+                case NewLineMode.CRLF:
+                case NewLineMode.LF:
+                {
+                    writer.WriteLine("\r\r\r");
+                    break;
+                }
+                default: throw new NotSupportedException();
+            }
+        }
+
+        void TestReaderWriter(DataReader reader, DataWriter writer)
+        {
+            var buffer = new byte[2 * 1024];
+            new Random(123).NextBytes(buffer);
             var dateTime = DateTime.UtcNow;
             var timeSpan = new TimeSpan(Environment.TickCount);
-            string randomString;
-            byte[] randomStringBytes;
+
+            bool testStrings;
+            string randomString = null;
             try
             {
-                var charArray = new char[short.MaxValue];
-                for (var i = 0; i < charArray.Length; i++)
-                {
-                    charArray[i] = (char)i;
-                }
-
-                randomStringBytes = writer.Encoding.GetBytes(charArray);
-                randomString = writer.Encoding.GetString(randomStringBytes);
+                var lf = writer.LineFeed;
+                testStrings = true;
             }
-            catch
+            catch (Exception ex)
             {
-                var charArray = new char[128];
-                for (var i = 0; i < charArray.Length; i++)
-                {
-                    charArray[i] = (char)i;
-                }
-
-                randomStringBytes = writer.Encoding.GetBytes(charArray);
-                randomString = writer.Encoding.GetString(randomStringBytes);
+                Assert.AreEqual(typeof(NotSupportedException), ex.GetType());
+                testStrings = false;
             }
 
             for (var i = int.MaxValue; i > 0; i >>= 1)
@@ -64,45 +200,15 @@ namespace Tests.Cave.IO
                 writer.Write7BitEncoded64(i);
             }
 
-            writer.Write(true);
-            writer.Write(false);
-            try
+            if (testStrings)
             {
-                writer.Write(randomString[0]);
-            }
-            catch (NotSupportedException)
-            {
-                if (!writer.Encoding.IsDead())
-                {
-                    throw;
-                }
-            }
-
-            try
-            {
-                writer.Write(randomString[1]);
-            }
-            catch (NotSupportedException)
-            {
-                if (!writer.Encoding.IsDead())
-                {
-                    throw;
-                }
-            }
-
-            try
-            {
-                writer.Write(randomString.ToArray());
-            }
-            catch (NotSupportedException)
-            {
-                if (!writer.Encoding.IsDead())
-                {
-                    throw;
-                }
+                randomString = CreateString(writer.StringEncoding, buffer);
+                TestStringsWrite(writer, randomString);
             }
 
             var position = writer.BaseStream.Position;
+            writer.Write(true);
+            writer.Write(false);
             writer.Write(dateTime);
             writer.Write(timeSpan);
             writer.Write(1.23456789m);
@@ -131,204 +237,79 @@ namespace Tests.Cave.IO
             writer.Write(byte.MinValue);
             writer.Write(sbyte.MaxValue);
             writer.Write(sbyte.MinValue);
-            writer.WritePrefixed(randomString);
-            writer.WritePrefixed("");
-            writer.WritePrefixed((string)null);
-            writer.WritePrefixed(buffer);
-            try
-            {
-                writer.WriteZeroTerminated(randomString.Replace("\0", ""));
-            }
-            catch (NotSupportedException)
-            {
-                if (!writer.Encoding.IsDead())
-                {
-                    throw;
-                }
-            }
 
-            writer.Write(buffer);
+            writer.Write7BitEncoded64(long.MaxValue);
+            writer.WritePrefixed(buffer);
             writer.WriteEpoch32(dateTime);
             writer.WriteEpoch64(dateTime);
-            var supportsWriteLine = true;
-            try
-            {
-                writer.WriteLine();
-                switch (reader.NewLineMode)
-                {
-                    case NewLineMode.CR:
-                    {
-                        writer.WriteLine("\n\n\n");
-                        break;
-                    }
-                    case NewLineMode.CRLF:
-                    case NewLineMode.LF:
-                    {
-                        writer.WriteLine("\r\r\r");
-                        break;
-                    }
-                    default: throw new NotSupportedException();
-                }
-
-                writer.WriteLine(randomString.Replace("\r", "").Replace("\n", ""));
-            }
-            catch (NotSupportedException)
-            {
-                if ((writer.StringEncoding == StringEncoding.X_EUROPA) || writer.Encoding.IsDead())
-                {
-                    supportsWriteLine = false;
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            writer.Write(buffer);
 
             reader.BaseStream.Position = 0;
+            var msg = $"{reader.StringEncoding}: Failed writer -> reader roundtrip!";
+
             for (var i = int.MaxValue; i > 0; i >>= 1)
             {
-                Assert.AreEqual(-i, reader.Read7BitEncodedInt32());
-                Assert.AreEqual(i, reader.Read7BitEncodedInt32());
+                Assert.AreEqual(-i, reader.Read7BitEncodedInt32(), msg);
+                Assert.AreEqual(i, reader.Read7BitEncodedInt32(), msg);
             }
 
             for (var i = long.MaxValue; i > 0; i >>= 1)
             {
-                Assert.AreEqual(-i, reader.Read7BitEncodedInt64());
-                Assert.AreEqual(i, reader.Read7BitEncodedInt64());
+                Assert.AreEqual(-i, reader.Read7BitEncodedInt64(), msg);
+                Assert.AreEqual(i, reader.Read7BitEncodedInt64(), msg);
             }
 
-            Assert.AreEqual(true, reader.ReadBool());
-            Assert.AreEqual(false, reader.ReadBool());
-            try
+            if (testStrings)
             {
-                Assert.AreEqual(randomString[0], reader.ReadChar());
-            }
-            catch (NotSupportedException)
-            {
-                if (!writer.Encoding.IsDead())
-                {
-                    throw;
-                }
+                TestStringsRead(reader, randomString);
             }
 
-            try
-            {
-                Assert.AreEqual(randomString[1], reader.ReadChar());
-            }
-            catch (NotSupportedException)
-            {
-                if (!writer.Encoding.IsDead())
-                {
-                    throw;
-                }
-            }
+            Assert.AreEqual(position, reader.BaseStream.Position, $"{reader.StringEncoding}: End position during read does not match write. String decoding may have lost some bytes...");
 
-            try
-            {
-                var readChars = reader.ReadChars(randomString.Length);
-                CollectionAssert.AreEqual(randomString.ToCharArray(), readChars);
-            }
-            catch (NotSupportedException)
-            {
-                if (!writer.Encoding.IsDead())
-                {
-                    throw;
-                }
-            }
+            Assert.AreEqual(true, reader.ReadBool(), msg);
+            Assert.AreEqual(false, reader.ReadBool(), msg);
+            Assert.AreEqual(dateTime, reader.ReadDateTime(), msg);
+            Assert.AreEqual(timeSpan, reader.ReadTimeSpan(), msg);
+            Assert.AreEqual(1.23456789m, reader.ReadDecimal(), msg);
+            Assert.AreEqual(1.23456, reader.ReadDouble(), msg);
+            Assert.AreEqual(double.NaN, reader.ReadDouble(), msg);
+            Assert.AreEqual(double.PositiveInfinity, reader.ReadDouble(), msg);
+            Assert.AreEqual(double.NegativeInfinity, reader.ReadDouble(), msg);
+            Assert.AreEqual(1.234f, reader.ReadSingle(), msg);
+            Assert.AreEqual(float.NaN, reader.ReadSingle(), msg);
+            Assert.AreEqual(float.PositiveInfinity, reader.ReadSingle(), msg);
+            Assert.AreEqual(float.NegativeInfinity, reader.ReadSingle(), msg);
+            Assert.AreEqual(12345678, reader.ReadInt32(), msg);
+            Assert.AreEqual(int.MaxValue, reader.ReadInt32(), msg);
+            Assert.AreEqual(int.MinValue, reader.ReadInt32(), msg);
+            Assert.AreEqual(uint.MaxValue, reader.ReadUInt32(), msg);
+            Assert.AreEqual(uint.MinValue, reader.ReadUInt32(), msg);
+            Assert.AreEqual(long.MaxValue, reader.ReadInt64(), msg);
+            Assert.AreEqual(long.MinValue, reader.ReadInt64(), msg);
+            Assert.AreEqual(ulong.MaxValue, reader.ReadUInt64(), msg);
+            Assert.AreEqual(ulong.MinValue, reader.ReadUInt64(), msg);
+            Assert.AreEqual(short.MaxValue, reader.ReadInt16(), msg);
+            Assert.AreEqual(short.MinValue, reader.ReadInt16(), msg);
+            Assert.AreEqual(ushort.MaxValue, reader.ReadUInt16(), msg);
+            Assert.AreEqual(ushort.MinValue, reader.ReadUInt16(), msg);
+            Assert.AreEqual(byte.MaxValue, reader.ReadUInt8(), msg);
+            Assert.AreEqual(byte.MinValue, reader.ReadUInt8(), msg);
+            Assert.AreEqual(sbyte.MaxValue, reader.ReadInt8(), msg);
+            Assert.AreEqual(sbyte.MinValue, reader.ReadInt8(), msg);
 
-            if (reader.BaseStream.Position != position)
-            {
-                throw new Exception();
-            }
-
-            Assert.AreEqual(dateTime, reader.ReadDateTime());
-            Assert.AreEqual(timeSpan, reader.ReadTimeSpan());
-            Assert.AreEqual(1.23456789m, reader.ReadDecimal());
-            Assert.AreEqual(1.23456, reader.ReadDouble());
-            Assert.AreEqual(double.NaN, reader.ReadDouble());
-            Assert.AreEqual(double.PositiveInfinity, reader.ReadDouble());
-            Assert.AreEqual(double.NegativeInfinity, reader.ReadDouble());
-            Assert.AreEqual(1.234f, reader.ReadSingle());
-            Assert.AreEqual(float.NaN, reader.ReadSingle());
-            Assert.AreEqual(float.PositiveInfinity, reader.ReadSingle());
-            Assert.AreEqual(float.NegativeInfinity, reader.ReadSingle());
-            Assert.AreEqual(12345678, reader.ReadInt32());
-            Assert.AreEqual(int.MaxValue, reader.ReadInt32());
-            Assert.AreEqual(int.MinValue, reader.ReadInt32());
-            Assert.AreEqual(uint.MaxValue, reader.ReadUInt32());
-            Assert.AreEqual(uint.MinValue, reader.ReadUInt32());
-            Assert.AreEqual(long.MaxValue, reader.ReadInt64());
-            Assert.AreEqual(long.MinValue, reader.ReadInt64());
-            Assert.AreEqual(ulong.MaxValue, reader.ReadUInt64());
-            Assert.AreEqual(ulong.MinValue, reader.ReadUInt64());
-            Assert.AreEqual(short.MaxValue, reader.ReadInt16());
-            Assert.AreEqual(short.MinValue, reader.ReadInt16());
-            Assert.AreEqual(ushort.MaxValue, reader.ReadUInt16());
-            Assert.AreEqual(ushort.MinValue, reader.ReadUInt16());
-            Assert.AreEqual(byte.MaxValue, reader.ReadUInt8());
-            Assert.AreEqual(byte.MinValue, reader.ReadUInt8());
-            Assert.AreEqual(sbyte.MaxValue, reader.ReadInt8());
-            Assert.AreEqual(sbyte.MinValue, reader.ReadInt8());
-            Assert.AreEqual(randomString, reader.ReadString());
-            Assert.AreEqual("", reader.ReadString());
-            Assert.AreEqual(null, reader.ReadString());
-            CollectionAssert.AreEqual(buffer, reader.ReadBytes());
-            try
-            {
-                var readString = reader.ReadZeroTerminatedString(8 * randomString.Length);
-                var expected = randomString.Replace("\0", "");
-                CollectionAssert.AreEqual(expected.ToCharArray(), readString.ToCharArray());
-                Assert.AreEqual(expected, readString);
-            }
-            catch (NotSupportedException)
-            {
-                if (!writer.Encoding.IsDead())
-                {
-                    throw;
-                }
-            }
-
-            CollectionAssert.AreEqual(buffer, reader.ReadBytes(buffer.Length));
+            Assert.AreEqual(long.MaxValue, reader.Read7BitEncodedInt64(), msg);
+            CollectionAssert.AreEqual(buffer, reader.ReadBytes(), msg);
             var epoch = new DateTime(dateTime.Ticks - (dateTime.Ticks % TimeSpan.TicksPerSecond));
-            Assert.AreEqual(epoch, reader.ReadEpoch32());
-            Assert.AreEqual(epoch, reader.ReadEpoch64());
-            if (supportsWriteLine)
-            {
-                Assert.AreEqual("", reader.ReadLine());
-                switch (reader.NewLineMode)
-                {
-                    case NewLineMode.CR:
-                    {
-                        var expected = "\n\n\n";
-                        var readLine = reader.ReadLine();
-                        Assert.AreEqual(expected, readLine);
-                        break;
-                    }
-                    case NewLineMode.CRLF:
-                    case NewLineMode.LF:
-                    {
-                        var expected = "\r\r\r";
-                        var readLine = reader.ReadLine();
-                        Assert.AreEqual(expected, readLine);
-                        break;
-                    }
-                    default: throw new NotSupportedException();
-                }
-
-                {
-                    var expected = randomString.Replace("\r", "").Replace("\n", "");
-                    var readLine = reader.ReadLine(randomString.Length * 4);
-                    CollectionAssert.AreEqual(expected.ToCharArray(), readLine.ToCharArray());
-                    Assert.AreEqual(expected, readLine);
-                }
-            }
+            Assert.AreEqual(epoch, reader.ReadEpoch32(), msg);
+            Assert.AreEqual(epoch, reader.ReadEpoch64(), msg);
+            CollectionAssert.AreEqual(buffer, reader.ReadBytes(buffer.Length), msg);
         }
 
         #endregion Private Methods
 
         #region Public Methods
 
-        public static void TestReaderWriter(StringEncoding stringEncoding)
+        void TestReaderWriter(StringEncoding stringEncoding)
         {
             if (stringEncoding == 0)
             {
@@ -353,10 +334,215 @@ namespace Tests.Cave.IO
         }
 
         [Test]
-        public void TestReaderWriter1()
+        public void Utf8Test()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream);
+                var reader = new DataReader(stream);
+                var codepoints = new List<string>();
+                for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                {
+                    var character = char.ConvertFromUtf32(codepoint);
+                    var pos = stream.Position;
+                    writer.Write(character);
+                    codepoints.Add(character);
+                    stream.Position = pos;
+                    var test = reader.ReadChars(1);
+                    CollectionAssert.AreEqual(character, test);
+                }
+                stream.Position = 0;
+                CollectionAssert.AreEqual(codepoints.Join(), reader.ReadChars(codepoints.Count));
+            }
+        }
+
+        [Test]
+        public void Utf7Test()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream, StringEncoding.UTF_7);
+                var reader = new DataReader(stream, StringEncoding.UTF_7);
+                var codepoints = new List<string>();
+                for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                {
+                    var character = char.ConvertFromUtf32(codepoint);
+                    var pos = stream.Position;
+                    writer.Write(character);
+                    codepoints.Add(character);
+                    stream.Position = pos;
+                    var test = reader.ReadChars(1);
+                    CollectionAssert.AreEqual(character, test);
+                }
+                stream.Position = 0;
+                CollectionAssert.AreEqual(codepoints.Join(), reader.ReadChars(codepoints.Count));
+            }
+        }
+
+        [Test]
+        public void UnicodeTest()
+        {
+            var encodings = new[]
+            {
+                StringEncoding.UTF_7,
+                StringEncoding.UTF8, StringEncoding.UTF_8,
+                StringEncoding.UTF16, StringEncoding.UTF_16, StringEncoding.UTF_16BE,
+                StringEncoding.UTF32, StringEncoding.UTF_32, StringEncoding.UTF_32BE,
+            };
+            foreach (var encoding in encodings)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    var writer = new DataWriter(stream, encoding);
+                    var reader = new DataReader(stream, encoding);
+                    var codepoints = new List<string>();
+                    for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                    {
+                        var character = char.ConvertFromUtf32(codepoint);
+                        var pos = stream.Position;
+                        writer.Write(character);
+                        codepoints.Add(character);
+                        stream.Position = pos;
+                        var test = reader.ReadChars(1);
+                        CollectionAssert.AreEqual(character, test);
+                    }
+                    stream.Position = 0;
+                    var real = codepoints.Join();
+                    var roundtrip = reader.ReadChars(codepoints.Count);
+                    CollectionAssert.AreEqual(real, roundtrip);
+
+                    {
+                        const string TestString = "My Card: " + AceOfSpades;
+                        stream.Position = 0;
+                        writer.WriteZeroTerminated(TestString);
+                        stream.Position = 0;
+                        var test = reader.ReadZeroTerminatedString(1024);
+                        Assert.AreEqual(TestString, test);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void Iso2022Test()
+        {
+#if NET5_0_OR_GREATER
+            Assert.Ignore("ISO 2022 is no longer supported with net > 5.0!");
+#elif NETCOREAPP1_0_OR_GREATER
+            Assert.Ignore("ISO 2022 is no longer supported with netcore!");
+#else
+            var buffer = new byte[1024];
+            new Random(123).NextBytes(buffer);
+            var sb = new StringBuilder();
+            for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+            {
+                sb.Append(char.ConvertFromUtf32(codepoint));
+            }
+
+            var encodings = new[]
+            {
+                StringEncoding.ISO_2022_KR,
+                StringEncoding.ISO_2022_JP,
+                StringEncoding.ISO_2022_JP_2,
+                StringEncoding.CSISO2022JP,
+            };
+            foreach (var encoding in encodings)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    var writer = new DataWriter(stream, encoding);
+                    var reader = new DataReader(stream, encoding);
+                    var codepoints = new List<string>();
+                    for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                    {
+                        var character = char.ConvertFromUtf32(codepoint);
+                        if (!encoding.CanRoundtrip(character)) continue;
+                        var pos = stream.Position;
+                        writer.Write(character);
+                        codepoints.Add(character);
+                        stream.Position = pos;
+                        var test = reader.ReadChars(1);
+                        CollectionAssert.AreEqual(character, test);
+                    }
+                    stream.Position = 0;
+                    var real = codepoints.Join();
+                    var roundtrip = reader.ReadChars(codepoints.Count);
+                    CollectionAssert.AreEqual(real, roundtrip);
+
+                    stream.SetLength(0);
+                    //build a string with random characters supported by the specified encoding...
+                    var randomString = writer.StringEncoding.Decode(buffer).Replace("\r", "").Replace("\n", "").Replace("\0", "");
+                    while (!writer.StringEncoding.CanRoundtrip(randomString))
+                    {
+                        var newBuffer = writer.StringEncoding.Encode(randomString);
+                        randomString = writer.StringEncoding.Decode(newBuffer);
+                    }
+                    var randomStringBytes = writer.StringEncoding.Encode(randomString, withRoundtripTest: true);
+                    writer.WritePrefixed(randomString);
+                    writer.WriteLine(randomString);
+                    writer.WriteZeroTerminated(randomString);
+                    reader.BaseStream.Position = 0;
+                    Assert.AreEqual(randomString, reader.ReadPrefixedString());
+                    Assert.AreEqual(randomString, reader.ReadLine());
+                    Assert.AreEqual(randomString, reader.ReadZeroTerminatedString(64 * 1024));
+                }
+            }
+#endif
+        }
+
+        const string AceOfSpades = "\U0001F0A0";
+
+        [Test]
+        public void Utf8AceOfSpadesTest()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream);
+                var reader = new DataReader(stream);
+                writer.WriteLine((UTF8)AceOfSpades);
+                writer.WriteZeroTerminated((UTF8)AceOfSpades);
+                writer.Write((UTF8)AceOfSpades);
+                writer.Write(AceOfSpades.ToCharArray());
+                stream.Position = 0;
+                Assert.AreEqual(AceOfSpades, reader.ReadLine());
+                Assert.AreEqual(AceOfSpades, reader.ReadZeroTerminatedString(128));
+                Assert.AreEqual(AceOfSpades, reader.ReadString(4));
+                Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
+            }
+        }
+
+        [Test]
+        public void Utf7AceOfSpadesTest()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream, StringEncoding.UTF_7);
+                var reader = new DataReader(stream, StringEncoding.UTF_7);
+                writer.WriteLine((UTF7)AceOfSpades);
+                writer.WriteZeroTerminated((UTF7)AceOfSpades);
+                writer.Write((UTF7)AceOfSpades);
+                writer.Write(AceOfSpades.ToCharArray());
+                stream.Position = 0;
+                Assert.AreEqual(AceOfSpades, reader.ReadLine());
+                Assert.AreEqual(AceOfSpades, reader.ReadZeroTerminatedString(128));
+                Assert.AreEqual(AceOfSpades, reader.ReadUTF7(1));
+                Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
+            }
+        }
+
+        [Test]
+        public void Utf8ReaderWriterTest() => TestReaderWriter(StringEncoding.UTF_8);
+
+        [Test]
+        public void TestAllStringEncodings()
         {
             var id = "T" + MethodBase.GetCurrentMethod().GetHashCode().ToString("x4");
-            foreach (StringEncoding stringEncoding in Enum.GetValues(typeof(StringEncoding)))
+            var encodings = Enum.GetValues(typeof(StringEncoding)).Cast<StringEncoding>();
+#if !PARALLEL
+            encodings.ForEach(stringEncoding =>
+#else
+            Parallel.ForEach(encodings, stringEncoding =>
+#endif
             {
                 try
                 {
@@ -365,22 +551,33 @@ namespace Tests.Cave.IO
                 }
                 catch (Exception ex)
                 {
-                    if (ex is not NotSupportedException) Console.Error.WriteLine(ex.ToString());
-                    Assert.AreEqual(typeof(NotSupportedException), ex.GetType());
-                    Console.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) ok - not supported");
+                    if (ex is not NotSupportedException)
+                    {
+                        Console.Error.WriteLine($"StringEncoding: {stringEncoding}");
+                        Console.Error.WriteLine(ex.ToString());
+                        throw new AggregateException($"Error at StringEncoding {stringEncoding}", ex);
+                    }
+
+                    Console.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) not supported");
+                    Assert.Ignore($"Test : info {id}: TestReaderWriter({stringEncoding}) not supported");
                 }
-            }
+            });
         }
 
         [Test]
-        public void TestReaderWriter2()
+        public void TestFrameworkEncoders()
         {
             var id = "T" + MethodBase.GetCurrentMethod().GetHashCode().ToString("x4");
-            foreach (var encoding in Encoding.GetEncodings())
+            var encodings = Encoding.GetEncodings();
+#if !PARALLEL
+            encodings.ForEach(encoding =>
+#else
+            Parallel.ForEach(encodings, encoding =>
+#endif
             {
                 TestReaderWriter(encoding);
                 Console.WriteLine($"Test : info {id}: TestReaderWriter({encoding.DisplayName}) ok");
-            }
+            });
         }
 
         #endregion Public Methods

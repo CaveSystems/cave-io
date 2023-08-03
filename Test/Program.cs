@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
+using System.Text;
 using NUnit.Framework;
 
 namespace Test;
@@ -20,6 +21,10 @@ class Program
     static int Main(string[] args)
     {
         var errors = 0;
+
+#if NET5_0_OR_GREATER || NETCOREAPP1_0_OR_GREATER
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
 
 #if ALTERNATE_CODE
         var asm = typeof(Program).GetTypeInfo().Assembly;
@@ -112,6 +117,7 @@ class Program
 #if ALTERNATE_CODE
     static void WaitExit() { }
 #else
+
     static void WaitExit()
     {
         Console.Write("--- press enter to exit ---");
@@ -120,5 +126,6 @@ class Program
             ;
         }
     }
+
 #endif
 }

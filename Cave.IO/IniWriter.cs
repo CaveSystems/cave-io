@@ -22,7 +22,7 @@ namespace Cave.IO
 
         #endregion Private Fields
 
-        #region construtors
+        #region Public Constructors
 
         /// <summary>Initializes a new instance of the <see cref="IniWriter"/> class.</summary>
         public IniWriter()
@@ -63,7 +63,7 @@ namespace Cave.IO
             Load(reader);
         }
 
-        #endregion construtors
+        #endregion Public Constructors
 
         #region Public Properties
 
@@ -73,9 +73,12 @@ namespace Cave.IO
         /// <summary>Gets or sets the IniProperties.</summary>
         public IniProperties Properties { get; set; }
 
+        /// <summary>Gets or sets a value indicating whether a round trip test is done while saving settings.</summary>
+        public bool SkipRoundTripTests { get; set; }
+
         #endregion Public Properties
 
-        #region static constructors
+        #region Public Methods
 
         /// <summary>Creates an new initialization writer with the specified preexisting content.</summary>
         /// <param name="fileName">File name to read.</param>
@@ -115,11 +118,6 @@ namespace Cave.IO
         /// <param name="properties">The content properties.</param>
         /// <returns>Returns a new <see cref="IniWriter"/> instance.</returns>
         public static IniWriter Parse(string name, string[] lines, IniProperties properties = default) => new(IniReader.Parse(name, lines, properties));
-
-        #endregion static constructors
-
-        /// <summary>Gets or sets a value indicating whether a round trip test is done while saving settings.</summary>
-        public bool SkipRoundTripTests { get; set; }
 
         /// <summary>Loads all settings from the specified reader and replaces all present sections.</summary>
         /// <param name="reader">The reader to obtain the config from.</param>
@@ -489,5 +487,7 @@ namespace Cave.IO
         public void WriteStruct<T>(string section, T item)
             where T : struct
             => WriteFields<T>(section, item);
+
+        #endregion Public Methods
     }
 }
