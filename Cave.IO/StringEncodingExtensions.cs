@@ -165,19 +165,18 @@ public static class StringEncodingExtensions
         return result;
     }
 
-    public static byte[] GetByteOrderMark(this StringEncoding encoding)
-                    => encoding switch
-                    {
-                        StringEncoding.Undefined => throw new InvalidOperationException($"{nameof(StringEncoding)} {encoding} is undefined!"),
-                        (StringEncoding)1 or StringEncoding.US_ASCII => new byte[0],
-                        (StringEncoding)2 or StringEncoding.UTF_8 => new UTF8().ByteOrderMark,
-                        (StringEncoding)3 or StringEncoding.UTF_16 => new UTF16LE().ByteOrderMark,
-                        StringEncoding.UTF_16BE => new UTF16BE().ByteOrderMark,
-                        (StringEncoding)4 or StringEncoding.UTF_32 => new UTF32LE().ByteOrderMark,
-                        StringEncoding.UTF_32BE => new UTF32BE().ByteOrderMark,
-                        StringEncoding.UTF_7 => new UTF7().ByteOrderMark,
-                        _ => Encoding.GetEncoding((int)encoding).GetPreamble(),
-                    };
+    public static byte[] GetByteOrderMark(this StringEncoding encoding) => encoding switch
+    {
+        StringEncoding.Undefined => throw new InvalidOperationException($"{nameof(StringEncoding)} {encoding} is undefined!"),
+        (StringEncoding)1 or StringEncoding.US_ASCII => new byte[0],
+        (StringEncoding)2 or StringEncoding.UTF_8 => new UTF8().ByteOrderMark,
+        (StringEncoding)3 or StringEncoding.UTF_16 => new UTF16LE().ByteOrderMark,
+        StringEncoding.UTF_16BE => new UTF16BE().ByteOrderMark,
+        (StringEncoding)4 or StringEncoding.UTF_32 => new UTF32LE().ByteOrderMark,
+        StringEncoding.UTF_32BE => new UTF32BE().ByteOrderMark,
+        StringEncoding.UTF_7 => throw new InvalidOperationException("UTF7 uses an embedded UTF16BE BOM."),
+        _ => Encoding.GetEncoding((int)encoding).GetPreamble(),
+    };
 
     /// <summary>Returns whether the encoding is dead (true) or not (false).</summary>
     /// <param name="encoding">Encoding to check.</param>

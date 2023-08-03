@@ -2,11 +2,11 @@
 
 namespace Cave.IO
 {
-    /// <summary>
-    /// Provides access to common ini file.
-    /// </summary>
+    /// <summary>Provides access to common ini file.</summary>
     public static class Ini
     {
+        #region Internal Methods
+
         internal static void CheckName(string value, string paramName)
         {
             if (value == null)
@@ -56,27 +56,28 @@ namespace Cave.IO
 
             if (!properties.DisableEscaping)
             {
-                try
-                {
-                    value = value.Unescape();
-                }
-                catch
-                {
-                    // unescape failed, this may be a windows path
-                }
+                try { value = value.Unescape(); }
+                catch { }
             }
 
             return value;
         }
 
-        /// <summary>Gets the local user ini file.</summary>
-        /// <value>The local user ini file.</value>
-        public static IniReader GetLocalUserIniFile()
+        #endregion Internal Methods
+
+        #region Public Properties
+
+        /// <summary>Gets the platform specific extension of the configuration file.</summary>
+        public static string PlatformExtension => Platform.Type switch
         {
-            var location = new FileLocation(root: RootLocation.LocalUserConfig, extension: PlatformExtension);
-            FileSystem.TouchFile(location);
-            return IniReader.FromFile(location);
-        }
+            PlatformType.CompactFramework or PlatformType.Windows or PlatformType.Xbox => ".ini",
+            PlatformType.Linux or PlatformType.BSD or PlatformType.Android or PlatformType.Solaris or PlatformType.UnknownUnix or PlatformType.Unknown or PlatformType.MacOS => ".conf",
+            _ => ".conf",
+        };
+
+        #endregion Public Properties
+
+        #region Public Methods
 
         /// <summary>Gets the local machine ini file.</summary>
         /// <value>The local machine ini file.</value>
@@ -87,11 +88,11 @@ namespace Cave.IO
             return IniReader.FromFile(location);
         }
 
-        /// <summary>Gets the user ini file.</summary>
-        /// <value>The user ini file.</value>
-        public static IniReader GetUserIniFile()
+        /// <summary>Gets the local user ini file.</summary>
+        /// <value>The local user ini file.</value>
+        public static IniReader GetLocalUserIniFile()
         {
-            var location = new FileLocation(root: RootLocation.RoamingUserConfig, extension: PlatformExtension);
+            var location = new FileLocation(root: RootLocation.LocalUserConfig, extension: PlatformExtension);
             FileSystem.TouchFile(location);
             return IniReader.FromFile(location);
         }
@@ -105,14 +106,15 @@ namespace Cave.IO
             return IniReader.FromFile(location);
         }
 
-        /// <summary>
-        /// Gets the platform specific extension of the configuration file.
-        /// </summary>
-        public static string PlatformExtension => Platform.Type switch
+        /// <summary>Gets the user ini file.</summary>
+        /// <value>The user ini file.</value>
+        public static IniReader GetUserIniFile()
         {
-            PlatformType.CompactFramework or PlatformType.Windows or PlatformType.Xbox => ".ini",
-            PlatformType.Linux or PlatformType.BSD or PlatformType.Android or PlatformType.Solaris or PlatformType.UnknownUnix or PlatformType.Unknown or PlatformType.MacOS => ".conf",
-            _ => ".conf",
-        };
+            var location = new FileLocation(root: RootLocation.RoamingUserConfig, extension: PlatformExtension);
+            FileSystem.TouchFile(location);
+            return IniReader.FromFile(location);
+        }
+
+        #endregion Public Methods
     }
 }

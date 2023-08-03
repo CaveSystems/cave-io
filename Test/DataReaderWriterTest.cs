@@ -125,7 +125,10 @@ namespace Tests.Cave.IO
 
         void TestStringsWrite(DataWriter writer, string randomString)
         {
-            writer.Write(writer.StringEncoding.GetByteOrderMark());
+            if (writer.StringEncoding != StringEncoding.UTF_7)
+            {
+                writer.Write(writer.StringEncoding.GetByteOrderMark());
+            }
             writer.WriteLine("Testline");
             var pos = writer.BaseStream.Position;
             writer.WriteString("Test.Too.Long!", byteCount: 8);
@@ -168,7 +171,7 @@ namespace Tests.Cave.IO
         void TestReaderWriter(DataReader reader, DataWriter writer)
         {
             var buffer = new byte[2 * 1024];
-            new Random().NextBytes(buffer);
+            new Random(123).NextBytes(buffer);
             var dateTime = DateTime.UtcNow;
             var timeSpan = new TimeSpan(Environment.TickCount);
 
@@ -425,14 +428,14 @@ namespace Tests.Cave.IO
         {
 #if NET5_0_OR_GREATER
             Assert.Ignore("ISO 2022 is no longer supported with net > 5.0!");
+#elif NETCOREAPP1_0_OR_GREATER
+            Assert.Ignore("ISO 2022 is no longer supported with netcore!");
 #else
             var buffer = new byte[1024];
-            new Random().NextBytes(buffer);
+            new Random(123).NextBytes(buffer);
             var sb = new StringBuilder();
-            for (var n = 0; n < buffer.Length;)
+            for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
             {
-                int codepoint = (buffer[n++] * 256 + buffer[n++]);
-                if (codepoint >= 0xD800) codepoint <<= 1;
                 sb.Append(char.ConvertFromUtf32(codepoint));
             }
 
@@ -507,7 +510,7 @@ namespace Tests.Cave.IO
                 Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
             }
         }
-        
+
         [Test]
         public void Utf7AceOfSpadesTest()
         {
@@ -522,11 +525,10 @@ namespace Tests.Cave.IO
                 stream.Position = 0;
                 Assert.AreEqual(AceOfSpades, reader.ReadLine());
                 Assert.AreEqual(AceOfSpades, reader.ReadZeroTerminatedString(128));
-                Assert.AreEqual(AceOfSpades, reader.ReadUTF7(2));
+                Assert.AreEqual(AceOfSpades, reader.ReadUTF7(1));
                 Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
             }
         }
-
 
         [Test]
         public void Utf8ReaderWriterTest() => TestReaderWriter(StringEncoding.UTF_8);
