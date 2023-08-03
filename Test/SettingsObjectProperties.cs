@@ -45,7 +45,9 @@ namespace Tests.Cave.IO
             {
                 var buf = new byte[len * 2];
                 random.NextBytes(buf);
-                str = Encoding.Unicode.GetString(buf).ToCharArray();
+                var text = Encoding.Unicode.GetString(buf);
+                while (text.Length > 0 && text.StartsWith("\uFEFF")) text = text[1..];
+                str = text.ToCharArray();
             }
             else
             {

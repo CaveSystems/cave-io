@@ -114,35 +114,41 @@ namespace Tests.Cave.IO.IniFile
             Parallel.ForEach(allCultures, culture =>
             {
                 var temp = Path.GetTempFileName();
-                lock (syncRoot) Console.WriteLine($"{nameof(IniReaderWriterTest)}.cs: info TI0002: Test {culture}, file {temp}");
-
-                if (culture.Calendar is not GregorianCalendar)
+                try
                 {
-                    lock (syncRoot) Console.WriteLine($"- Skipping calendar {culture.Calendar}");
-                    return;
+                    lock (syncRoot) Console.WriteLine($"{nameof(IniReaderWriterTest)}.cs: info TI0002: Test {culture}, file {temp}");
+
+                    if (culture.Calendar is not GregorianCalendar)
+                    {
+                        lock (syncRoot) Console.WriteLine($"- Skipping calendar {culture.Calendar}");
+                        return;
+                    }
+
+                    var settings = new SettingsStructFields[10];
+                    var properties = IniProperties.Default;
+                    properties.Culture = culture;
+                    var writer = new IniWriter(temp, properties);
+
+                    {
+                        var setting = SettingsStructFields.Random(null);
+                        settings[0] = setting;
+                        writer.WriteFields($"Section 0", setting);
+                    }
+                    for (var i = 1; i < settings.Length; i++)
+                    {
+                        var setting = SettingsStructFields.Random(culture);
+                        settings[i] = setting;
+                        writer.WriteFields($"Section {i}", setting);
+                    }
+                    writer.Save(temp);
+
+                    TestReader(writer.ToReader(), settings);
+                    TestReader(IniReader.FromFile(temp, properties), settings);
                 }
-
-                var settings = new SettingsStructFields[10];
-                var properties = IniProperties.Default;
-                properties.Culture = culture;
-                var writer = new IniWriter(temp, properties);
-
+                finally
                 {
-                    var setting = SettingsStructFields.Random(null);
-                    settings[0] = setting;
-                    writer.WriteFields($"Section 0", setting);
+                    File.Delete(temp);
                 }
-                for (var i = 1; i < settings.Length; i++)
-                {
-                    var setting = SettingsStructFields.Random(culture);
-                    settings[i] = setting;
-                    writer.WriteFields($"Section {i}", setting);
-                }
-                writer.Save(temp);
-
-                TestReader(writer.ToReader(), settings);
-                TestReader(IniReader.FromFile(temp, properties), settings);
-                File.Delete(temp);
             });
         }
 
