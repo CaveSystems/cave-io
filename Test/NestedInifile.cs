@@ -41,7 +41,7 @@ namespace Tests.Cave.IO.IniFile
                     Sub2 = SettingsStructFields.Random(culture),
                     Sub3 = SettingsObjectProperties.Random(culture),
                     Sub4 = SettingsStructProperties.Random(culture),
-                    SomethingSpecial = new Random().NextDouble()
+                    SomethingSpecial = new Random(culture.Name.GetHashCode()).NextDouble()
                 };
                 return result;
             }
