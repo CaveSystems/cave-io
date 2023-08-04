@@ -6,12 +6,6 @@ namespace Tests.Cave.IO
 {
     public struct SettingsStructFields : IEquatable<SettingsStructFields>
     {
-        #region Private Fields
-
-        static readonly Random random = new(Environment.TickCount);
-
-        #endregion Private Fields
-
         #region Public Fields
 
         public bool SampleBool;
@@ -43,6 +37,7 @@ namespace Tests.Cave.IO
 
         public static SettingsStructFields Random(CultureInfo culture = null)
         {
+            var random = new Random(123);
             var len = random.Next(0, 90);
             char[] str;
             if (culture == null)
