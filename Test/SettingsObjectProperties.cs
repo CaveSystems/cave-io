@@ -6,12 +6,6 @@ namespace Tests.Cave.IO
 {
     public class SettingsObjectProperties : IEquatable<SettingsObjectProperties>
     {
-        #region Private Fields
-
-        static readonly Random random = new(Environment.TickCount);
-
-        #endregion Private Fields
-
         #region Public Properties
 
         public bool SampleBool { get; set; }
@@ -39,6 +33,7 @@ namespace Tests.Cave.IO
 
         public static SettingsObjectProperties Random(CultureInfo culture = null)
         {
+            var random = new Random(123);
             var len = random.Next(0, 90);
             char[] str;
             if (culture == null)

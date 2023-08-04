@@ -88,7 +88,7 @@ namespace Tests.Cave.IO.IniFile
                 Test(((char)i).ToString());
             }
 
-            var random = new Random();
+            var random = new Random(123);
             foreach (var encodingInfo in Encoding.GetEncodings())
             {
                 for (var i = 0; i < 100; i++)
