@@ -10,16 +10,32 @@ using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text;
 using NUnit.Framework;
+using Tests.Cave.IO;
+using Tests.Cave.IO.IniFile;
 
 namespace Test;
 
 [ExcludeFromCodeCoverage]
 class Program
 {
+    static bool initialized;
+
+    public static void Init()
+    {
+        if (!initialized)
+        {
+#if NET5_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
+            initialized = true;
+        }
+    }
+
     public const bool Verbose = false;
 
     static int Main(string[] args)
     {
+        Init();
         var errors = 0;
 
 #if NET5_0_OR_GREATER || NETCOREAPP1_0_OR_GREATER
