@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Cave;
 using Cave.Collections;
 using Cave.IO;
 using NUnit.Framework;
@@ -10,6 +14,8 @@ namespace Tests.Cave.IO;
 [TestFixture]
 public class RingBufferTests
 {
+    #region Public Methods
+
     [Test]
     public void CircularBufferTest()
     {
@@ -96,4 +102,6 @@ public class RingBufferTests
             Assert.AreEqual(default(long), value);
         }
     }
+
+    #endregion Public Methods
 }
