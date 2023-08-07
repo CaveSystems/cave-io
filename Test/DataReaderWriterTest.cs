@@ -547,7 +547,7 @@ namespace Tests.Cave.IO
                 try
                 {
                     TestReaderWriter(stringEncoding);
-                    Console.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) ok");
+                    Trace.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) ok");
                 }
                 catch (Exception ex)
                 {
@@ -558,7 +558,7 @@ namespace Tests.Cave.IO
                         throw new AggregateException($"Error at StringEncoding {stringEncoding}", ex);
                     }
 
-                    Console.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) not supported");
+                    Trace.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) not supported");
                     Assert.Ignore($"Test : info {id}: TestReaderWriter({stringEncoding}) not supported");
                 }
             });
@@ -576,7 +576,7 @@ namespace Tests.Cave.IO
 #endif
             {
                 TestReaderWriter(encoding);
-                Console.WriteLine($"Test : info {id}: TestReaderWriter({encoding.DisplayName}) ok");
+                Trace.WriteLine($"Test : info {id}: TestReaderWriter({encoding.DisplayName}) ok");
             });
         }
 
