@@ -165,6 +165,10 @@ public static class StringEncodingExtensions
         return result;
     }
 
+    /// <summary>Gets the byte order mark to use for the specified <paramref name="encoding"/>.</summary>
+    /// <param name="encoding">Encoding to use.</param>
+    /// <returns>Returns the bytes used as BOM.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public static byte[] GetByteOrderMark(this StringEncoding encoding) => encoding switch
     {
         StringEncoding.Undefined => throw new InvalidOperationException($"{nameof(StringEncoding)} {encoding} is undefined!"),
