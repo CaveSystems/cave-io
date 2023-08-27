@@ -51,6 +51,7 @@ namespace Cave.IO
         {
             FileName = name ?? throw new ArgumentNullException(nameof(name));
             Properties = properties.Valid ? properties : IniProperties.Default;
+            if (Properties.Culture.Calendar is not GregorianCalendar) throw new NotSupportedException($"Calendar {Properties.Culture.Calendar} is not supported!");
             this.lines = lines;
         }
 
@@ -187,6 +188,7 @@ namespace Cave.IO
 
 #else
                 : new IniReader(fileName, new string[0], properties);
+
 #endif
 
         /// <summary>Loads initialization data from stream.</summary>

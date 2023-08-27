@@ -1,6 +1,9 @@
-﻿using System.IO;
-using Cave.IO;
+﻿
+
 using NUnit.Framework;
+
+using System.IO;
+using Cave.IO;
 
 namespace Tests.Cave.IO
 {

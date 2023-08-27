@@ -2,6 +2,7 @@ using Cave.Security;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -14,33 +15,47 @@ namespace Cave.IO
         #region Public Fields
 
         /// <summary>Gets or sets the string boxing character.</summary>
-        public char BoxCharacter;
+        public char BoxCharacter { get; set; }
 
         /// <summary>Default is case insensitive. Set this to true to match properties exactly.</summary>
-        public bool CaseSensitive;
+        public bool CaseSensitive { get; set; }
 
         /// <summary>Gets / sets the <see cref="IniCompressionType"/>.</summary>
-        public IniCompressionType Compression;
+        public IniCompressionType Compression { get; set; }
+
+        CultureInfo culture;
 
         /// <summary>Gets / sets the culture used to en/decode values.</summary>
-        public CultureInfo Culture;
+        public CultureInfo Culture
+        {
+            get => culture;
+            set
+            {
+                culture = value;
+                if (culture.CultureTypes.HasFlag(CultureTypes.NeutralCultures))
+                {
+                    culture = CultureInfo.GetCultures(CultureTypes.SpecificCultures).FirstOrDefault(c => c.Name.StartsWith(value.Name));
+                }
+                culture ??= CultureInfo.InvariantCulture;
+            }
+        }
 
         /// <summary>Gets / sets the format of date time fields.</summary>
-        public string DateTimeFormat;
+        public string DateTimeFormat { get; set; }
 
         /// <summary>Gets / sets the kind for date time fields.</summary>
-        public DateTimeKind DateTimeKind;
+        public DateTimeKind DateTimeKind { get; set; }
 
         /// <summary>Disable un/-escaping of ascii characters (backslash escaping).</summary>
-        public bool DisableEscaping;
+        public bool DisableEscaping { get; set; }
 
         /// <summary>Gets / sets the <see cref="Encoding"/>.</summary>
-        public Encoding Encoding;
+        public Encoding Encoding { get; set; }
 
         /// <summary>
         /// Use simple synchronous encryption to protect from users eyes ? (This is not a security feature, use file system acl to protect from other users.)
         /// </summary>
-        public SymmetricAlgorithm Encryption;
+        public SymmetricAlgorithm Encryption { get; set; }
 
         #endregion Public Fields
 

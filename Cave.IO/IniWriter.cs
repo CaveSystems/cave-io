@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -36,6 +37,10 @@ namespace Cave.IO
         /// <param name="properties">Encoding properties.</param>
         public IniWriter(string fileName, IniProperties properties)
         {
+            if (properties.Culture.Calendar is not GregorianCalendar)
+            {
+                throw new NotSupportedException($"Calendar {properties.Culture.Calendar} is not supported!");
+            }
             Properties = properties.Valid ? properties : IniProperties.Default;
             FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
             if (File.Exists(fileName))

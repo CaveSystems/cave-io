@@ -1,13 +1,18 @@
-﻿using System.Globalization;
+﻿
+
+using NUnit.Framework;
+
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System;
 using Cave.IO;
-using NUnit.Framework;
 using System.IO;
 using System.Diagnostics;
 using Test;
+using System.Collections.Generic;
+using Cave;
 
 namespace Tests.Cave.IO;
 
@@ -110,23 +115,23 @@ public class TestInifile
     [Test]
     public void IniReaderWriterTest()
     {
-        object syncRoot = new();
+        List<Exception> errors = new();
         Parallel.ForEach(allCultures, culture =>
         {
             var temp = Path.GetTempFileName();
             try
             {
-                lock (syncRoot) Trace.WriteLine($"{nameof(IniReaderWriterTest)}.cs: info TI0002: Test {culture}, file {temp}");
-
-                if (culture.Calendar is not GregorianCalendar)
-                {
-                    lock (syncRoot) Trace.WriteLine($"- Skipping calendar {culture.Calendar}");
-                    return;
-                }
-
                 var settings = new SettingsStructFields[10];
                 var properties = IniProperties.Default;
                 properties.Culture = culture;
+
+                if (properties.Culture.Calendar is not GregorianCalendar)
+                {
+                    try { new IniWriter(temp, properties); }
+                    catch (NotSupportedException ex) { return; }
+                    Assert.Fail($"Calendar {properties.Culture.Calendar} should not be supported!");
+                    return;
+                }
                 var writer = new IniWriter(temp, properties);
 
                 {
@@ -136,7 +141,7 @@ public class TestInifile
                 }
                 for (var i = 1; i < settings.Length; i++)
                 {
-                    var setting = SettingsStructFields.Random(culture);
+                    var setting = SettingsStructFields.Random(properties.Culture);
                     settings[i] = setting;
                     writer.WriteFields($"Section {i}", setting);
                 }
@@ -145,11 +150,19 @@ public class TestInifile
                 TestReader(writer.ToReader(), settings);
                 TestReader(IniReader.FromFile(temp, properties), settings);
             }
+            catch (Exception ex)
+            {
+                lock (errors) errors.Add(ex);
+            }
             finally
             {
                 File.Delete(temp);
             }
         });
+        if (errors.Count > 0)
+        {
+            Assert.Fail("IniReaderWriterTest failed:\n" + errors.Select(e => $"{e}").JoinNewLine());
+        }
     }
 
     [Test]

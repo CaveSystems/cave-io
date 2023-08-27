@@ -1,7 +1,10 @@
-﻿using System.IO;
+﻿
+
+using NUnit.Framework;
+
+using System.IO;
 using System.Text;
 using Cave.IO;
-using NUnit.Framework;
 
 namespace Tests.Cave.IO
 {
