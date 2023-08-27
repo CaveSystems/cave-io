@@ -490,6 +490,11 @@ public sealed class DataReader
     /// <returns>The guid.</returns>
     public Guid ReadGuid() => new(ReadBytes(16));
 
+    /// <summary>Reads a HZ encoded string.</summary>
+    /// <param name="codepoints">Number of codepoints to read</param>
+    /// <returns>Returns the decoded string.</returns>
+    /// <exception cref="InvalidDataException"></exception>
+    /// s
     public string ReadHZ(int codepoints)
     {
         var block = new byte[Math.Max(16, codepoints * 2)];
