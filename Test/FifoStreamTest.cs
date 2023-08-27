@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿
+
+using NUnit.Framework;
+
+using System.Linq;
 using System.Threading.Tasks;
 using Cave.IO;
-using NUnit.Framework;
 
 namespace Tests.Cave.IO;
 

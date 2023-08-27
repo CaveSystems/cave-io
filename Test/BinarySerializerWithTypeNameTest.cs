@@ -1,8 +1,9 @@
-﻿using System;
+﻿using NUnit.Framework;
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using Cave.IO;
-using NUnit.Framework;
 
 namespace Tests.Cave.IO
 {
@@ -40,7 +41,6 @@ namespace Tests.Cave.IO
         {
             for (var i = 0; i < 100; i++)
             {
-                Trace.WriteLine($"SettingsObjectFields {i}");
                 var serializer = new BinarySerializer();
                 serializer.ClassFlags |= SerializerFlags.TypeName;
                 serializer.StructFlags |= SerializerFlags.TypeName;
@@ -58,7 +58,6 @@ namespace Tests.Cave.IO
         {
             for (var i = 0; i < 100; i++)
             {
-                Trace.WriteLine($"SettingsObjectProperties {i}");
                 var serializer = new BinarySerializer();
                 serializer.ClassFlags |= SerializerFlags.TypeName;
                 serializer.StructFlags |= SerializerFlags.TypeName;

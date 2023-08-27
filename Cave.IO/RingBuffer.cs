@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 #nullable enable
@@ -10,15 +11,8 @@ namespace Cave.IO;
 
 /// <summary>Provides a lock free ring buffer without overflow checking.</summary>
 /// <typeparam name="TValue">Item type.</typeparam>
-public class RingBuffer<TValue> : IRingBuffer<TValue>
+public partial class RingBuffer<TValue> : IRingBuffer<TValue>
 {
-    class Container
-    {
-        public Container(TValue value) => Value = value;
-
-        public readonly TValue Value;
-    }
-
     #region Private Fields
 
     int space;
@@ -28,16 +22,10 @@ public class RingBuffer<TValue> : IRingBuffer<TValue>
     int nextWritePosition;
     long rejectedCount;
     long lostCount;
-    readonly Container?[] Buffer;
+    readonly int mask;
+    readonly Container?[] buffer;
 
     #endregion Private Fields
-
-    #region Protected Fields
-
-    /// <summary>Gets the mask for indices.</summary>
-    protected readonly int Mask;
-
-    #endregion Protected Fields
 
     #region Public Constructors
 
@@ -50,8 +38,8 @@ public class RingBuffer<TValue> : IRingBuffer<TValue>
             throw new ArgumentOutOfRangeException(nameof(bits));
         }
 
-        Buffer = new Container?[1 << bits];
-        Mask = Capacity - 1;
+        buffer = new Container?[1 << bits];
+        mask = Capacity - 1;
         space = Capacity;
     }
 
@@ -63,35 +51,67 @@ public class RingBuffer<TValue> : IRingBuffer<TValue>
     public RingBufferOverflowFlags OverflowHandling { get; set; }
 
     /// <inheritdoc/>
-    public int Available => (int)(WriteCount - ReadCount);
+    public int Available
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => (int)(WriteCount - ReadCount);
+    }
 
     /// <inheritdoc/>
-    public int Capacity => Buffer.Length;
+    public int Capacity
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => buffer.Length;
+    }
 
     /// <inheritdoc/>
-    public long LostCount => Interlocked.Read(ref lostCount);
+    public long LostCount
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => Interlocked.Read(ref lostCount);
+    }
 
     /// <inheritdoc/>
-    public long ReadCount => Interlocked.Read(ref readCount);
+    public long ReadCount
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => Interlocked.Read(ref readCount);
+    }
 
     /// <inheritdoc/>
-    public int ReadPosition => nextReadPosition & Mask;
+    public int ReadPosition
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => nextReadPosition & mask;
+    }
 
     /// <inheritdoc/>
-    public long RejectedCount => Interlocked.Read(ref rejectedCount);
+    public long RejectedCount
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => Interlocked.Read(ref rejectedCount);
+    }
 
     /// <inheritdoc/>
-    public long WriteCount => Interlocked.Read(ref writeCount);
+    public long WriteCount
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => Interlocked.Read(ref writeCount);
+    }
 
     /// <inheritdoc/>
-    public int WritePosition => nextWritePosition & Mask;
+    public int WritePosition
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => nextWritePosition & mask;
+    }
 
     #endregion Public Properties
 
     #region Public Methods
 
     /// <inheritdoc/>
-    public void CopyTo(TValue[] array, int index) => Buffer.CopyTo(array, index);
+    public void CopyTo(TValue[] array, int index) => buffer.CopyTo(array, index);
 
     /// <inheritdoc/>
     public bool TryRead(out TValue value)
@@ -103,8 +123,8 @@ public class RingBuffer<TValue> : IRingBuffer<TValue>
             return false;
         }
         //read
-        var i = (Interlocked.Increment(ref nextReadPosition) - 1) & Mask;
-        var result = Interlocked.Exchange(ref Buffer[i], null);
+        var i = (Interlocked.Increment(ref nextReadPosition) - 1) & mask;
+        var result = Interlocked.Exchange(ref buffer[i], null);
         //second check, handles overshooting of multiple (same time) read operations passing first check
         if (result is null)
         {
@@ -158,8 +178,8 @@ public class RingBuffer<TValue> : IRingBuffer<TValue>
         var container = new Container(item);
         if (Interlocked.Decrement(ref space) >= 0)
         {
-            var i = (Interlocked.Increment(ref nextWritePosition) - 1) & Mask;
-            var prev = Interlocked.Exchange(ref Buffer[i], container);
+            var i = (Interlocked.Increment(ref nextWritePosition) - 1) & mask;
+            var prev = Interlocked.Exchange(ref buffer[i], container);
             if (prev != null) throw new Exception("Fatal buffer corruption detected!");
             Interlocked.Increment(ref writeCount);
             return true;
@@ -175,8 +195,8 @@ public class RingBuffer<TValue> : IRingBuffer<TValue>
             }
             else
             {
-                var i = (Interlocked.Increment(ref nextWritePosition) - 1) & Mask;
-                Buffer[i] = new(item);
+                var i = (Interlocked.Increment(ref nextWritePosition) - 1) & mask;
+                buffer[i] = new(item);
                 Interlocked.Increment(ref writeCount);
                 Interlocked.Increment(ref lostCount);
                 result = true;
@@ -192,6 +212,9 @@ public class RingBuffer<TValue> : IRingBuffer<TValue>
             return result;
         }
     }
+
+    /// <inheritdoc/>
+    public IRingBufferCursor<TValue> GetCursor() => new Cursor(this);
 
     #endregion Public Methods
 }

@@ -1,15 +1,15 @@
-﻿using System;
+﻿using NUnit.Framework;
+
+using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Cave;
 using Cave.IO;
-using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace Tests.Cave.IO
 {
@@ -140,7 +140,7 @@ namespace Tests.Cave.IO
             writer.Write((byte)1);
             writer.Write(randomString);
             writer.Write((ushort)2);
-            writer.Write(randomString.ToArray());
+            writer.Write(randomString.ToCharArray());
             writer.Write((uint)3);
             writer.WriteZeroTerminated(randomString.Replace("\0", ""));
             writer.WriteZeroTerminated("");
@@ -547,7 +547,6 @@ namespace Tests.Cave.IO
                 try
                 {
                     TestReaderWriter(stringEncoding);
-                    Trace.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) ok");
                 }
                 catch (Exception ex)
                 {
@@ -558,7 +557,6 @@ namespace Tests.Cave.IO
                         throw new AggregateException($"Error at StringEncoding {stringEncoding}", ex);
                     }
 
-                    Trace.WriteLine($"Test : info {id}: TestReaderWriter({stringEncoding}) not supported");
                     Assert.Ignore($"Test : info {id}: TestReaderWriter({stringEncoding}) not supported");
                 }
             });
@@ -576,7 +574,6 @@ namespace Tests.Cave.IO
 #endif
             {
                 TestReaderWriter(encoding);
-                Trace.WriteLine($"Test : info {id}: TestReaderWriter({encoding.DisplayName}) ok");
             });
         }
 
