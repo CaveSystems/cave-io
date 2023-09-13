@@ -15,15 +15,15 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
 {
     #region Private Fields
 
-    int space;
-    long readCount;
-    int nextReadPosition;
-    long writeCount;
-    int nextWritePosition;
-    long rejectedCount;
-    long lostCount;
-    readonly int mask;
     readonly Container?[] buffer;
+    readonly int mask;
+    long lostCount;
+    int nextReadPosition;
+    int nextWritePosition;
+    long readCount;
+    long rejectedCount;
+    int space;
+    long writeCount;
 
     #endregion Private Fields
 
@@ -48,13 +48,10 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     #region Public Properties
 
     /// <inheritdoc/>
-    public RingBufferOverflowFlags OverflowHandling { get; set; }
-
-    /// <inheritdoc/>
     public int Available
     {
         [MethodImpl((MethodImplOptions)0x0100)]
-        get => (int)(WriteCount - ReadCount);
+        get => (int)(WriteCount - ReadCount - LostCount);
     }
 
     /// <inheritdoc/>
@@ -70,6 +67,9 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
         [MethodImpl((MethodImplOptions)0x0100)]
         get => Interlocked.Read(ref lostCount);
     }
+
+    /// <inheritdoc/>
+    public RingBufferOverflowFlags OverflowHandling { get; set; }
 
     /// <inheritdoc/>
     public long ReadCount
@@ -93,6 +93,13 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     }
 
     /// <inheritdoc/>
+    public int Space
+    {
+        [MethodImpl((MethodImplOptions)0x0100)]
+        get => space;
+    }
+
+    /// <inheritdoc/>
     public long WriteCount
     {
         [MethodImpl((MethodImplOptions)0x0100)]
@@ -112,6 +119,40 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
 
     /// <inheritdoc/>
     public void CopyTo(TValue[] array, int index) => buffer.CopyTo(array, index);
+
+    /// <inheritdoc/>
+    public IRingBufferCursor<TValue> GetCursor() => new Cursor(this);
+
+    /// <inheritdoc/>
+    public TValue Read()
+    {
+        while (true)
+        {
+            if (TryRead(out var result)) return result;
+            Thread.Sleep(0);
+        }
+    }
+
+    /// <inheritdoc/>
+    public IList<TValue> ReadList(int count = 0)
+    {
+        if (count <= 0) count = Available;
+        List<TValue> list = new(count);
+        for (var i = 0; i < count; i++)
+        {
+            if (!TryRead(out var value)) break;
+            list.Add(value);
+        }
+        return list;
+    }
+
+    /// <inheritdoc/>
+    public TValue[] ToArray()
+    {
+        var clone = new TValue[Capacity];
+        CopyTo(clone, 0);
+        return clone;
+    }
 
     /// <inheritdoc/>
     public bool TryRead(out TValue value)
@@ -141,37 +182,6 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     }
 
     /// <inheritdoc/>
-    public TValue Read()
-    {
-        while (true)
-        {
-            if (TryRead(out var result)) return result;
-            Thread.Sleep(1);
-        }
-    }
-
-    /// <inheritdoc/>
-    public IList<TValue> ReadList(int count = 0)
-    {
-        if (count <= 0) count = Available;
-        List<TValue> list = new(count);
-        for (var i = 0; i < count; i++)
-        {
-            if (!TryRead(out var value)) break;
-            list.Add(value);
-        }
-        return list;
-    }
-
-    /// <inheritdoc/>
-    public TValue[] ToArray()
-    {
-        var clone = new TValue[Capacity];
-        CopyTo(clone, 0);
-        return clone;
-    }
-
-    /// <inheritdoc/>
     public bool Write(TValue item)
     {
         if (item is null) throw new ArgumentNullException(nameof(item));
@@ -185,36 +195,33 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
             return true;
         }
         //overflow handling
-        {
-            bool result;
-            if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Prevent))
-            {
-                Interlocked.Increment(ref space);
-                Interlocked.Increment(ref rejectedCount);
-                result = false;
-            }
-            else
-            {
-                var i = (Interlocked.Increment(ref nextWritePosition) - 1) & mask;
-                buffer[i] = new(item);
-                Interlocked.Increment(ref writeCount);
-                Interlocked.Increment(ref lostCount);
-                result = true;
-            }
-            if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Trace))
-            {
-                Trace.TraceError(new InternalBufferOverflowException().Message);
-            }
-            if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Exception))
-            {
-                throw new InternalBufferOverflowException();
-            }
-            return result;
-        }
-    }
 
-    /// <inheritdoc/>
-    public IRingBufferCursor<TValue> GetCursor() => new Cursor(this);
+        bool result;
+        if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Prevent))
+        {
+            Interlocked.Increment(ref rejectedCount);
+            result = false;
+        }
+        else
+        {
+            var i = (Interlocked.Increment(ref nextWritePosition) - 1) & mask;
+            buffer[i] = new(item);
+            Interlocked.Increment(ref writeCount);
+            Interlocked.Increment(ref lostCount);
+            result = true;
+        }
+        //give space back
+        Interlocked.Increment(ref space);
+        if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Trace))
+        {
+            Trace.TraceError(new InternalBufferOverflowException().Message);
+        }
+        if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Exception))
+        {
+            throw new InternalBufferOverflowException();
+        }
+        return result;
+    }
 
     #endregion Public Methods
 }
