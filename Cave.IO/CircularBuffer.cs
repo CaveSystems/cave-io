@@ -9,7 +9,13 @@ namespace Cave.IO;
 /// <typeparam name="TValue">Item type.</typeparam>
 public sealed class CircularBuffer<TValue> : RingBuffer<TValue>
 {
+    #region Private Fields
+
     int maxQueuedCount;
+
+    #endregion Private Fields
+
+    #region Public Constructors
 
     /// <summary>Creates a new instance of the <see cref="CircularBuffer{TValue}"/> class.</summary>
     /// <param name="bits">Number of bits to use for item capacity (defaults to 12 = 4096 items).</param>
@@ -17,6 +23,10 @@ public sealed class CircularBuffer<TValue> : RingBuffer<TValue>
     {
         OverflowHandling = RingBufferOverflowFlags.Prevent;
     }
+
+    #endregion Public Constructors
+
+    #region Public Properties
 
     /// <summary>Gets the maximum number of items queued.</summary>
     [Obsolete("This property is only updated on usage and may not work as expected!")]
@@ -35,4 +45,6 @@ public sealed class CircularBuffer<TValue> : RingBuffer<TValue>
         get => OverflowHandling.HasFlag(RingBufferOverflowFlags.Trace);
         set => OverflowHandling = value ? OverflowHandling | RingBufferOverflowFlags.Trace : OverflowHandling & ~RingBufferOverflowFlags.Trace;
     }
+
+    #endregion Public Properties
 }
