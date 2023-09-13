@@ -574,6 +574,11 @@ public sealed class DataReader
         }
     }
 
+    /// <summary>Reads an iso 2022 string</summary>
+    /// <param name="codepoints">Number of codepoints to read</param>
+    /// <param name="requireReset">Value indicating whether encoding requires reset to ascii or not</param>
+    /// <returns>Returns the read string</returns>
+    /// <exception cref="InvalidDataException"></exception>
     public string ReadISO2022(int codepoints, bool requireReset)
     {
         var block = new byte[Math.Max(16, codepoints * 2)];
@@ -660,7 +665,7 @@ public sealed class DataReader
                 if (result.CountCodepoints() >= codepoints)
                 {
                     //we are almost complete... iso2022 requires the string to end with a switch to ascii if a code was used
-                    //we we are in shift, we need the return
+                    //if we are in shift, we need the return to ascii
                     if (!requireReset) currentCode = string.Empty;
                     if (shift || currentCode is not ("(B" or ""))
                     {

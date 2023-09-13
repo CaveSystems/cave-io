@@ -56,7 +56,9 @@ public static class StringEncodingExtensions
             (StringEncoding)3 or StringEncoding.UTF_16 => Encoding.Unicode,
             StringEncoding.UTF_16BE => Encoding.BigEndianUnicode,
             (StringEncoding)4 or StringEncoding.UTF_32 => Encoding.UTF32,
+#pragma warning disable SYSLIB0001
             StringEncoding.UTF_7 => Encoding.UTF7,
+#pragma warning restore SYSLIB0001
             _ => Encoding.GetEncoding((int)encoding)
         };
 

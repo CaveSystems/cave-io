@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Cave;
 using Cave.Collections;
 using Cave.IO;
+using System.Drawing;
 
 namespace Tests.Cave.IO;
 
@@ -122,6 +123,53 @@ public class RingBufferTests
     }
 
     [Test]
+    public void MultiWriterTest()
+    {
+        const int count = 10000;
+        var fifo = new RingBuffer<int>();
+        int ready = 0;
+        var startSignal = new ManualResetEvent(false);
+
+        void Writer(int startValue)
+        {
+            Interlocked.Increment(ref ready);
+            startSignal.WaitOne();
+            Parallel.For(startValue * count, (startValue + 1) * count, (n) =>
+            {
+                if (!fifo.Write(n)) throw new Exception("This shall not happen!");
+                if (fifo.Available > fifo.Capacity * 4 / 5) Thread.Sleep(1);
+            });
+        }
+        void Reader()
+        {
+            var list = new List<int>(count * 10);
+            Interlocked.Increment(ref ready);
+            for (int i = 0; i < list.Capacity; i++)
+            {
+                list.Add(fifo.Read());
+            }
+            list.Sort();
+            CollectionAssert.AreEqual(new Counter(0, list.Capacity), list);
+        }
+        var tasks = new Counter(0, 10).Select((start) => Task.Factory.StartNew(() => Writer(start), TaskCreationOptions.LongRunning)).ToList();
+        tasks.Add(Task.Factory.StartNew(() => Reader()));
+        var watch = StopWatch.StartNew();
+        while (ready != 11)
+        {
+            Thread.Sleep(1);
+            if (watch.ElapsedSeconds > 20) Assert.Fail("Tasks did not startup in time!");
+        }
+        Trace.WriteLine($"{watch.Elapsed.FormatTime()} Ready");
+        startSignal.Set();
+        watch.Reset();
+        if (!Task.WaitAll(tasks.ToArray(), 60 * 1000))
+        {
+            Assert.Fail($"{tasks.Count(t => !t.IsCompleted)} tasks did not complete in time!");
+        }
+        Trace.WriteLine($"{watch.Elapsed.FormatTime()} Done");
+    }
+
+    [Test]
     public void OverFlowRejectTest()
     {
         var buf = new CircularBuffer<long>(8);
@@ -150,6 +198,78 @@ public class RingBufferTests
     }
 
     [Test]
+    public void OverFlowTest()
+    {
+        var buf = new RingBuffer<long>(2);
+        for (int i = 0; i < 10; i++) buf.Write(i);
+
+        //overflow position
+        Assert.AreEqual(6, buf.LostCount);
+        Assert.AreEqual(0, buf.ReadCount);
+        Assert.AreEqual(4, buf.Available);
+        Assert.AreEqual(10, buf.WriteCount);
+        Assert.AreEqual(0, buf.RejectedCount);
+        Assert.AreEqual(0, buf.Space);
+
+        foreach (var expected in new long[] { 8, 9, 6, 7 })
+        {
+            Assert.IsTrue(buf.TryRead(out long value));
+            Assert.AreEqual(expected, value);
+        }
+
+        Assert.AreEqual(4, buf.Space);
+        Assert.AreEqual(6, buf.LostCount);
+        Assert.AreEqual(4, buf.ReadCount);
+        Assert.AreEqual(0, buf.Available);
+        Assert.AreEqual(10, buf.WriteCount);
+        Assert.AreEqual(0, buf.RejectedCount);
+
+        {
+            var ok = buf.TryRead(out long value);
+            Assert.IsFalse(ok);
+        }
+
+        var expectedLostCount = 6;
+        var expectedReadCount = 4;
+        var expectedWriteCount = 10;
+        for (int i = 0; i < 10; i++)
+        {
+            //buffer empty
+            {
+                var ok = buf.TryRead(out long value);
+                Assert.IsFalse(ok);
+            }
+            //overflow buffer
+            for (int n = 0; n < 10; n++)
+            {
+                buf.Write(-n);
+                Assert.IsTrue(buf.Available > 0);
+                Assert.AreEqual(++expectedWriteCount, buf.WriteCount);
+            }
+            Assert.AreEqual(4, buf.Available);
+            //overwrite buffer
+            for (int n = 0; n < 4; n++) buf.Write(i);
+            expectedWriteCount += 4;
+            expectedLostCount += 10;
+            Assert.AreEqual(4, buf.Available);
+            Assert.AreEqual(expectedWriteCount, buf.WriteCount);
+            Assert.AreEqual(expectedLostCount, buf.LostCount);
+            Assert.AreEqual(expectedReadCount, buf.ReadCount);
+            //read 4 items
+            for (int n = 0; n < 4; n++)
+            {
+                Assert.IsTrue(buf.TryRead(out long value));
+                Assert.AreEqual((long)i, value);
+            }
+            expectedReadCount += 4;
+            Assert.AreEqual(0, buf.Available);
+            Assert.AreEqual(expectedWriteCount, buf.WriteCount);
+            Assert.AreEqual(expectedLostCount, buf.LostCount);
+            Assert.AreEqual(expectedReadCount, buf.ReadCount);
+        }
+    }
+
+    [Test]
     public void OverFlowWriteTest()
     {
         var buf = new RingBuffer<long>(8);
@@ -163,7 +283,7 @@ public class RingBufferTests
 
         for (int i = 0; i < 256; i++)
         {
-            Assert.AreEqual(1000 - i, buf.Available);
+            Assert.AreEqual(256 - i, buf.Available);
             Assert.AreEqual((long)i, buf.ReadCount);
             Assert.AreEqual(i, buf.ReadPosition);
             var read = buf.TryRead(out var value);
