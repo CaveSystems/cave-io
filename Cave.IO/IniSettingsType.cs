@@ -1,18 +1,17 @@
-﻿namespace Cave.IO
+﻿namespace Cave.IO;
+
+/// <summary>
+/// Provides available types of ini settings serialization.
+/// </summary>
+public enum IniSettingsType
 {
     /// <summary>
-    /// Provides available types of ini settings serialization.
+    /// Read / write fields of a struct / class
     /// </summary>
-    public enum IniSettingsType
-    {
-        /// <summary>
-        /// Read / write fields of a struct / class
-        /// </summary>
-        Fields = 0,
+    Fields = 0,
 
-        /// <summary>
-        /// Read / write properties of a struct / class
-        /// </summary>
-        Properties = 1,
-    }
+    /// <summary>
+    /// Read / write properties of a struct / class
+    /// </summary>
+    Properties = 1,
 }

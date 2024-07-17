@@ -1150,10 +1150,7 @@ public sealed class DataReader
             return ReadUTF7(maximumBytes, zeroChars);
         }
 
-        if (zeroBytes == null)
-        {
-            zeroBytes = StringEncoding.Encode(zeroChars, withRoundtripTest: true);
-        }
+        zeroBytes ??= StringEncoding.Encode(zeroChars, withRoundtripTest: true);
 
         return ReadUntil(zeroBytes, zeroChars, maximumBytes);
     }
