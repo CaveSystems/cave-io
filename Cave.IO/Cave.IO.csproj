@@ -9,9 +9,9 @@
             net48;
             netstandard2.0;netstandard2.1;
             net5.0;net6.0;net7.0;
-            netcoreapp3.0;netcoreapp3.1;
-            netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;
+            netcoreapp3.1;
         </TargetFrameworks>
+
         <!--project-->
         <RootNamespace>Cave.IO</RootNamespace>
         <AssemblyOriginatorKeyFile>cave-io.snk</AssemblyOriginatorKeyFile>
@@ -39,7 +39,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Cave.Extensions" Version="3.0.8" />
+        <PackageReference Include="Cave.Extensions" Version="3.0.13" />
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -8,7 +8,7 @@ namespace Cave.IO;
 /// Provides a fifo buffer for byte[] blocks readable as stream. New buffers can be appended to the end of the stream and read like a stream. The performance of
 /// this class is best with medium sized buffers (1kiB - 64kiB).
 /// </summary>
-public class FifoStream : Stream
+public class FifoStream : Stream, IFifoStream
 {
     #region Private Fields
 

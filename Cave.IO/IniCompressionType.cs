@@ -1,23 +1,22 @@
-﻿namespace Cave.IO
+﻿namespace Cave.IO;
+
+/// <summary>
+/// Available ini compression types.
+/// </summary>
+public enum IniCompressionType
 {
     /// <summary>
-    /// Available ini compression types.
+    /// No compression, no encryption
     /// </summary>
-    public enum IniCompressionType
-    {
-        /// <summary>
-        /// No compression, no encryption
-        /// </summary>
-        None = 0x00,
+    None = 0x00,
 
-        /// <summary>
-        /// Compression using deflate
-        /// </summary>
-        Deflate = 0x01,
+    /// <summary>
+    /// Compression using deflate
+    /// </summary>
+    Deflate = 0x01,
 
-        /// <summary>
-        /// Compression using gzip
-        /// </summary>
-        GZip = 0x02,
-    }
+    /// <summary>
+    /// Compression using gzip
+    /// </summary>
+    GZip = 0x02,
 }
