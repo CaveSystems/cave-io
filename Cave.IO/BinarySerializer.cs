@@ -408,6 +408,12 @@ public class BinarySerializer
             case TypeCode.ARRAY:
             {
                 var elementType = type.GetElementType();
+                if (elementType is null)
+                {
+                    var args = type.GetGenericArguments();
+                    if (args.Length != 1) throw new NotSupportedException($"{typeCode} are supported only with a single generic element! Affected type: {type}");
+                    elementType = args.Single();
+                }
                 return DeserializeArray(elementType, reader);
             }
 
@@ -552,7 +558,7 @@ public class BinarySerializer
         {
             case TypeCode.ENUMERATION:
             {
-                WriteEnumeration(type, ((IEnumerable)value), writer);
+                WriteEnumeration(type, (IEnumerable)value, writer);
                 return;
             }
             case TypeCode.ARRAY:
