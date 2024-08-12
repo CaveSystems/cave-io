@@ -72,18 +72,18 @@ public struct FourCC : IEquatable<FourCC>
     /// <summary>Checks for equality with the <see cref="object.ToString()"/> method of the specified <paramref name="obj"/>.</summary>
     /// <param name="obj">The object to compare to.</param>
     /// <returns>Returns true if the specified object is equal to the current object; otherwise, false.</returns>
-    public override bool Equals(object obj) => Equals(ToString(), obj?.ToString());
+    public override readonly bool Equals(object obj) => Equals(ToString(), obj?.ToString());
 
     /// <inheritdoc/>
-    public bool Equals(FourCC other) => value == other.value;
+    public readonly bool Equals(FourCC other) => value == other.value;
 
     /// <summary>Serves as the default hash function.</summary>
     /// <returns>Returns a hash code for the current object.</returns>
-    public override int GetHashCode() => ToString().GetHashCode();
+    public override readonly int GetHashCode() => ToString().GetHashCode();
 
     /// <summary>Retrieves the 4 character string this value represents.</summary>
     /// <returns>Returns a string[4].</returns>
-    public override string ToString()
+    public override readonly string ToString()
     {
         var bytes = BitConverter.GetBytes(value);
         return Encoding.ASCII.GetString(bytes);

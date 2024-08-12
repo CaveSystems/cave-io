@@ -4,10 +4,16 @@ namespace Cave.IO;
 
 partial class RingBuffer<TValue>
 {
-    class Container
-    {
-        public Container(TValue value) => Value = value;
+    #region Private Classes
 
-        public readonly TValue Value;
+    sealed class Container(TValue value)
+    {
+        #region Public Fields
+
+        public readonly TValue Value = value;
+
+        #endregion Public Fields
     }
+
+    #endregion Private Classes
 }

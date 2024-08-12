@@ -200,7 +200,7 @@ public class ResistantFileStream : Stream
     public override long Position { get => streamPosition; set => Seek(value, SeekOrigin.Begin); }
 
     /// <summary>Clears buffers for this stream and causes any buffered data to be written to the file.</summary>
-    public override void Flush() => Resistant(() => stream.Flush());
+    public override void Flush() => Resistant(stream.Flush);
 
     /// <summary>Reads a block of bytes from the stream and writes the data in a given buffer.</summary>
     /// <param name="buffer">

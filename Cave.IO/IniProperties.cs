@@ -9,10 +9,11 @@ using System.Text;
 namespace Cave.IO;
 
 /// <summary>Provides properties for the <see cref="IniReader"/> and <see cref="IniWriter"/> classes.</summary>
-[SuppressMessage("Design", "CA1001")]
 public struct IniProperties : IEquatable<IniProperties>, IDisposable
 {
     #region Public Fields
+
+    CultureInfo culture;
 
     /// <summary>Gets or sets the string boxing character.</summary>
     public char BoxCharacter { get; set; }
@@ -23,21 +24,11 @@ public struct IniProperties : IEquatable<IniProperties>, IDisposable
     /// <summary>Gets / sets the <see cref="IniCompressionType"/>.</summary>
     public IniCompressionType Compression { get; set; }
 
-    CultureInfo culture;
-
     /// <summary>Gets / sets the culture used to en/decode values.</summary>
     public CultureInfo Culture
     {
-        get => culture;
-        set
-        {
-            culture = value;
-            if (culture.CultureTypes.HasFlag(CultureTypes.NeutralCultures))
-            {
-                culture = CultureInfo.GetCultures(CultureTypes.SpecificCultures).FirstOrDefault(c => c.Name.StartsWith(value.Name));
-            }
-            culture ??= CultureInfo.InvariantCulture;
-        }
+        readonly get => culture ?? CultureInfo.InvariantCulture;
+        set => culture = value;
     }
 
     /// <summary>Gets / sets the format of date time fields.</summary>
@@ -80,15 +71,15 @@ public struct IniProperties : IEquatable<IniProperties>, IDisposable
     }
 
     /// <summary>Gets a value indicating whether the properties are all set or not.</summary>
-    public bool Valid => Enum.IsDefined(typeof(IniCompressionType), Compression) && (Encoding != null) && (Culture != null) && (DateTimeKind is DateTimeKind.Local or DateTimeKind.Utc);
+    public readonly bool Valid => Enum.IsDefined(typeof(IniCompressionType), Compression) && (Encoding != null) && (Culture != null) && (DateTimeKind is DateTimeKind.Local or DateTimeKind.Utc);
 
     #endregion Public Properties
 
     #region Public Methods
 
     /// <summary>
-    /// Obtains <see cref="IniProperties"/> with default settings and simple encryption. (This is not a security feature, use file system acl to protect
-    /// from other users.)
+    /// Obtains <see cref="IniProperties"/> with default settings and simple encryption. (This is not a security feature, use file system acl to protect from
+    /// other users.)
     /// </summary>
     /// <param name="password">Password to use.</param>
     /// <returns>Returns a new <see cref="IniProperties"/> instance.</returns>
@@ -112,8 +103,8 @@ public struct IniProperties : IEquatable<IniProperties>, IDisposable
     }
 
     /// <summary>
-    /// Obtains <see cref="IniProperties"/> with default settings and simple encryption. (This is not a security feature, use file system acl to protect
-    /// from other users.)
+    /// Obtains <see cref="IniProperties"/> with default settings and simple encryption. (This is not a security feature, use file system acl to protect from
+    /// other users.)
     /// </summary>
     /// <param name="password">Password to use.</param>
     /// <param name="salt">Salt to use.</param>
@@ -149,7 +140,7 @@ public struct IniProperties : IEquatable<IniProperties>, IDisposable
     public static bool operator ==(IniProperties properties1, IniProperties properties2) => properties1.Equals(properties2);
 
     /// <inheritdoc/>
-    public void Dispose()
+    public readonly void Dispose()
     {
         if (Encryption is IDisposable disposable) disposable.Dispose();
     }
@@ -157,12 +148,12 @@ public struct IniProperties : IEquatable<IniProperties>, IDisposable
     /// <summary>Determines whether the specified <see cref="object"/>, is equal to this instance.</summary>
     /// <param name="obj">The <see cref="object"/> to compare with this instance.</param>
     /// <returns><c>true</c> if the specified <see cref="object"/> is equal to this instance; otherwise, <c>false</c>.</returns>
-    public override bool Equals(object obj) => obj is IniProperties other && Equals(other);
+    public override readonly bool Equals(object obj) => obj is IniProperties other && Equals(other);
 
     /// <summary>Determines whether the specified <see cref="IniProperties"/>, is equal to this instance.</summary>
     /// <param name="other">The <see cref="IniProperties"/> to compare with this instance.</param>
     /// <returns><c>true</c> if the specified <see cref="IniProperties"/> is equal to this instance; otherwise, <c>false</c>.</returns>
-    public bool Equals(IniProperties other) => other.CaseSensitive == CaseSensitive
+    public readonly bool Equals(IniProperties other) => other.CaseSensitive == CaseSensitive
             && other.Compression == Compression
             && other.Culture == Culture
             && other.DateTimeFormat == DateTimeFormat
@@ -172,7 +163,7 @@ public struct IniProperties : IEquatable<IniProperties>, IDisposable
 
     /// <summary>Returns a hash code for this instance.</summary>
     /// <returns>A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.</returns>
-    public override int GetHashCode() => base.GetHashCode();
+    public override readonly int GetHashCode() => base.GetHashCode();
 
     #endregion Public Methods
 }

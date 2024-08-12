@@ -19,7 +19,7 @@ public class BitConverterLE : BitConverterBase
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
     /// <returns>The value as encoded byte array.</returns>
-    public override byte[] GetBytes(ushort value) => new[] { (byte)(value % 256), (byte)(value / 256) };
+    public override byte[] GetBytes(ushort value) => [(byte)(value % 256), (byte)(value / 256)];
 
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>

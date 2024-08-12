@@ -33,7 +33,7 @@ public static class Ini
 
     internal static string Escape(string value, IniProperties properties)
     {
-        var box = value.IndexOfAny(new[] { properties.BoxCharacter, '#', ' ' }) > -1;
+        var box = value.IndexOfAny([properties.BoxCharacter, '#', ' ']) > -1;
         if (!properties.DisableEscaping)
         {
             value = value.EscapeUtf8();
@@ -83,6 +83,7 @@ public static class Ini
     /// <value>The local machine ini file.</value>
     public static IniReader GetLocalMachineIniFile()
     {
+        var fileName = MainAssembly.Get()?.GetName()?.Name ?? "main";
         var location = FileLocation.Create(root: RootLocation.AllUserConfig, extension: PlatformExtension);
         FileSystem.TouchFile(location);
         return IniReader.FromFile(location);
@@ -92,7 +93,8 @@ public static class Ini
     /// <value>The local user ini file.</value>
     public static IniReader GetLocalUserIniFile()
     {
-        var location = FileLocation.Create(root: RootLocation.LocalUserConfig, extension: PlatformExtension);
+        var fileName = MainAssembly.Get()?.GetName()?.Name ?? "main";
+        var location = FileLocation.Create(root: RootLocation.LocalUserConfig, fileName: fileName, extension: PlatformExtension);
         FileSystem.TouchFile(location);
         return IniReader.FromFile(location);
     }
@@ -101,7 +103,8 @@ public static class Ini
     /// <value>The program ini file.</value>
     public static IniReader GetProgramIniFile()
     {
-        var location = FileLocation.Create(root: RootLocation.Program, extension: PlatformExtension);
+        var fileName = MainAssembly.Get()?.GetName()?.Name ?? "main";
+        var location = FileLocation.Create(root: RootLocation.Program, fileName: fileName, extension: PlatformExtension);
         FileSystem.TouchFile(location);
         return IniReader.FromFile(location);
     }
@@ -110,7 +113,8 @@ public static class Ini
     /// <value>The user ini file.</value>
     public static IniReader GetUserIniFile()
     {
-        var location = FileLocation.Create(root: RootLocation.RoamingUserConfig, extension: PlatformExtension);
+        var fileName = MainAssembly.Get()?.GetName()?.Name ?? "main";
+        var location = FileLocation.Create(root: RootLocation.RoamingUserConfig, fileName: fileName, extension: PlatformExtension);
         FileSystem.TouchFile(location);
         return IniReader.FromFile(location);
     }

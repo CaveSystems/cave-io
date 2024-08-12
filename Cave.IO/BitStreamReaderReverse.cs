@@ -4,7 +4,9 @@ using System.IO;
 namespace Cave.IO;
 
 /// <summary>Bit Stream Reader Class for reversed bitstreams of the form: byte0[bit7,bit6,bit5,bit4,bit3,bit2,bit1,bit0] byte1[bit15,bit14,bit13,bit12,...].</summary>
-public class BitStreamReaderReverse
+/// <remarks>Initializes a new instance of the <see cref="BitStreamReaderReverse"/> class.</remarks>
+/// <param name="stream">The stream to read from.</param>
+public class BitStreamReaderReverse(Stream stream)
 {
     #region Private Fields
 
@@ -13,22 +15,12 @@ public class BitStreamReaderReverse
 
     #endregion Private Fields
 
-    #region Public Constructors
-
-    /// <summary>Initializes a new instance of the <see cref="BitStreamReaderReverse"/> class.</summary>
-    /// <param name="stream">The stream to read from.</param>
-    public BitStreamReaderReverse(Stream stream) => BaseStream = stream;
-
-    #endregion Public Constructors
-
     #region Public Properties
 
     /// <summary>Gets the BaseStream.</summary>
-    public Stream BaseStream { get; }
+    public Stream BaseStream { get; } = stream;
 
-    /// <summary>
-    /// Gets a value indicating whether the end of stream is reached during bit reading. This can always be called, even if the stream cannot seek.
-    /// </summary>
+    /// <summary>Gets a value indicating whether the end of stream is reached during bit reading. This can always be called, even if the stream cannot seek.</summary>
     public bool EndOfStream
     {
         get
@@ -86,6 +78,10 @@ public class BitStreamReaderReverse
     #endregion Public Properties
 
     #region Public Methods
+
+    /// <summary>Gets a hash code for this object.</summary>
+    /// <returns>The hash code.</returns>
+    public override int GetHashCode() => base.GetHashCode();
 
     /// <summary>reads a bit from the buffer.</summary>
     /// <returns>A bit.</returns>
@@ -145,14 +141,6 @@ public class BitStreamReaderReverse
         return result;
     }
 
-    #endregion Public Methods
-
-    #region overrides
-
-    /// <summary>Gets a hash code for this object.</summary>
-    /// <returns>The hash code.</returns>
-    public override int GetHashCode() => base.GetHashCode();
-
     /// <summary>Gets the name of the class and the current state.</summary>
     /// <returns>The classname and current state.</returns>
     public override string ToString()
@@ -177,5 +165,5 @@ public class BitStreamReaderReverse
         return result;
     }
 
-    #endregion overrides
+    #endregion Public Methods
 }

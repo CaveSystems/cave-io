@@ -157,7 +157,7 @@ public static class MarshalStruct
             data.Add(b);
         }
 
-        return Encoding.UTF8.GetString(data.ToArray());
+        return Encoding.UTF8.GetString([.. data]);
     }
 
     /// <summary>Reads a native UTF8 strings array.</summary>
@@ -183,7 +183,7 @@ public static class MarshalStruct
                     break;
                 }
 
-                strings.Add(Encoding.UTF8.GetString(current.ToArray()));
+                strings.Add(Encoding.UTF8.GetString([.. current]));
                 current.Clear();
                 continue;
             }
@@ -191,7 +191,7 @@ public static class MarshalStruct
             current.Add(b);
         }
 
-        return strings.ToArray();
+        return [.. strings];
     }
 
     /// <summary>Gets the size of the specified structure.</summary>

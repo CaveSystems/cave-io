@@ -4,20 +4,14 @@ using System.Collections.Generic;
 namespace Cave.IO;
 
 /// <summary>Provides binary conversion routines.</summary>
-public class Bits
+/// <remarks>Initializes a new instance of the <see cref="Bits"/> class.</remarks>
+/// <param name="data">Binary data to initialize.</param>
+public class Bits(byte[] data)
 {
-    #region Public Constructors
-
-    /// <summary>Initializes a new instance of the <see cref="Bits"/> class.</summary>
-    /// <param name="data">Binary data to initialize.</param>
-    public Bits(byte[] data) => Data = data;
-
-    #endregion Public Constructors
-
     #region Public Properties
 
     /// <summary>Gets a copy of all data.</summary>
-    public IList<byte> Data { get; }
+    public IList<byte> Data { get; } = data;
 
     #endregion Public Properties
 
@@ -25,11 +19,11 @@ public class Bits
 
     /// <summary>Implicitly converts an array to <see cref="Bits"/> data.</summary>
     /// <param name="data">The binary data.</param>
-    public static implicit operator Bits(byte[] data) => data == null ? new Bits(new byte[0]) : new Bits(data);
+    public static implicit operator Bits(byte[] data) => data == null ? new Bits([]) : new Bits(data);
 
     /// <summary>Implicitly converts <see cref="Bits"/> data to an array.</summary>
     /// <param name="value">The binary data.</param>
-    public static implicit operator byte[](Bits value) => value?.Data as byte[] ?? new byte[0];
+    public static implicit operator byte[](Bits value) => value?.Data as byte[] ?? [];
 
     /// <summary>Reflects 32 bits.</summary>
     /// <param name="x">The bits.</param>
@@ -204,7 +198,7 @@ public class Bits
         }
 
         result.Reverse();
-        return new string(result.ToArray());
+        return new string([.. result]);
     }
 
     /// <summary>Converts a binary value (100110101) to a "normal" value (0x135 = 309).</summary>

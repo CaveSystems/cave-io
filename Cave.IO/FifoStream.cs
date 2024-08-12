@@ -29,22 +29,10 @@ public class FifoStream : Stream, IFifoStream
     #region Public Properties
 
     /// <summary>Gets the number of bytes available from the current read position to the end of the stream.</summary>
-    public virtual int Available
-    {
-        get
-        {
-            return realLength - realPosition;
-        }
-    }
+    public virtual int Available => realLength - realPosition;
 
     /// <summary>Gets the number of buffers in the stream.</summary>
-    public int BufferCount
-    {
-        get
-        {
-            return Buffers.Count;
-        }
-    }
+    public int BufferCount => Buffers.Count;
 
     /// <summary>Gets a value indicating whether this stream can always be read or not.</summary>
     public override bool CanRead => true;
@@ -538,10 +526,7 @@ public class FifoStream : Stream, IFifoStream
     /// <param name="buffer">An array of bytes.</param>
     /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
     /// <param name="count">The number of bytes to be written to the current stream.</param>
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-        AppendBuffer(buffer, offset, count);
-    }
+    public override void Write(byte[] buffer, int offset, int count) => AppendBuffer(buffer, offset, count);
 
     #endregion Public Methods
 }

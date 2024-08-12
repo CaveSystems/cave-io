@@ -174,7 +174,7 @@ public static class StringEncodingExtensions
     public static byte[] GetByteOrderMark(this StringEncoding encoding) => encoding switch
     {
         StringEncoding.Undefined => throw new InvalidOperationException($"{nameof(StringEncoding)} {encoding} is undefined!"),
-        (StringEncoding)1 or StringEncoding.US_ASCII => new byte[0],
+        (StringEncoding)1 or StringEncoding.US_ASCII => [],
         (StringEncoding)2 or StringEncoding.UTF_8 => new UTF8().ByteOrderMark,
         (StringEncoding)3 or StringEncoding.UTF_16 => new UTF16LE().ByteOrderMark,
         StringEncoding.UTF_16BE => new UTF16BE().ByteOrderMark,

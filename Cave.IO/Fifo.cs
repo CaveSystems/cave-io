@@ -11,12 +11,12 @@ public class Fifo<TValue>
 {
     #region Private Classes
 
-    class Container
+    sealed class Container
     {
         #region Private Fields
 
+        readonly TValue? value;
         Container? next;
-        TValue? value;
 
         #endregion Private Fields
 
@@ -65,10 +65,7 @@ public class Fifo<TValue>
     #region Public Constructors
 
     /// <summary>Creates a new instance of the <see cref="Fifo{TValue}"/> class.</summary>
-    public Fifo()
-    {
-        first = last = new();
-    }
+    public Fifo() => first = last = new();
 
     #endregion Public Constructors
 

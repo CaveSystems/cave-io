@@ -69,15 +69,15 @@ public struct SingleStruct : IEquatable<SingleStruct>
 
     /// <summary>Returns a hash code for this instance.</summary>
     /// <returns>A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.</returns>
-    public override int GetHashCode() => base.GetHashCode();
+    public override readonly int GetHashCode() => base.GetHashCode();
 
     /// <summary>Determines whether the specified <see cref="object"/>, is equal to this instance.</summary>
     /// <param name="obj">The <see cref="object"/> to compare with this instance.</param>
     /// <returns><c>true</c> if the specified <see cref="object"/> is equal to this instance; otherwise, <c>false</c>.</returns>
-    public override bool Equals(object obj) => obj is SingleStruct s && Equals(s);
+    public override readonly bool Equals(object obj) => obj is SingleStruct s && Equals(s);
 
     /// <summary>Determines whether the specified <see cref="SingleStruct"/>, is equal to this instance.</summary>
     /// <param name="other">The <see cref="SingleStruct"/> to compare with this instance.</param>
     /// <returns><c>true</c> if the specified <see cref="SingleStruct"/> is equal to this instance; otherwise, <c>false</c>.</returns>
-    public bool Equals(SingleStruct other) => other.UInt32 == UInt32;
+    public readonly bool Equals(SingleStruct other) => other.UInt32 == UInt32;
 }

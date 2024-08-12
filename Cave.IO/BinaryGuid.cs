@@ -30,7 +30,7 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
     public static bool operator !=(BinaryGuid g1, BinaryGuid g2) => !Equals(g1?.ToString(), g2?.ToString());
 
     /// <inheritdoc/>
-    public static bool operator <(BinaryGuid left, BinaryGuid right) => left is null ? right is object : left.CompareTo(right) < 0;
+    public static bool operator <(BinaryGuid left, BinaryGuid right) => left is null ? right is not null : left.CompareTo(right) < 0;
 
     /// <inheritdoc/>
     public static bool operator <=(BinaryGuid left, BinaryGuid right) => left is null || left.CompareTo(right) <= 0;
@@ -42,7 +42,7 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
     public static bool operator ==(BinaryGuid g1, BinaryGuid g2) => Equals(g1?.ToString(), g2?.ToString());
 
     /// <inheritdoc/>
-    public static bool operator >(BinaryGuid left, BinaryGuid right) => left is object && left.CompareTo(right) > 0;
+    public static bool operator >(BinaryGuid left, BinaryGuid right) => left is not null && left.CompareTo(right) > 0;
 
     /// <inheritdoc/>
     public static bool operator >=(BinaryGuid left, BinaryGuid right) => left is null ? right is null : left.CompareTo(right) >= 0;

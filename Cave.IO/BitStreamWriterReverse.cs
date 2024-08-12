@@ -4,7 +4,8 @@ using System.IO;
 namespace Cave.IO;
 
 /// <summary>Bit Stream Reader Class for Bitstreams of the form: byte0[bit7,bit6,bit5,bit4,bit3,bit2,bit1,bit0] byte1[bit15,bit14,bit13,bit12,...].</summary>
-public sealed class BitStreamWriterReverse
+/// <param name="stream">The stream to write to.</param>
+public sealed class BitStreamWriterReverse(Stream stream)
 {
     #region Private Fields
 
@@ -13,18 +14,10 @@ public sealed class BitStreamWriterReverse
 
     #endregion Private Fields
 
-    #region Public Constructors
-
-    /// <summary>Initializes a new instance of the <see cref="BitStreamWriterReverse"/> class.</summary>
-    /// <param name="stream">The stream to write to.</param>
-    public BitStreamWriterReverse(Stream stream) => BaseStream = stream;
-
-    #endregion Public Constructors
-
     #region Public Properties
 
     /// <summary>Gets the BaseStream.</summary>
-    public Stream BaseStream { get; private set; }
+    public Stream BaseStream { get; private set; } = stream;
 
     /// <summary>Gets retrieves the length in bits.</summary>
     public long Length => (BaseStream.Length * 8) + position;

@@ -18,72 +18,6 @@ namespace Tests.Cave.IO
     {
         #region Private Methods
 
-        void TestReaderWriter(EncodingInfo encoding)
-        {
-            var stream = new MemoryStream();
-            var writer = new DataWriter(stream, encoding.GetEncoding());
-            var reader = new DataReader(stream, encoding.GetEncoding());
-            TestReaderWriter(reader, writer);
-        }
-
-        void TestStringsRead(DataReader reader, string randomString)
-        {
-            var msg = $"{reader.StringEncoding}: Failed writer -> reader roundtrip!";
-            Assert.AreEqual("Testline", reader.ReadLine(), msg + " Preamble test failed!");
-            {
-                var expected = reader.StringEncoding.Decode(reader.StringEncoding.Encode("Test.Too.Long!").GetRange(0, 8));
-                Assert.AreEqual(expected, reader.ReadString(byteCount: 8).BeforeFirst('\0'), msg);
-            }
-
-            Assert.AreEqual(0x01020304, reader.ReadInt32(), msg);
-            Assert.AreEqual(randomString[0], reader.ReadChar(), msg);
-            Assert.AreEqual((byte)0, reader.ReadByte(), msg);
-            Assert.AreEqual(randomString[1], reader.ReadChar(), msg);
-            Assert.AreEqual((byte)1, reader.ReadByte(), msg);
-            {
-                var codepoints = randomString.CountCodepoints();
-                var readString = reader.ReadChars(codepoints);
-                CollectionAssert.AreEqual(randomString, readString, msg);
-            }
-            Assert.AreEqual((ushort)2, reader.ReadUInt16(), msg);
-            {
-                var codepoints = randomString.CountCodepoints();
-                var readChars = reader.ReadChars(codepoints);
-                CollectionAssert.AreEqual(randomString, readChars, msg);
-            }
-            Assert.AreEqual((uint)3, reader.ReadUInt32(), msg);
-
-            Assert.AreEqual(randomString.Replace("\0", ""), reader.ReadZeroTerminatedString(65536), msg);
-            Assert.AreEqual("", reader.ReadZeroTerminatedString(1024), msg);
-
-            Assert.AreEqual(randomString, reader.ReadString(), msg);
-            Assert.AreEqual("", reader.ReadString(), msg);
-            Assert.AreEqual(null, reader.ReadPrefixedString(), msg);
-
-            Assert.AreEqual(randomString.Replace(reader.LineFeed, ""), reader.ReadLine(), msg);
-            Assert.AreEqual("", reader.ReadLine(), msg);
-
-            switch (reader.NewLineMode)
-            {
-                case NewLineMode.CR:
-                {
-                    var expected = "\n\n\n";
-                    var readLine = reader.ReadLine();
-                    Assert.AreEqual(expected, readLine, msg);
-                    break;
-                }
-                case NewLineMode.CRLF:
-                case NewLineMode.LF:
-                {
-                    var expected = "\r\r\r";
-                    var readLine = reader.ReadLine();
-                    Assert.AreEqual(expected, readLine, msg);
-                    break;
-                }
-                default: throw new NotSupportedException();
-            }
-        }
-
         string CreateString(StringEncoding encoding, byte[] randomBuffer)
         {
             var charArray = new char[128];
@@ -123,49 +57,12 @@ namespace Tests.Cave.IO
             return randomString;
         }
 
-        void TestStringsWrite(DataWriter writer, string randomString)
+        void TestReaderWriter(EncodingInfo encoding)
         {
-            if (writer.StringEncoding != StringEncoding.UTF_7)
-            {
-                writer.Write(writer.StringEncoding.GetByteOrderMark());
-            }
-            writer.WriteLine("Testline");
-            var pos = writer.BaseStream.Position;
-            writer.WriteString("Test.Too.Long!", byteCount: 8);
-            Assert.AreEqual(8, writer.BaseStream.Position - pos);
-            writer.Write(0x01020304);
-            writer.Write(randomString[0]);
-            writer.Write((byte)0);
-            writer.Write(randomString[1]);
-            writer.Write((byte)1);
-            writer.Write(randomString);
-            writer.Write((ushort)2);
-            writer.Write(randomString.ToCharArray());
-            writer.Write((uint)3);
-            writer.WriteZeroTerminated(randomString.Replace("\0", ""));
-            writer.WriteZeroTerminated("");
-            Assert.Throws<ArgumentNullException>(() => writer.WriteZeroTerminated((string)null));
-            writer.WritePrefixed(randomString);
-            writer.WritePrefixed("");
-            writer.WritePrefixed((string)null);
-            writer.WriteLine(randomString.Replace(writer.LineFeed, ""));
-            writer.WriteLine("");
-            Assert.Throws<ArgumentNullException>(() => writer.WriteLine((string)null));
-            switch (writer.NewLineMode)
-            {
-                case NewLineMode.CR:
-                {
-                    writer.WriteLine("\n\n\n");
-                    break;
-                }
-                case NewLineMode.CRLF:
-                case NewLineMode.LF:
-                {
-                    writer.WriteLine("\r\r\r");
-                    break;
-                }
-                default: throw new NotSupportedException();
-            }
+            var stream = new MemoryStream();
+            var writer = new DataWriter(stream, encoding.GetEncoding());
+            var reader = new DataReader(stream, encoding.GetEncoding());
+            TestReaderWriter(reader, writer);
         }
 
         void TestReaderWriter(DataReader reader, DataWriter writer)
@@ -305,10 +202,6 @@ namespace Tests.Cave.IO
             CollectionAssert.AreEqual(buffer, reader.ReadBytes(buffer.Length), msg);
         }
 
-        #endregion Private Methods
-
-        #region Public Methods
-
         void TestReaderWriter(StringEncoding stringEncoding)
         {
             if (stringEncoding == 0)
@@ -333,95 +226,120 @@ namespace Tests.Cave.IO
             }
         }
 
-        [Test]
-        public void Utf8Test()
+        void TestStringsRead(DataReader reader, string randomString)
         {
-            using (var stream = new MemoryStream())
+            var msg = $"{reader.StringEncoding}: Failed writer -> reader roundtrip!";
+            Assert.AreEqual("Testline", reader.ReadLine(), msg + " Preamble test failed!");
             {
-                var writer = new DataWriter(stream);
-                var reader = new DataReader(stream);
-                var codepoints = new List<string>();
-                for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                var expected = reader.StringEncoding.Decode(reader.StringEncoding.Encode("Test.Too.Long!").GetRange(0, 8));
+                Assert.AreEqual(expected, reader.ReadString(byteCount: 8).BeforeFirst('\0'), msg);
+            }
+
+            Assert.AreEqual(0x01020304, reader.ReadInt32(), msg);
+            Assert.AreEqual(randomString[0], reader.ReadChar(), msg);
+            Assert.AreEqual((byte)0, reader.ReadByte(), msg);
+            Assert.AreEqual(randomString[1], reader.ReadChar(), msg);
+            Assert.AreEqual((byte)1, reader.ReadByte(), msg);
+            {
+                var codepoints = randomString.CountCodepoints();
+                var readString = reader.ReadChars(codepoints);
+                CollectionAssert.AreEqual(randomString, readString, msg);
+            }
+            Assert.AreEqual((ushort)2, reader.ReadUInt16(), msg);
+            {
+                var codepoints = randomString.CountCodepoints();
+                var readChars = reader.ReadChars(codepoints);
+                CollectionAssert.AreEqual(randomString, readChars, msg);
+            }
+            Assert.AreEqual((uint)3, reader.ReadUInt32(), msg);
+
+            Assert.AreEqual(randomString.Replace("\0", ""), reader.ReadZeroTerminatedString(65536), msg);
+            Assert.AreEqual("", reader.ReadZeroTerminatedString(1024), msg);
+
+            Assert.AreEqual(randomString, reader.ReadString(), msg);
+            Assert.AreEqual("", reader.ReadString(), msg);
+            Assert.AreEqual(null, reader.ReadPrefixedString(), msg);
+
+            Assert.AreEqual(randomString.Replace(reader.LineFeed, ""), reader.ReadLine(), msg);
+            Assert.AreEqual("", reader.ReadLine(), msg);
+
+            switch (reader.NewLineMode)
+            {
+                case NewLineMode.CR:
                 {
-                    var character = char.ConvertFromUtf32(codepoint);
-                    var pos = stream.Position;
-                    writer.Write(character);
-                    codepoints.Add(character);
-                    stream.Position = pos;
-                    var test = reader.ReadChars(1);
-                    CollectionAssert.AreEqual(character, test);
+                    var expected = "\n\n\n";
+                    var readLine = reader.ReadLine();
+                    Assert.AreEqual(expected, readLine, msg);
+                    break;
                 }
-                stream.Position = 0;
-                CollectionAssert.AreEqual(codepoints.Join(), reader.ReadChars(codepoints.Count));
+                case NewLineMode.CRLF:
+                case NewLineMode.LF:
+                {
+                    var expected = "\r\r\r";
+                    var readLine = reader.ReadLine();
+                    Assert.AreEqual(expected, readLine, msg);
+                    break;
+                }
+                default: throw new NotSupportedException();
             }
         }
 
-        [Test]
-        public void Utf7Test()
+        void TestStringsWrite(DataWriter writer, string randomString)
         {
-            using (var stream = new MemoryStream())
+            if (writer.StringEncoding != StringEncoding.UTF_7)
             {
-                var writer = new DataWriter(stream, StringEncoding.UTF_7);
-                var reader = new DataReader(stream, StringEncoding.UTF_7);
-                var codepoints = new List<string>();
-                for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                writer.Write(writer.StringEncoding.GetByteOrderMark());
+            }
+            writer.WriteLine("Testline");
+            var pos = writer.BaseStream.Position;
+            writer.WriteString("Test.Too.Long!", byteCount: 8);
+            Assert.AreEqual(8, writer.BaseStream.Position - pos);
+            writer.Write(0x01020304);
+            writer.Write(randomString[0]);
+            writer.Write((byte)0);
+            writer.Write(randomString[1]);
+            writer.Write((byte)1);
+            writer.Write(randomString);
+            writer.Write((ushort)2);
+            writer.Write(randomString.ToCharArray());
+            writer.Write((uint)3);
+            writer.WriteZeroTerminated(randomString.Replace("\0", ""));
+            writer.WriteZeroTerminated("");
+            Assert.Throws<ArgumentNullException>(() => writer.WriteZeroTerminated((string)null));
+            writer.WritePrefixed(randomString);
+            writer.WritePrefixed("");
+            writer.WritePrefixed((string)null);
+            writer.WriteLine(randomString.Replace(writer.LineFeed, ""));
+            writer.WriteLine("");
+            Assert.Throws<ArgumentNullException>(() => writer.WriteLine((string)null));
+            switch (writer.NewLineMode)
+            {
+                case NewLineMode.CR:
                 {
-                    var character = char.ConvertFromUtf32(codepoint);
-                    var pos = stream.Position;
-                    writer.Write(character);
-                    codepoints.Add(character);
-                    stream.Position = pos;
-                    var test = reader.ReadChars(1);
-                    CollectionAssert.AreEqual(character, test);
+                    writer.WriteLine("\n\n\n");
+                    break;
                 }
-                stream.Position = 0;
-                CollectionAssert.AreEqual(codepoints.Join(), reader.ReadChars(codepoints.Count));
+                case NewLineMode.CRLF:
+                case NewLineMode.LF:
+                {
+                    writer.WriteLine("\r\r\r");
+                    break;
+                }
+                default: throw new NotSupportedException();
             }
         }
 
-        [Test]
-        public void UnicodeTest()
-        {
-            var encodings = new[]
-            {
-                StringEncoding.UTF_7,
-                StringEncoding.UTF8, StringEncoding.UTF_8,
-                StringEncoding.UTF16, StringEncoding.UTF_16, StringEncoding.UTF_16BE,
-                StringEncoding.UTF32, StringEncoding.UTF_32, StringEncoding.UTF_32BE,
-            };
-            foreach (var encoding in encodings)
-            {
-                using (var stream = new MemoryStream())
-                {
-                    var writer = new DataWriter(stream, encoding);
-                    var reader = new DataReader(stream, encoding);
-                    var codepoints = new List<string>();
-                    for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
-                    {
-                        var character = char.ConvertFromUtf32(codepoint);
-                        var pos = stream.Position;
-                        writer.Write(character);
-                        codepoints.Add(character);
-                        stream.Position = pos;
-                        var test = reader.ReadChars(1);
-                        CollectionAssert.AreEqual(character, test);
-                    }
-                    stream.Position = 0;
-                    var real = codepoints.Join();
-                    var roundtrip = reader.ReadChars(codepoints.Count);
-                    CollectionAssert.AreEqual(real, roundtrip);
+        #endregion Private Methods
 
-                    {
-                        const string TestString = "My Card: " + AceOfSpades;
-                        stream.Position = 0;
-                        writer.WriteZeroTerminated(TestString);
-                        stream.Position = 0;
-                        var test = reader.ReadZeroTerminatedString(1024);
-                        Assert.AreEqual(TestString, test);
-                    }
-                }
-            }
-        }
+        #region Public Fields
+
+        public const string AceOfSpades = "\U0001F0A0";
+
+        public const string TestString = "My Card: " + AceOfSpades;
+
+        #endregion Public Fields
+
+        #region Public Methods
 
         [Test]
         public void Iso2022Test()
@@ -490,49 +408,6 @@ namespace Tests.Cave.IO
 #endif
         }
 
-        const string AceOfSpades = "\U0001F0A0";
-
-        [Test]
-        public void Utf8AceOfSpadesTest()
-        {
-            using (var stream = new MemoryStream())
-            {
-                var writer = new DataWriter(stream);
-                var reader = new DataReader(stream);
-                writer.WriteLine((UTF8)AceOfSpades);
-                writer.WriteZeroTerminated((UTF8)AceOfSpades);
-                writer.Write((UTF8)AceOfSpades);
-                writer.Write(AceOfSpades.ToCharArray());
-                stream.Position = 0;
-                Assert.AreEqual(AceOfSpades, reader.ReadLine());
-                Assert.AreEqual(AceOfSpades, reader.ReadZeroTerminatedString(128));
-                Assert.AreEqual(AceOfSpades, reader.ReadString(4));
-                Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
-            }
-        }
-
-        [Test]
-        public void Utf7AceOfSpadesTest()
-        {
-            using (var stream = new MemoryStream())
-            {
-                var writer = new DataWriter(stream, StringEncoding.UTF_7);
-                var reader = new DataReader(stream, StringEncoding.UTF_7);
-                writer.WriteLine((UTF7)AceOfSpades);
-                writer.WriteZeroTerminated((UTF7)AceOfSpades);
-                writer.Write((UTF7)AceOfSpades);
-                writer.Write(AceOfSpades.ToCharArray());
-                stream.Position = 0;
-                Assert.AreEqual(AceOfSpades, reader.ReadLine());
-                Assert.AreEqual(AceOfSpades, reader.ReadZeroTerminatedString(128));
-                Assert.AreEqual(AceOfSpades, reader.ReadUTF7(1));
-                Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
-            }
-        }
-
-        [Test]
-        public void Utf8ReaderWriterTest() => TestReaderWriter(StringEncoding.UTF_8);
-
         [Test]
         public void TestAllStringEncodings()
         {
@@ -575,6 +450,136 @@ namespace Tests.Cave.IO
             {
                 TestReaderWriter(encoding);
             });
+        }
+
+        [Test]
+        public void UnicodeTest()
+        {
+            var encodings = new[]
+            {
+                StringEncoding.UTF_7,
+                StringEncoding.UTF8, StringEncoding.UTF_8,
+                StringEncoding.UTF16, StringEncoding.UTF_16, StringEncoding.UTF_16BE,
+                StringEncoding.UTF32, StringEncoding.UTF_32, StringEncoding.UTF_32BE,
+            };
+            foreach (var encoding in encodings)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    var writer = new DataWriter(stream, encoding);
+                    var reader = new DataReader(stream, encoding);
+                    var codepoints = new List<string>();
+                    for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                    {
+                        var character = char.ConvertFromUtf32(codepoint);
+                        var pos = stream.Position;
+                        writer.Write(character);
+                        codepoints.Add(character);
+                        stream.Position = pos;
+                        var test = reader.ReadChars(1);
+                        CollectionAssert.AreEqual(character, test);
+                    }
+                    stream.Position = 0;
+                    var real = codepoints.Join();
+                    var roundtrip = reader.ReadChars(codepoints.Count);
+                    CollectionAssert.AreEqual(real, roundtrip);
+
+                    {
+                        stream.Position = 0;
+                        writer.WriteZeroTerminated(TestString);
+                        stream.Position = 0;
+                        var test = reader.ReadZeroTerminatedString(1024);
+                        Assert.AreEqual(TestString, test);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void Utf7AceOfSpadesTest()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream, StringEncoding.UTF_7);
+                var reader = new DataReader(stream, StringEncoding.UTF_7);
+                writer.WriteLine((UTF7)AceOfSpades);
+                writer.WriteZeroTerminated((UTF7)AceOfSpades);
+                writer.Write((UTF7)AceOfSpades);
+                writer.Write(AceOfSpades.ToCharArray());
+                stream.Position = 0;
+                Assert.AreEqual(AceOfSpades, reader.ReadLine());
+                Assert.AreEqual(AceOfSpades, reader.ReadZeroTerminatedString(128));
+                Assert.AreEqual(AceOfSpades, reader.ReadUTF7(1));
+                Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
+            }
+        }
+
+        [Test]
+        public void Utf7Test()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream, StringEncoding.UTF_7);
+                var reader = new DataReader(stream, StringEncoding.UTF_7);
+                var codepoints = new List<string>();
+                for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                {
+                    var character = char.ConvertFromUtf32(codepoint);
+                    var pos = stream.Position;
+                    writer.Write(character);
+                    codepoints.Add(character);
+                    stream.Position = pos;
+                    var test = reader.ReadChars(1);
+                    CollectionAssert.AreEqual(character, test);
+                }
+                stream.Position = 0;
+                CollectionAssert.AreEqual(codepoints.Join(), reader.ReadChars(codepoints.Count));
+            }
+        }
+
+        [Test]
+        public void Utf8AceOfSpadesTest()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream);
+                var reader = new DataReader(stream);
+                writer.WriteLine((UTF8)AceOfSpades);
+                writer.WriteZeroTerminated((UTF8)AceOfSpades);
+                writer.Write((UTF8)AceOfSpades);
+                writer.Write(AceOfSpades.ToCharArray());
+                stream.Position = 0;
+                Assert.AreEqual(AceOfSpades, reader.ReadLine());
+                Assert.AreEqual(AceOfSpades, reader.ReadZeroTerminatedString(128));
+                Assert.AreEqual(AceOfSpades, reader.ReadString(4));
+                Assert.AreEqual(AceOfSpades, reader.ReadChars(1));
+            }
+        }
+
+        [Test]
+        public void Utf8ReaderWriterTest() => TestReaderWriter(StringEncoding.UTF_8);
+
+        [Test]
+        public void Utf8Test()
+        {
+            using (var stream = new MemoryStream())
+            {
+                var writer = new DataWriter(stream);
+                var reader = new DataReader(stream);
+                var codepoints = new List<string>();
+                for (int codepoint = 1; codepoint < 0x10FFFF; codepoint = codepoint * 3 + 7)
+                {
+                    var character = char.ConvertFromUtf32(codepoint);
+                    var pos = stream.Position;
+                    writer.Write(character);
+                    codepoints.Add(character);
+                    stream.Position = pos;
+                    var test = reader.ReadChars(1);
+                    CollectionAssert.AreEqual(character, test);
+                }
+                stream.Position = 0;
+                CollectionAssert.AreEqual(codepoints.Join(), reader.ReadChars(codepoints.Count));
+            }
         }
 
         #endregion Public Methods

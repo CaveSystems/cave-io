@@ -42,20 +42,12 @@ public abstract class BitConverterBase : IBitConverter
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
     /// <returns>The value as encoded byte array.</returns>
-    public byte[] GetBytes(bool value)
-    {
-        if (value)
-        {
-            return new byte[] { 1 };
-        }
-
-        return new byte[] { 0 };
-    }
+    public byte[] GetBytes(bool value) => value ? [1] : [0];
 
     /// <summary>Gets the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
     /// <returns>The value as encoded byte array.</returns>
-    public byte[] GetBytes(byte value) => new[] { value };
+    public byte[] GetBytes(byte value) => [value];
 
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
@@ -109,7 +101,7 @@ public abstract class BitConverterBase : IBitConverter
             result.AddRange(GetBytes(i));
         }
 
-        return result.ToArray();
+        return [.. result];
     }
 
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>

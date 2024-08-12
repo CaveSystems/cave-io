@@ -4,7 +4,9 @@ using System.IO;
 namespace Cave.IO;
 
 /// <summary>Bit Stream Reader Class for Bitstreams of the form: byte0[bit0,bit1,bit2,bit3,bit4,bit5,bit6,bit7] byte1[bit8,bit9,bit10,bit11,...].</summary>
-public class BitStreamReader
+/// <remarks>Initializes a new instance of the <see cref="BitStreamReader"/> class.</remarks>
+/// <param name="stream">The stream to read from.</param>
+public class BitStreamReader(Stream stream)
 {
     #region Private Fields
 
@@ -13,25 +15,15 @@ public class BitStreamReader
 
     #endregion Private Fields
 
-    #region Public Constructors
-
-    /// <summary>Initializes a new instance of the <see cref="BitStreamReader"/> class.</summary>
-    /// <param name="stream">The stream to read from.</param>
-    public BitStreamReader(Stream stream) => BaseStream = stream;
-
-    #endregion Public Constructors
-
     #region Public Properties
 
     /// <summary>Gets the number of bits available (Stream needs to provide Position and Length getters!).</summary>
     public long Available => Length - Position;
 
     /// <summary>Gets the BaseStream.</summary>
-    public Stream BaseStream { get; private set; }
+    public Stream BaseStream { get; private set; } = stream;
 
-    /// <summary>
-    /// Gets a value indicating whether the end of stream is reached during bit reading. This can always be called, even if the stream cannot seek.
-    /// </summary>
+    /// <summary>Gets a value indicating whether the end of stream is reached during bit reading. This can always be called, even if the stream cannot seek.</summary>
     public bool EndOfStream
     {
         get

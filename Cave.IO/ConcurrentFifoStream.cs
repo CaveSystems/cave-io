@@ -4,14 +4,10 @@ using System.IO;
 namespace Cave.IO;
 
 /// <summary>Provides a concurrent version of <see cref="FifoStream"/></summary>
-public class ConcurrentFifoStream : IFifoStream
+/// <remarks>Creates a new synchonized fifo stream.</remarks>
+/// <param name="baseStream"></param>
+public class ConcurrentFifoStream(IFifoStream baseStream) : IFifoStream
 {
-    #region Private Fields
-
-    IFifoStream baseStream;
-
-    #endregion Private Fields
-
     #region Private Methods
 
     void Locked(Action action) { lock (baseStream) action(); }
@@ -19,14 +15,6 @@ public class ConcurrentFifoStream : IFifoStream
     TResult Locked<TResult>(Func<TResult> func) { lock (baseStream) return func(); }
 
     #endregion Private Methods
-
-    #region Public Constructors
-
-    /// <summary>Creates a new synchonized fifo stream.</summary>
-    /// <param name="baseStream"></param>
-    public ConcurrentFifoStream(IFifoStream baseStream) => this.baseStream = baseStream;
-
-    #endregion Public Constructors
 
     #region Public Properties
 

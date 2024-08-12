@@ -257,7 +257,7 @@ public sealed class DataReader
 
         if (count == 0)
         {
-            return new T[0];
+            return [];
         }
 
         var byteCount = Read7BitEncodedInt32();
@@ -1061,7 +1061,7 @@ public sealed class DataReader
             }
         }
 
-        return result.Substring(0, result.Length - endMarker.Length);
+        return result[..^endMarker.Length];
     }
 
     /// <summary>Reads an utf8 text from string.</summary>
@@ -1088,7 +1088,7 @@ public sealed class DataReader
             if ((b2 & 0x11000000) == 0x10000000) throw new InvalidDataException("Invalid multibyte value!");
             if (b < 0xE0)
             {
-                var codepoint = (b & 0x1F) << 6 | (b2 & 0x3F);
+                var codepoint = ((b & 0x1F) << 6) | (b2 & 0x3F);
                 sb.Append(char.ConvertFromUtf32(codepoint));
                 continue;
             }
@@ -1098,7 +1098,7 @@ public sealed class DataReader
             if ((b3 & 0x11000000) == 0x10000000) throw new InvalidDataException("Invalid multibyte value!");
             if (b < 0xF0)
             {
-                var codepoint = ((b & 0xF) << 6 | (b2 & 0x3F)) << 6 | (b3 & 0x3F);
+                var codepoint = ((((b & 0xF) << 6) | (b2 & 0x3F)) << 6) | (b3 & 0x3F);
                 //test bom
                 if (codepoint == 0xEFBBBF && sb.Length == 0)
                 {
@@ -1113,7 +1113,7 @@ public sealed class DataReader
             if ((b4 & 0x11000000) == 0x10000000) throw new InvalidDataException("Invalid multibyte value!");
             if (b < 0xF5)
             {
-                var codepoint = (((b & 0x7) << 6 | (b2 & 0x3F)) << 6 | (b3 & 0x3F)) << 6 | (b4 & 0x3F);
+                var codepoint = ((((((b & 0x7) << 6) | (b2 & 0x3F)) << 6) | (b3 & 0x3F)) << 6) | (b4 & 0x3F);
                 sb.Append(char.ConvertFromUtf32(codepoint));
                 continue;
             }
@@ -1133,7 +1133,7 @@ public sealed class DataReader
         var i = result.IndexOf((char)0);
         if (i > -1)
         {
-            result = result.Substring(0, i);
+            result = result[..i];
         }
 
         return result;

@@ -11,8 +11,8 @@ namespace Cave.IO;
 /// <summary>
 /// Provides easy access to (commandline-) arguments and syntax checking of the following form:.
 /// <p>
-/// programname [--optionname ["option parameters"]] [-optionchar ["option parameters"]] parameter1 [parameter2 [parameter3 [...]]] <br/> the proper
-/// sequence is only needed with parameters (often used for files)
+/// programname [--optionname ["option parameters"]] [-optionchar ["option parameters"]] parameter1 [parameter2 [parameter3 [...]]] <br/> the proper sequence is
+/// only needed with parameters (often used for files)
 /// </p>
 /// </summary>
 public sealed class Arguments : IEquatable<Arguments>
@@ -63,7 +63,7 @@ public sealed class Arguments : IEquatable<Arguments>
         }
 
         Options = new OptionCollection(opts);
-        Parameters = new ParameterCollection(pars.ToArray());
+        Parameters = new ParameterCollection([.. pars]);
     }
 
     /// <summary>Reads the parameters and options from a commandline string.</summary>
@@ -129,7 +129,7 @@ public sealed class Arguments : IEquatable<Arguments>
             strings.Add(stringBuilder.ToString());
         }
 
-        ReadFromArray(strings.ToArray(), opt);
+        ReadFromArray([.. strings], opt);
     }
 
     #endregion Private Methods
@@ -363,7 +363,7 @@ public sealed class Arguments : IEquatable<Arguments>
             }
         }
 
-        var result = new ParameterCollection(pars.ToArray());
+        var result = new ParameterCollection([.. pars]);
         return result;
     }
 
@@ -469,7 +469,7 @@ public sealed class Arguments : IEquatable<Arguments>
             result.Add(option.ToString());
         }
 
-        return result.ToArray();
+        return [.. result];
     }
 
     /// <summary>Gets a string containing the <see cref="Command"/>, <see cref="Parameters"/> and <see cref="Options"/>.</summary>

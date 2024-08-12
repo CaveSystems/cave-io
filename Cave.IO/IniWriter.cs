@@ -458,14 +458,9 @@ public class IniWriter
         Ini.CheckName(section, nameof(section));
         Ini.CheckName(valueName, nameof(valueName));
 
-        List<string> result;
-        if (data.ContainsKey(section))
+        if (!data.TryGetValue(section, out var result))
         {
-            result = data[section];
-        }
-        else
-        {
-            result = new List<string>();
+            result = [];
             data[section] = result;
         }
 

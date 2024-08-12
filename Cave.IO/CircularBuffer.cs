@@ -19,10 +19,7 @@ public sealed class CircularBuffer<TValue> : RingBuffer<TValue>
 
     /// <summary>Creates a new instance of the <see cref="CircularBuffer{TValue}"/> class.</summary>
     /// <param name="bits">Number of bits to use for item capacity (defaults to 12 = 4096 items).</param>
-    public CircularBuffer(int bits = 12) : base(bits)
-    {
-        OverflowHandling = RingBufferOverflowFlags.Prevent;
-    }
+    public CircularBuffer(int bits = 12) : base(bits) => OverflowHandling = RingBufferOverflowFlags.Prevent;
 
     #endregion Public Constructors
 

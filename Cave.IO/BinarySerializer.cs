@@ -12,7 +12,7 @@ public class BinarySerializer
 {
     #region Private Methods
 
-    BindingFlags GetBindingFlags(SerializerFlags flags)
+    static BindingFlags GetBindingFlags(SerializerFlags flags)
     {
         var result = BindingFlags.Instance;
         if (flags.HasFlag(SerializerFlags.NonPublic)) result |= BindingFlags.NonPublic;
@@ -243,9 +243,9 @@ public class BinarySerializer
 
     #region Public Methods
 
-    readonly Dictionary<Type, MethodBase> staticParseLookup = new();
+    readonly Dictionary<Type, MethodBase> staticParseLookup = [];
 
-    readonly Dictionary<string, Type> typeLookup = new();
+    readonly Dictionary<string, Type> typeLookup = [];
 
     MethodBase GetParse(Type type)
     {
@@ -645,8 +645,7 @@ public class BinarySerializer
     /// <param name="type">The type to register.</param>
     public void UseToStringAndCctor(Type type)
     {
-        var parse = type.GetConstructor(new[] { typeof(string) });
-        if (parse == null) throw new ArgumentException("Could not find a matching Cctor(string) method!");
+        var parse = type.GetConstructor([typeof(string)]) ?? throw new ArgumentException("Could not find a matching Cctor(string) method!");
         staticParseLookup.Add(type, parse);
     }
 
@@ -654,8 +653,7 @@ public class BinarySerializer
     /// <param name="type">The type to register.</param>
     public void UseToStringAndParse(Type type)
     {
-        var parse = type.GetMethod("Parse", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public, null, new[] { typeof(string) }, null);
-        if (parse == null) throw new ArgumentException("Could not find a matching static Parse(string) method!");
+        var parse = type.GetMethod("Parse", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public, null, [typeof(string)], null) ?? throw new ArgumentException("Could not find a matching static Parse(string) method!");
         staticParseLookup.Add(type, parse);
     }
 
