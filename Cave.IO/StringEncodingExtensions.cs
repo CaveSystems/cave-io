@@ -22,7 +22,7 @@ public static class StringEncodingExtensions
         {
             switch (encoding)
             {
-                case (StringEncoding)1: // StringEncoding.ASCII:
+                case StringEncoding.ASCII:
                 case StringEncoding.US_ASCII: return ASCII.IsClean(text);
 
                 case (StringEncoding)2: // StringEncoding.UTF8:

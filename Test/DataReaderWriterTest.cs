@@ -1,5 +1,6 @@
-﻿using NUnit.Framework;
+﻿#define PARALLEL
 
+using NUnit.Framework;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Cave;
 using Cave.IO;
+using System.Threading;
 
 namespace Tests.Cave.IO
 {
@@ -416,6 +418,8 @@ namespace Tests.Cave.IO
 #if !PARALLEL
             encodings.ForEach(stringEncoding =>
 #else
+            ThreadPool.SetMaxThreads(1000, 1000);
+            ThreadPool.SetMinThreads(100, 100);
             Parallel.ForEach(encodings, stringEncoding =>
 #endif
             {
@@ -445,6 +449,8 @@ namespace Tests.Cave.IO
 #if !PARALLEL
             encodings.ForEach(encoding =>
 #else
+            ThreadPool.SetMaxThreads(1000, 1000);
+            ThreadPool.SetMinThreads(100, 100);
             Parallel.ForEach(encodings, encoding =>
 #endif
             {
@@ -455,13 +461,7 @@ namespace Tests.Cave.IO
         [Test]
         public void UnicodeTest()
         {
-            var encodings = new[]
-            {
-                StringEncoding.UTF_7,
-                StringEncoding.UTF8, StringEncoding.UTF_8,
-                StringEncoding.UTF16, StringEncoding.UTF_16, StringEncoding.UTF_16BE,
-                StringEncoding.UTF32, StringEncoding.UTF_32, StringEncoding.UTF_32BE,
-            };
+            var encodings = new[] { StringEncoding.UTF7, StringEncoding.UTF8, StringEncoding.UTF16, StringEncoding.UTF16BE, StringEncoding.UTF32, StringEncoding.UTF32BE, };
             foreach (var encoding in encodings)
             {
                 using (var stream = new MemoryStream())

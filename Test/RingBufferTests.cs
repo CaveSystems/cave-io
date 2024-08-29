@@ -16,6 +16,16 @@ namespace Tests.Cave.IO;
 [TestFixture]
 public class RingBufferTests
 {
+    #region Public Constructors
+
+    static RingBufferTests()
+    {
+        ThreadPool.SetMaxThreads(1000, 1000);
+        ThreadPool.SetMinThreads(100, 100);
+    }
+
+    #endregion Public Constructors
+
     #region Public Methods
 
     [Test]

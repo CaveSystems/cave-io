@@ -1,6 +1,4 @@
-﻿
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 using System.Globalization;
 using System.Linq;
@@ -13,6 +11,7 @@ using System.Diagnostics;
 using Test;
 using System.Collections.Generic;
 using Cave;
+using System.Threading;
 
 namespace Tests.Cave.IO;
 
@@ -115,6 +114,9 @@ public class TestInifile
     [Test]
     public void IniReaderWriterTest()
     {
+        ThreadPool.SetMaxThreads(1000, 1000);
+        ThreadPool.SetMinThreads(100, 100);
+
         List<Exception> errors = new();
         Parallel.ForEach(allCultures, culture =>
         {
