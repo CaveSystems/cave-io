@@ -62,8 +62,8 @@ namespace Tests.Cave.IO
         void TestReaderWriter(EncodingInfo encoding)
         {
             var stream = new MemoryStream();
-            var writer = new DataWriter(stream, encoding.GetEncoding());
-            var reader = new DataReader(stream, encoding.GetEncoding());
+            var writer = new DataWriter(stream, encoding.ToStringEncoding());
+            var reader = new DataReader(stream, encoding.ToStringEncoding());
             TestReaderWriter(reader, writer);
         }
 

@@ -1,5 +1,4 @@
-﻿#nullable enable
-
+﻿
 using System;
 using System.Diagnostics;
 
@@ -9,12 +8,6 @@ namespace Cave.IO;
 /// <typeparam name="TValue">Item type.</typeparam>
 public sealed class CircularBuffer<TValue> : RingBuffer<TValue>
 {
-    #region Private Fields
-
-    int maxQueuedCount;
-
-    #endregion Private Fields
-
     #region Public Constructors
 
     /// <summary>Creates a new instance of the <see cref="CircularBuffer{TValue}"/> class.</summary>
@@ -24,10 +17,6 @@ public sealed class CircularBuffer<TValue> : RingBuffer<TValue>
     #endregion Public Constructors
 
     #region Public Properties
-
-    /// <summary>Gets the maximum number of items queued.</summary>
-    [Obsolete("This property is only updated on usage and may not work as expected!")]
-    public int MaxQueuedCount => maxQueuedCount = Math.Max(maxQueuedCount, Available);
 
     /// <summary>Throw exceptions on overflow (buffer under run)</summary>
     public bool OverflowExceptions

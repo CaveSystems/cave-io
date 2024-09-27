@@ -155,11 +155,11 @@ public class IniWriter
 
     /// <summary>Saves the content of the ini to a file readable by <see cref="IniReader"/>.</summary>
     /// <param name="fileName">The fileName to write to.</param>
-    public void Save(string fileName = null)
+    public void Save(string? fileName = null)
     {
         fileName ??= FileName;
-
-        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(fileName)));
+        var dir = Path.GetDirectoryName(Path.GetFullPath(fileName));
+        if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
         Stream stream = File.Open(fileName, FileMode.Create, FileAccess.Write, FileShare.None);
         try
         {
@@ -250,6 +250,7 @@ public class IniWriter
     /// <exception cref="ArgumentOutOfRangeException">If type is object.</exception>
     public void WriteFields<T>(string section, T item)
     {
+        if (item is null) return;
         var type = typeof(T);
         if (type == typeof(object)) throw new ArgumentOutOfRangeException(nameof(T));
         WriteFields(section, typeof(T), item);
@@ -274,7 +275,7 @@ public class IniWriter
 
             if (field.HasAttribute<IniSectionAttribute>())
             {
-                var sectionAttribute = field.GetAttribute<IniSectionAttribute>();
+                var sectionAttribute = field.GetAttribute<IniSectionAttribute>()!;
                 if (value is null) continue;
 
                 if (value is IEnumerable enumerable)
@@ -294,15 +295,6 @@ public class IniWriter
         }
     }
 
-    /// <summary>Writes all fields of the object to the specified section (replacing a present one).</summary>
-    /// <typeparam name="T">The class type.</typeparam>
-    /// <param name="section">The section to write to.</param>
-    /// <param name="item">The instance to write.</param>
-    [Obsolete("Use WriteFields/WriteProperties instead!")]
-    public void WriteObject<T>(string section, T item)
-        where T : class
-        => WriteFields<T>(section, item);
-
     /// <summary>Writes all properties of the object to the specified section (replacing a present one).</summary>
     /// <typeparam name="T">The class type.</typeparam>
     /// <param name="section">The section to write to.</param>
@@ -310,6 +302,7 @@ public class IniWriter
     /// <exception cref="ArgumentOutOfRangeException">If type is object.</exception>
     public void WriteProperties<T>(string section, T item)
     {
+        if (item is null) return;
         var type = typeof(T);
         if (type == typeof(object)) throw new ArgumentOutOfRangeException(nameof(T));
         WriteProperties(section, typeof(T), item);
@@ -334,7 +327,7 @@ public class IniWriter
 
             if (property.HasAttribute<IniSectionAttribute>())
             {
-                var sectionAttribute = property.GetAttribute<IniSectionAttribute>();
+                var sectionAttribute = property.GetAttribute<IniSectionAttribute>()!;
                 if (value is null) continue;
 
                 if (value is IEnumerable enumerable)
@@ -398,7 +391,7 @@ public class IniWriter
     /// <param name="section">Name of the section.</param>
     /// <param name="name">Name of the setting.</param>
     /// <param name="value">Value of the setting.</param>
-    public void WriteSetting(string section, string name, object value)
+    public void WriteSetting(string section, string name, object? value)
     {
         string data;
         if (value is DateTime dt)
@@ -420,26 +413,23 @@ public class IniWriter
         }
         else
         {
-            data = StringExtensions.ToString(value, Properties.Culture);
+            data = value is null ? string.Empty : StringExtensions.ToString(value, Properties.Culture);
         }
 
-        if (value != null)
+        if (value is not null && !SkipRoundTripTests)
         {
-            if (!SkipRoundTripTests)
+            //roundtrip test
+            try
             {
-                //roundtrip test
-                try
+                var test = IniReader.ConvertValue(value.GetType(), data, Properties);
+                if (!DefaultComparer.Equals(test, value))
                 {
-                    var test = IniReader.ConvertValue(value.GetType(), data, Properties);
-                    if (!DefaultComparer.Equals(test, value))
-                    {
-                        throw new InvalidDataException($"Equals() check failed! Written: {value}, Read: {test}");
-                    }
+                    throw new InvalidDataException($"Equals() check failed! Written: {value}, Read: {test}");
                 }
-                catch (Exception ex)
-                {
-                    throw new InvalidDataException($"Write/Read round trip test failed! You can swith this off with {nameof(IniWriter)}.{nameof(SkipRoundTripTests)}", ex);
-                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException($"Write/Read round trip test failed! You can swith this off with {nameof(IniWriter)}.{nameof(SkipRoundTripTests)}", ex);
             }
         }
         WriteSetting(section, name, data);
@@ -478,15 +468,6 @@ public class IniWriter
         // add new one
         result.Add(valueName + "=" + Ini.Escape(value, Properties));
     }
-
-    /// <summary>Writes all fields of the struct to the specified section (replacing a present one).</summary>
-    /// <typeparam name="T">The struct type.</typeparam>
-    /// <param name="section">The section to write to.</param>
-    /// <param name="item">The struct.</param>
-    [Obsolete("Use WriteFields/WriteProperties instead!")]
-    public void WriteStruct<T>(string section, T item)
-        where T : struct
-        => WriteFields<T>(section, item);
 
     #endregion Public Methods
 }

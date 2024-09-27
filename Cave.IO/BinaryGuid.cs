@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cave.IO;
 
@@ -7,7 +8,7 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
 {
     #region Private Fields
 
-    byte[] data;
+    byte[] data = [];
 
     #endregion Private Fields
 
@@ -16,7 +17,7 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
     /// <summary>Performs an implicit conversion from <see cref="Guid"/> to <see cref="BinaryGuid"/>.</summary>
     /// <param name="id">The unique identifier.</param>
     /// <returns>The result of the conversion.</returns>
-    public static implicit operator BinaryGuid(Guid id) => id == Guid.Empty ? null : new BinaryGuid { data = id.ToByteArray() };
+    public static implicit operator BinaryGuid(Guid id) => new() { data = id.ToByteArray() };
 
     /// <summary>Performs an implicit conversion from <see cref="BinaryGuid"/> to <see cref="Guid"/>.</summary>
     /// <param name="id">The unique identifier.</param>
@@ -52,17 +53,8 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
     /// <returns>the binary GUID.</returns>
     public static BinaryGuid Parse(string text)
     {
-        if (text == null)
-        {
-            return null;
-        }
-
+        if (text is null) throw new ArgumentNullException(nameof(text));
         var guid = new Guid(text);
-        if (guid == Guid.Empty)
-        {
-            throw new ArgumentOutOfRangeException(nameof(text));
-        }
-
         return new BinaryGuid { data = guid.ToByteArray() };
     }
 
@@ -70,7 +62,7 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
     /// <param name="text">The text.</param>
     /// <param name="id">The unique identifier.</param>
     /// <returns>true if parsing was successful.</returns>
-    public static bool TryParse(string text, out BinaryGuid id)
+    public static bool TryParse(string text, [MaybeNullWhen(false)] out BinaryGuid id)
     {
 #if NET20 || NET35
         try
@@ -96,15 +88,15 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
     }
 
     /// <inheritdoc/>
-    public int CompareTo(object other) => string.CompareOrdinal(ToString(), other?.ToString());
+    public int CompareTo(object? other) => string.CompareOrdinal(ToString(), other?.ToString());
 
     /// <inheritdoc/>
-    public int CompareTo(BinaryGuid other) => string.CompareOrdinal(ToString(), other?.ToString());
+    public int CompareTo(BinaryGuid? other) => string.CompareOrdinal(ToString(), other?.ToString());
 
     /// <summary>Determines whether the specified <see cref="object"/>, is equal to this instance.</summary>
     /// <param name="obj">The <see cref="object"/> to compare with this instance.</param>
     /// <returns><c>true</c> if the specified <see cref="object"/> is equal to this instance; otherwise, <c>false</c>.</returns>
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (ReferenceEquals(obj, this))
         {

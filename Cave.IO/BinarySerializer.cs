@@ -10,29 +10,13 @@ namespace Cave.IO;
 /// <summary>Provides fast and efficient field and property de-/serialization.</summary>
 public class BinarySerializer
 {
-    #region Private Methods
+    #region Private Fields
 
-    static BindingFlags GetBindingFlags(SerializerFlags flags)
-    {
-        var result = BindingFlags.Instance;
-        if (flags.HasFlag(SerializerFlags.NonPublic)) result |= BindingFlags.NonPublic;
-        if (flags.HasFlag(SerializerFlags.Public)) result |= BindingFlags.Public;
-        return result;
-    }
+    readonly Dictionary<Type, MethodBase> staticParseLookup = new();
 
-    #endregion Private Methods
+    readonly Dictionary<string, Type> typeLookup = new();
 
-    #region Public Properties
-
-    /// <summary>Gets or sets flags for class field and property (de-)serialization.</summary>
-    /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of classes.</remarks>
-    public SerializerFlags ClassFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
-
-    /// <summary>Gets or sets flags for structure field and property (de-)serialization.</summary>
-    /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of structures.</remarks>
-    public SerializerFlags StructFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
-
-    #endregion Public Properties
+    #endregion Private Fields
 
     #region Private Enums
 
@@ -81,9 +65,13 @@ public class BinarySerializer
 
     #endregion Private Enums
 
-    #region Private Methods
+    #region Private Properties
 
     static Type EnumerableType { get; } = typeof(IEnumerable);
+
+    #endregion Private Properties
+
+    #region Private Methods
 
     static TypeCode FromType(Type type)
     {
@@ -142,9 +130,17 @@ public class BinarySerializer
         return TypeCode.UNKNOWN;
     }
 
+    static BindingFlags GetBindingFlags(SerializerFlags flags)
+    {
+        var result = BindingFlags.Instance;
+        if (flags.HasFlag(SerializerFlags.NonPublic)) result |= BindingFlags.NonPublic;
+        if (flags.HasFlag(SerializerFlags.Public)) result |= BindingFlags.Public;
+        return result;
+    }
+
     static bool IsPrimitive(TypeCode objTypeCode) => ((int)objTypeCode) < 0x60;
 
-    static object ReadPrimitive(TypeCode objTypeCode, DataReader reader) => objTypeCode switch
+    static object? ReadPrimitive(TypeCode objTypeCode, DataReader reader) => objTypeCode switch
     {
         TypeCode.NULL => null,
         TypeCode.BOOL => reader.ReadBool(),
@@ -232,22 +228,7 @@ public class BinarySerializer
         return array;
     }
 
-    #endregion Private Methods
-
-    #region Public Properties
-
-    /// <summary>Gets or sets the serializers used.</summary>
-    public IList<IBinaryTypeSerializer> Serializers { get; set; }
-
-    #endregion Public Properties
-
-    #region Public Methods
-
-    readonly Dictionary<Type, MethodBase> staticParseLookup = [];
-
-    readonly Dictionary<string, Type> typeLookup = [];
-
-    MethodBase GetParse(Type type)
+    MethodBase? GetParse(Type type)
     {
         staticParseLookup.TryGetValue(type, out var parse);
         return parse;
@@ -255,7 +236,8 @@ public class BinarySerializer
 
     void WriteArray(Type arrayType, Array array, DataWriter writer)
     {
-        var elementTypeCode = FromType(arrayType.GetElementType());
+        var elementType = arrayType.GetElementType() ?? throw new InvalidOperationException($"Cannot determine element type of array {array}!");
+        var elementTypeCode = FromType(elementType);
         writer.Write((byte)elementTypeCode);
         writer.Write7BitEncoded32(array.Length);
 
@@ -295,7 +277,8 @@ public class BinarySerializer
         }
         else
         {
-            elementTypeCode = FromType(arrayType.GetElementType());
+            var elementType = arrayType.GetElementType() ?? throw new InvalidOperationException($"Cannot determine element type of array {enumeration}!");
+            elementTypeCode = FromType(elementType);
         }
 
         writer.Write((byte)elementTypeCode);
@@ -326,41 +309,60 @@ public class BinarySerializer
         return;
     }
 
+    #endregion Private Methods
+
+    #region Public Properties
+
+    /// <summary>Gets or sets flags for class field and property (de-)serialization.</summary>
+    /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of classes.</remarks>
+    public SerializerFlags ClassFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
+
+    /// <summary>Gets or sets the serializers used.</summary>
+    public IList<IBinaryTypeSerializer> Serializers { get; set; } = [];
+
+    /// <summary>Gets or sets flags for structure field and property (de-)serialization.</summary>
+    /// <remarks>By default this is set to (de-)serialize all non-&amp;public fields of structures.</remarks>
+    public SerializerFlags StructFlags { get; set; } = SerializerFlags.Fields | SerializerFlags.NonPublic | SerializerFlags.Public;
+
+    #endregion Public Properties
+
+    #region Public Methods
+
     /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
     /// <param name="type">The type to deserialize</param>
     /// <param name="stream">The stream to deserialize from</param>
     /// <returns></returns>
-    public object Deserialize(Type type, Stream stream) => Deserialize(type, new DataReader(stream));
+    public object? Deserialize(Type type, Stream stream) => Deserialize(type, new DataReader(stream));
 
     /// <summary>Deserializes the specified type from a byte block.</summary>
     /// <param name="block">The data block to deserialize from</param>
     /// <typeparam name="T">The type to deserialize</typeparam>
     /// <returns></returns>
-    public T Deserialize<T>(byte[] block) => (T)Deserialize(typeof(T), new MemoryStream(block));
+    public T? Deserialize<T>(byte[] block) => (T?)Deserialize(typeof(T), new MemoryStream(block));
 
     /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
     /// <param name="stream">The stream to deserialize from</param>
     /// <typeparam name="T">The type to deserialize</typeparam>
     /// <returns></returns>
-    public T Deserialize<T>(Stream stream) => (T)Deserialize(typeof(T), new DataReader(stream));
+    public T? Deserialize<T>(Stream stream) => (T?)Deserialize(typeof(T), new DataReader(stream));
 
     /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
     /// <param name="reader">The reader to deserialize from</param>
     /// <typeparam name="T">The type to deserialize</typeparam>
     /// <returns></returns>
-    public T Deserialize<T>(DataReader reader) => (T)Deserialize(typeof(T), reader);
+    public T? Deserialize<T>(DataReader reader) => (T?)Deserialize(typeof(T), reader);
 
     /// <summary>Deserializes the specified type from a given data block</summary>
     /// <param name="type">The type to deserialize</param>
     /// <param name="block">The data block to deserialize from</param>
     /// <returns></returns>
-    public object Deserialize(Type type, byte[] block) => Deserialize(type, new MemoryStream(block));
+    public object? Deserialize(Type type, byte[] block) => Deserialize(type, new MemoryStream(block));
 
     /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
     /// <param name="type">The type to deserialize</param>
     /// <param name="reader">The reader to deserialize from</param>
     /// <returns></returns>
-    public object Deserialize(Type type, DataReader reader)
+    public object? Deserialize(Type type, DataReader reader)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
         if (reader == null) throw new ArgumentNullException(nameof(reader));
@@ -421,10 +423,10 @@ public class BinarySerializer
             {
                 if (StructFlags.HasFlag(SerializerFlags.TypeName) || StructFlags.HasFlag(SerializerFlags.AssemblyName))
                 {
-                    var className = reader.ReadPrefixedString();
-                    if (!typeLookup.TryGetValue(className, out type))
+                    var className = reader.ReadPrefixedString() ?? throw new InvalidDataException("Empty classname at deserialization!");
+                    if (!typeLookup.TryGetValue(className, out var itemType))
                     {
-                        typeLookup[className] = type = AppDom.FindType(className, AppDom.LoadFlags.None);
+                        typeLookup[className] = itemType = AppDom.FindType(className, AppDom.LoadFlags.None) ?? throw new InvalidOperationException($"Could not deserialize type {className}!");
                     }
                 }
 
@@ -454,10 +456,10 @@ public class BinarySerializer
             {
                 if (ClassFlags.HasFlag(SerializerFlags.TypeName) || ClassFlags.HasFlag(SerializerFlags.AssemblyName))
                 {
-                    var className = reader.ReadPrefixedString();
-                    if (!typeLookup.TryGetValue(className, out type))
+                    var className = reader.ReadPrefixedString() ?? throw new InvalidDataException("Empty classname at deserialization!");
+                    if (!typeLookup.TryGetValue(className, out var itemType))
                     {
-                        typeLookup[className] = type = AppDom.FindType(className, AppDom.LoadFlags.None);
+                        typeLookup[className] = itemType = AppDom.FindType(className, AppDom.LoadFlags.None) ?? throw new InvalidOperationException($"Could not deserialize type {className}!");
                     }
                 }
 
@@ -467,11 +469,11 @@ public class BinarySerializer
                     var str = reader.ReadPrefixedString();
                     if (parse.IsConstructor)
                     {
-                        return ((ConstructorInfo)parse).Invoke(new[] { str });
+                        return ((ConstructorInfo)parse).Invoke([str]);
                     }
                     else
                     {
-                        return parse.Invoke(null, new[] { str });
+                        return parse.Invoke(null, [str]);
                     }
                 }
 
@@ -503,7 +505,7 @@ public class BinarySerializer
     /// <summary>Serializes the specified object</summary>
     /// <param name="value">The object to serialize</param>
     /// <param name="stream">The stream to serialize to</param>
-    public void Serialize(object value, Stream stream)
+    public void Serialize(object? value, Stream stream)
     {
         var writer = new DataWriter(stream);
         Serialize(value, writer);
@@ -513,7 +515,7 @@ public class BinarySerializer
     /// <summary>Serializes the specified object</summary>
     /// <param name="value">The object to serialize</param>
     /// <param name="data">Returns the serialized data.</param>
-    public void Serialize(object value, out byte[] data)
+    public void Serialize(object? value, out byte[] data)
     {
         using var result = new MemoryStream();
         Serialize(value, result);
@@ -523,12 +525,17 @@ public class BinarySerializer
     /// <summary>Serializes the specified object to a <see cref="DataWriter"/></summary>
     /// <param name="value">The object to serialize</param>
     /// <param name="writer">The writer to serialize to</param>
-    public void Serialize(object value, DataWriter writer)
+    public void Serialize(object? value, DataWriter writer)
     {
         if (writer == null) throw new ArgumentNullException(nameof(writer));
 
-        var type = value?.GetType();
-        var objTypeCode = value is null ? TypeCode.NULL : FromType(type);
+        if (value is null)
+        {
+            writer.Write((byte)TypeCode.NULL);
+            return;
+        }
+        var type = value.GetType() ?? throw new InvalidOperationException($"Could not get type of value {value}!");
+        var objTypeCode = FromType(type);
         writer.Write((byte)objTypeCode);
 
         if (IsPrimitive(objTypeCode))

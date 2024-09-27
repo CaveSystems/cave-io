@@ -12,7 +12,7 @@ public class FifoStream : Stream, IFifoStream
 {
     #region Private Fields
 
-    LinkedListNode<byte[]> currentBuffer;
+    LinkedListNode<byte[]>? currentBuffer;
     int currentBufferPosition;
     int realLength;
     int realPosition;
@@ -140,19 +140,19 @@ public class FifoStream : Stream, IFifoStream
             throw new ArgumentNullException(nameof(source));
         }
 
-        const int bufferSize = 1024 * 1024;
+        const int BufferSize = 1024 * 1024;
         long result = 0;
         while (true)
         {
-            var buffer = new byte[bufferSize];
-            var count = source.Read(buffer, 0, bufferSize);
+            var buffer = new byte[BufferSize];
+            var count = source.Read(buffer, 0, BufferSize);
             if (count == 0)
             {
                 break;
             }
 
             result += count;
-            if (count != bufferSize)
+            if (count != BufferSize)
             {
                 Array.Resize(ref buffer, count);
             }
@@ -436,7 +436,7 @@ public class FifoStream : Stream, IFifoStream
                     currentBufferPosition = 0;
                     while (offset < 0)
                     {
-                        currentBuffer = currentBuffer.Previous;
+                        currentBuffer = currentBuffer.Previous!;
                         offset += currentBuffer.Value.Length;
                     }
 
@@ -445,7 +445,7 @@ public class FifoStream : Stream, IFifoStream
                         while ((currentBuffer != null) && (offset >= currentBuffer.Value.Length))
                         {
                             offset -= currentBuffer.Value.Length;
-                            currentBuffer = currentBuffer.Next;
+                            currentBuffer = currentBuffer.Next!;
                         }
 
                         currentBufferPosition = (int)offset;
@@ -460,7 +460,7 @@ public class FifoStream : Stream, IFifoStream
 
                 case SeekOrigin.Begin:
                 {
-                    currentBuffer = Buffers.First;
+                    currentBuffer = Buffers.First ?? throw new EndOfStreamException();
                     currentBufferPosition = 0;
                     realPosition = 0;
                     if (offset != 0)
@@ -473,7 +473,7 @@ public class FifoStream : Stream, IFifoStream
                 case SeekOrigin.End:
                 {
                     realPosition = realLength;
-                    currentBuffer = Buffers.Last;
+                    currentBuffer = Buffers.Last ?? throw new EndOfStreamException();
                     currentBufferPosition = currentBuffer.Value.Length;
                     if (offset != 0)
                     {

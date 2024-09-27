@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -75,32 +73,6 @@ public sealed class DataWriter
         }
     }
 
-    /// <summary>Initializes a new instance of the <see cref="DataWriter"/> class.</summary>
-    /// <param name="output">The stream to write to.</param>
-    /// <param name="newLine">New line mode.</param>
-    /// <param name="encoding">Encoding to use for characters and strings.</param>
-    /// <param name="endian">The endian type.</param>
-    /// <exception cref="ArgumentNullException">output.</exception>
-    /// <exception cref="ArgumentException">Stream does not support writing or is already closed.;output.</exception>
-    /// <exception cref="NotSupportedException">StringEncoding {0} not supported! or EndianType {0} not supported!.</exception>
-    public DataWriter(Stream output, Encoding encoding, NewLineMode newLine = NewLineMode.LF, EndianType endian = EndianType.LittleEndian)
-    {
-        BaseStream = output ?? throw new ArgumentNullException(nameof(output));
-        NewLineMode = newLine;
-        stringEncoding = encoding?.ToStringEncoding() ?? throw new ArgumentOutOfRangeException(nameof(encoding));
-        endianType = endian;
-        endianEncoder = endian switch
-        {
-            EndianType.LittleEndian => new BitConverterLE(),
-            EndianType.BigEndian => new BitConverterBE(),
-            _ => throw new NotImplementedException($"EndianType {endianType} not implemented!")
-        };
-        if (!BaseStream.CanWrite)
-        {
-            throw new ArgumentException("Stream does not support writing or is already closed.", nameof(output));
-        }
-    }
-
     #endregion Public Constructors
 
     #region Public Properties
@@ -113,15 +85,6 @@ public sealed class DataWriter
     /// (missing codepage character mappings) occur.
     /// </summary>
     public bool DisableEncodingRoundtripTest { get; set; }
-
-    /// <summary>Gets or sets the Encoding to use for characters and strings. Setting this property updates <see cref="StringEncoding"/> automatically.</summary>
-    /// <remarks>This can be used between all read calls.</remarks>
-    [Obsolete("Use StringEncoding whenever possible.")]
-    public Encoding Encoding
-    {
-        get => stringEncoding.Create();
-        set => StringEncoding = value.ToStringEncoding();
-    }
 
     /// <summary>Gets or sets the endian encoder type.</summary>
     /// <remarks>This can be used between all write calls.</remarks>
@@ -571,7 +534,6 @@ public sealed class DataWriter
         ZeroTerminationTest();
 
         var data = EncodeString(text + '\0');
-        var required = data.Length;
         while (data.Length >= maxLength)
         {
             var remove = data.Length - maxLength;

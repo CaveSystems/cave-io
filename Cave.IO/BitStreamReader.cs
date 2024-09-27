@@ -11,6 +11,7 @@ public class BitStreamReader(Stream stream)
     #region Private Fields
 
     int bufferedByte;
+    bool isClosed;
     int position = -1;
 
     #endregion Private Fields
@@ -85,18 +86,26 @@ public class BitStreamReader(Stream stream)
     /// <summary>Closes the reader and the underlying stream.</summary>
     public void Close()
     {
+        if (!isClosed)
+        {
 #if NETSTANDARD13
-        BaseStream?.Dispose();
+            BaseStream?.Dispose();
 #else
-        BaseStream?.Close();
+            BaseStream?.Close();
 #endif
-        BaseStream = null;
+            isClosed = true;
+        }
     }
+
+    /// <summary>Gets a hash code for this object.</summary>
+    /// <returns>The hash code.</returns>
+    public override int GetHashCode() => base.GetHashCode();
 
     /// <summary>reads a bit from the buffer.</summary>
     /// <returns>A Bit.</returns>
     public uint ReadBit()
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         if (position < 0)
         {
             bufferedByte = BaseStream.ReadByte();
@@ -116,6 +125,7 @@ public class BitStreamReader(Stream stream)
     /// <returns>Number of bits read.</returns>
     public uint ReadBits32(int count)
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         if (count < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -129,6 +139,7 @@ public class BitStreamReader(Stream stream)
     /// <returns>Number of bits read.</returns>
     public uint ReadBits32(uint count)
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         if (Math.Abs(count) > 32)
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -149,6 +160,7 @@ public class BitStreamReader(Stream stream)
     /// <returns>Number of bits read.</returns>
     public ulong ReadBits64(int count)
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         if (count < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -162,6 +174,7 @@ public class BitStreamReader(Stream stream)
     /// <returns>Number of bits read.</returns>
     public ulong ReadBits64(uint count)
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         if (Math.Abs(count) > 64)
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -176,14 +189,6 @@ public class BitStreamReader(Stream stream)
 
         return result;
     }
-
-    #endregion Public Methods
-
-    #region overrides
-
-    /// <summary>Gets a hash code for this object.</summary>
-    /// <returns>The hash code.</returns>
-    public override int GetHashCode() => base.GetHashCode();
 
     /// <summary>Gets the name of the class and the current state.</summary>
     /// <returns>Classname and currrent state.</returns>
@@ -209,5 +214,5 @@ public class BitStreamReader(Stream stream)
         return result;
     }
 
-    #endregion overrides
+    #endregion Public Methods
 }

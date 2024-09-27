@@ -137,11 +137,11 @@ public static class MarshalStruct
     /// <summary>Reads a native UTF8 string.</summary>
     /// <param name="address">The pointer.</param>
     /// <returns>The string.</returns>
-    public static string ReadUtf8(IntPtr address)
+    public static UTF8 ReadUtf8(IntPtr address)
     {
         if (address == IntPtr.Zero)
         {
-            return null;
+            return new();
         }
 
         var data = new List<byte>();
@@ -157,21 +157,21 @@ public static class MarshalStruct
             data.Add(b);
         }
 
-        return Encoding.UTF8.GetString([.. data]);
+        return new UTF8([.. data]);
     }
 
     /// <summary>Reads a native UTF8 strings array.</summary>
     /// <remarks>utf8 string arrays are a memory reagon containing null terminated utf8 strings terminated by an empty utf8 string.</remarks>
     /// <param name="address">The pointer.</param>
     /// <returns>The array of strings.</returns>
-    public static string[] ReadUtf8Strings(IntPtr address)
+    public static UTF8[] ReadUtf8Strings(IntPtr address)
     {
         if (address == IntPtr.Zero)
         {
-            return null;
+            return [];
         }
 
-        var strings = new List<string>();
+        var strings = new List<UTF8>();
         var current = new List<byte>();
         for (var i = 0; ; i++)
         {
@@ -183,7 +183,7 @@ public static class MarshalStruct
                     break;
                 }
 
-                strings.Add(Encoding.UTF8.GetString([.. current]));
+                strings.Add(new([.. current]));
                 current.Clear();
                 continue;
             }

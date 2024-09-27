@@ -48,7 +48,7 @@ public class FifoBuffer
     /// <returns>Returns a dequeued buffer (may be of any size &gt; 0).</returns>
     public byte[] Dequeue()
     {
-        var buffer = Buffers.First.Value;
+        var buffer = Buffers.First?.Value ?? throw new EndOfStreamException();
         Buffers.RemoveFirst();
         Length -= buffer.Length;
         return buffer;
@@ -145,11 +145,6 @@ public class FifoBuffer
 
     /// <summary>Directly enqueues the specified byte buffer.</summary>
     /// <param name="buffer">The buffer to add.</param>
-    [Obsolete("Use Enqueue(byte[] buffer, bool doNotCopy) instead.")]
-    public void Enqueue(byte[] buffer) => Enqueue(buffer, false);
-
-    /// <summary>Directly enqueues the specified byte buffer.</summary>
-    /// <param name="buffer">The buffer to add.</param>
     /// <param name="doNotCopy">Prevents copying of the <paramref name="buffer"/> data. Use only when you know what you are doing.</param>
     public void Enqueue(byte[] buffer, bool doNotCopy)
     {
@@ -196,7 +191,7 @@ public class FifoBuffer
 
     /// <summary>Peeks at the first buffer (may be of any size &gt; 0).</summary>
     /// <returns>Returns the first buffer (may be of any size &gt; 0).</returns>
-    public byte[] Peek() => Buffers.First.Value;
+    public byte[] Peek() => Buffers.First?.Value ?? throw new EndOfStreamException();
 
     /// <summary>Peeks at the buffer returning the specified number of bytes as new byte[] buffer.</summary>
     /// <param name="size">The number of bytes to peek at.</param>
@@ -213,7 +208,7 @@ public class FifoBuffer
         var node = Buffers.First;
         while (pos < size)
         {
-            var current = node.Value;
+            var current = node?.Value ?? throw new EndOfStreamException();
             node = node.Next;
             var len = Math.Min(current.Length, size - pos);
             Buffer.BlockCopy(current, 0, result, pos, len);
@@ -237,7 +232,7 @@ public class FifoBuffer
         var node = Buffers.First;
         while (pos < size)
         {
-            var current = node.Value;
+            var current = node?.Value ?? throw new EndOfStreamException();
             node = node.Next;
             var len = Math.Min(current.Length, size - pos);
             Marshal.Copy(current, 0, address, len);
@@ -245,11 +240,6 @@ public class FifoBuffer
             pos += len;
         }
     }
-
-    /// <summary>Directly prepends a copy of the specified byte buffer.</summary>
-    /// <param name="buffer">The buffer to add (will not be copied).</param>
-    [Obsolete("Use Prepend(byte[] buffer, bool doNotCopy) instead.")]
-    public void Prepend(byte[] buffer) => Prepend(buffer, false);
 
     /// <summary>Directly prepends the specified byte buffer.</summary>
     /// <param name="buffer">The buffer to add.</param>

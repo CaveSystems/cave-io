@@ -59,7 +59,7 @@ public class ResistantFileStream : Stream
 
     #region private implementation
 
-    volatile FileStream stream;
+    volatile FileStream? stream;
     long streamLength;
     long streamPosition;
 
@@ -81,12 +81,13 @@ public class ResistantFileStream : Stream
     T Resistant<T>(Func<T> function)
         where T : struct
     {
-        Exception exception = null;
+        Exception? exception = null;
         for (var i = 0; i < FileMaxErrors; i++)
         {
             try
             {
                 var result = function();
+                if (stream is null) throw new ObjectDisposedException(nameof(ResistantFileStream));
                 streamPosition = stream.Position;
                 return result;
             }
@@ -108,17 +109,18 @@ public class ResistantFileStream : Stream
             }
         }
 
-        throw exception;
+        throw exception!;
     }
 
     void Resistant(Action action)
     {
-        Exception exception = null;
+        Exception? exception = null;
         for (var i = 0; i < FileMaxErrors; i++)
         {
             try
             {
                 action();
+                if (stream is null) throw new ObjectDisposedException(nameof(ResistantFileStream));
                 streamPosition = stream.Position;
             }
             catch (Exception ex)
@@ -132,7 +134,7 @@ public class ResistantFileStream : Stream
             }
         }
 
-        throw exception;
+        throw exception!;
     }
 
     #endregion private implementation
@@ -185,13 +187,13 @@ public class ResistantFileStream : Stream
     #region stream implementation
 
     /// <summary>Gets a value indicating whether the current stream supports reading.</summary>
-    public override bool CanRead => stream.CanRead;
+    public override bool CanRead => stream?.CanRead ?? false;
 
     /// <summary>Gets a value indicating whether the current stream supports seeking.</summary>
-    public override bool CanSeek => stream.CanSeek;
+    public override bool CanSeek => stream?.CanSeek ?? false;
 
     /// <summary>Gets a value indicating whether the current stream supports writing.</summary>
-    public override bool CanWrite => stream.CanWrite;
+    public override bool CanWrite => stream?.CanWrite ?? false;
 
     /// <summary>Gets the length in bytes of the stream.</summary>
     public override long Length => streamLength;
@@ -200,12 +202,18 @@ public class ResistantFileStream : Stream
     public override long Position { get => streamPosition; set => Seek(value, SeekOrigin.Begin); }
 
     /// <summary>Clears buffers for this stream and causes any buffered data to be written to the file.</summary>
-    public override void Flush() => Resistant(stream.Flush);
+    public override void Flush()
+    {
+        if (stream is not null)
+        {
+            Resistant(stream.Flush);
+        }
+    }
 
     /// <summary>Reads a block of bytes from the stream and writes the data in a given buffer.</summary>
     /// <param name="buffer">
-    /// When this method returns, contains the specified byte array with the values between offset and (offset + count - 1) replaced by the bytes read from
-    /// the current source.
+    /// When this method returns, contains the specified byte array with the values between offset and (offset + count - 1) replaced by the bytes read from the
+    /// current source.
     /// </param>
     /// <param name="offset">The byte offset in array at which the read bytes will be placed.</param>
     /// <param name="count">The maximum number of bytes to read.</param>
@@ -213,23 +221,23 @@ public class ResistantFileStream : Stream
     /// The total number of bytes read into the buffer. This might be less than the number of bytes requested if that number of bytes are not currently
     /// available, or zero if the end of the stream is reached.
     /// </returns>
-    public override int Read(byte[] buffer, int offset, int count) => Resistant(() => stream.Read(buffer, offset, count));
+    public override int Read(byte[] buffer, int offset, int count) => Resistant(() => BaseStream.Read(buffer, offset, count));
 
     /// <summary>Sets the current position of this stream to the given value.</summary>
     /// <param name="offset">The point relative to origin from which to begin seeking.</param>
     /// <param name="origin">Specifies the beginning, the end, or the current position as a reference point for offset, using a value of type SeekOrigin.</param>
     /// <returns>The new position in the stream.</returns>
-    public override long Seek(long offset, SeekOrigin origin) => Resistant(() => stream.Seek(offset, origin));
+    public override long Seek(long offset, SeekOrigin origin) => Resistant(() => BaseStream.Seek(offset, origin));
 
     /// <summary>Sets the length of this stream to the given value.</summary>
     /// <param name="value">The new length of the stream.</param>
-    public override void SetLength(long value) => Resistant(() => stream.SetLength(value));
+    public override void SetLength(long value) => Resistant(() => BaseStream.SetLength(value));
 
     /// <summary>Writes a block of bytes to the file stream.</summary>
     /// <param name="buffer">The buffer containing data to write to the stream.</param>
     /// <param name="offset">The zero-based byte offset in array from which to begin copying bytes to the stream.</param>
     /// <param name="count">The maximum number of bytes to write.</param>
-    public override void Write(byte[] buffer, int offset, int count) => Resistant(() => stream.Write(buffer, offset, count));
+    public override void Write(byte[] buffer, int offset, int count) => Resistant(() => BaseStream.Write(buffer, offset, count));
 
     #endregion stream implementation
 }

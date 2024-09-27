@@ -213,5 +213,17 @@ public static class StringEncodingExtensions
         return (StringEncoding)encoding.CodePage;
     }
 
+    /// <summary>Converts an encoding instance by codepage to the corresponding <see cref="StringEncoding"/> enum value.</summary>
+    /// <param name="encodingInfo">The encoding to convert.</param>
+    /// <returns>Returns an enum value for the <see cref="Encoding.CodePage"/>.</returns>
+    public static StringEncoding ToStringEncoding(this EncodingInfo encodingInfo)
+    {
+        if (encodingInfo is null)
+        {
+            throw new ArgumentNullException(nameof(encodingInfo));
+        }
+        return (StringEncoding)encodingInfo.CodePage;
+    }
+
     #endregion Public Methods
 }

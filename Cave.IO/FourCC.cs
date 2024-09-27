@@ -72,7 +72,7 @@ public struct FourCC : IEquatable<FourCC>
     /// <summary>Checks for equality with the <see cref="object.ToString()"/> method of the specified <paramref name="obj"/>.</summary>
     /// <param name="obj">The object to compare to.</param>
     /// <returns>Returns true if the specified object is equal to the current object; otherwise, false.</returns>
-    public override readonly bool Equals(object obj) => Equals(ToString(), obj?.ToString());
+    public override readonly bool Equals(object? obj) => Equals(ToString(), obj?.ToString());
 
     /// <inheritdoc/>
     public readonly bool Equals(FourCC other) => value == other.value;

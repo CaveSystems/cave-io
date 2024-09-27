@@ -155,7 +155,7 @@ public sealed class Arguments : IEquatable<Arguments>
     #region Public Properties
 
     /// <summary>Gets the command used to start the program. This may be null or empty if not set!.</summary>
-    public string Command { get; private set; }
+    public string Command { get; private set; } = string.Empty;
 
     /// <summary>Gets the number of parameters and options used. The command counts too, if it is set (not null or empty)!.</summary>
     public int Count
@@ -176,10 +176,10 @@ public sealed class Arguments : IEquatable<Arguments>
     public bool IsEmpty => string.IsNullOrEmpty(Command) && ((Parameters.Count + Options.Count) == 0);
 
     /// <summary>Gets all <see cref="Option"/> s found.</summary>
-    public OptionCollection Options { get; private set; }
+    public OptionCollection Options { get; private set; } = OptionCollection.Empty;
 
     /// <summary>Gets all parameters found.</summary>
-    public ParameterCollection Parameters { get; private set; }
+    public ParameterCollection Parameters { get; private set; } = ParameterCollection.Empty;
 
     /// <summary>Gets a <see cref="ProcessStartInfo"/>.</summary>
     public ProcessStartInfo ProcessStartInfo => new(Command, ToString(false));
@@ -257,12 +257,12 @@ public sealed class Arguments : IEquatable<Arguments>
     /// <summary>Determines whether the specified object is equal to the current object.</summary>
     /// <param name="obj">Object to check for equality.</param>
     /// <returns>Returns true if the specified instance equals this.</returns>
-    public override bool Equals(object obj) => Equals(obj as Arguments);
+    public override bool Equals(object? obj) => obj is Arguments args && Equals(args);
 
     /// <summary>Determines whether the specified object is equal to the current object.</summary>
     /// <param name="other">Arguments instance to check against.</param>
     /// <returns>Returns true if the specified instance equals this.</returns>
-    public bool Equals(Arguments other) =>
+    public bool Equals(Arguments? other) =>
         other is not null
      && (Count == other.Count)
      && (Command == other.Command)
@@ -272,7 +272,7 @@ public sealed class Arguments : IEquatable<Arguments>
     /// <summary>Gets the first matching option or null.</summary>
     /// <param name="optionNames">Option name to retrieve.</param>
     /// <returns>Returns a matching option instance or null.</returns>
-    public Option GetFirstOption(params string[] optionNames)
+    public Option? GetFirstOption(params string[] optionNames)
     {
         foreach (var name in optionNames)
         {
@@ -288,7 +288,7 @@ public sealed class Arguments : IEquatable<Arguments>
     /// <summary>Gets the value of the first matching option or null.</summary>
     /// <param name="optionNames">Option name to retrieve.</param>
     /// <returns>Returns the option value or null.</returns>
-    public string GetFirstOptionValue(params string[] optionNames) => GetFirstOption(optionNames)?.Value;
+    public string? GetFirstOptionValue(params string[] optionNames) => GetFirstOption(optionNames)?.Value;
 
     /// <summary>Gets the hash code for this instance.</summary>
     /// <returns>Returns a hash code.</returns>

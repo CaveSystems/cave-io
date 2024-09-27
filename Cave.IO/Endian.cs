@@ -15,8 +15,8 @@ public static class Endian
         get
         {
             var bytes = new byte[] { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0 };
-            const ulong bigEndianValue = 0x123456789ABCDEF0;
-            const ulong littleEndianValue = 0xF0DEBC9A78563412;
+            const ulong BigEndianValue = 0x123456789ABCDEF0;
+            const ulong LittleEndianValue = 0xF0DEBC9A78563412;
             ulong value;
             unsafe
             {
@@ -26,12 +26,12 @@ public static class Endian
                 }
             }
 
-            if (value == littleEndianValue)
+            if (value == LittleEndianValue)
             {
                 return EndianType.LittleEndian;
             }
 
-            if (value == bigEndianValue)
+            if (value == BigEndianValue)
             {
                 return EndianType.BigEndian;
             }

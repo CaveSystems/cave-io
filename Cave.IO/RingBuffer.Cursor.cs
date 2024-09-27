@@ -4,8 +4,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-#nullable enable
-
 namespace Cave.IO;
 
 partial class RingBuffer<TValue>

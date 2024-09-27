@@ -84,7 +84,7 @@ public static class Ini
     public static IniReader GetLocalMachineIniFile()
     {
         var fileName = MainAssembly.Get()?.GetName()?.Name ?? "main";
-        var location = FileLocation.Create(root: RootLocation.AllUserConfig, extension: PlatformExtension);
+        var location = FileLocation.Create(root: RootLocation.AllUserConfig, fileName: fileName, extension: PlatformExtension);
         FileSystem.TouchFile(location);
         return IniReader.FromFile(location);
     }
