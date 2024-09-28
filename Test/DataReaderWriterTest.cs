@@ -258,8 +258,8 @@ namespace Tests.Cave.IO
             Assert.AreEqual(randomString.Replace("\0", ""), reader.ReadZeroTerminatedString(65536), msg);
             Assert.AreEqual("", reader.ReadZeroTerminatedString(1024), msg);
 
-            Assert.AreEqual(randomString, reader.ReadString(), msg);
-            Assert.AreEqual("", reader.ReadString(), msg);
+            Assert.AreEqual(randomString, reader.ReadPrefixedString(), msg);
+            Assert.AreEqual("", reader.ReadPrefixedString(), msg);
             Assert.AreEqual(null, reader.ReadPrefixedString(), msg);
 
             Assert.AreEqual(randomString.Replace(reader.LineFeed, ""), reader.ReadLine(), msg);
