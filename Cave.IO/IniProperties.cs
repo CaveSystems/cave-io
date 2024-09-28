@@ -82,31 +82,6 @@ public struct IniProperties : IEquatable<IniProperties>, IDisposable
     /// other users.)
     /// </summary>
     /// <param name="password">Password to use.</param>
-    /// <returns>Returns a new <see cref="IniProperties"/> instance.</returns>
-    [Obsolete("This method is provided for compatibility reasons only.")]
-    public static IniProperties Encrypted(string password)
-    {
-        var salt = new byte[16];
-        for (byte i = 0; i < salt.Length; salt[i] = ++i)
-        {
-        }
-
-        var pbkdf1 = new PasswordDeriveBytes(password, salt);
-        var result = Default;
-        result.Encryption = new RijndaelManaged { BlockSize = 128, };
-#pragma warning disable CA5373
-        result.Encryption.Key = pbkdf1.GetBytes(result.Encryption.KeySize / 8);
-        result.Encryption.IV = pbkdf1.GetBytes(result.Encryption.BlockSize / 8);
-#pragma warning restore CA5373
-        (pbkdf1 as IDisposable)?.Dispose();
-        return result;
-    }
-
-    /// <summary>
-    /// Obtains <see cref="IniProperties"/> with default settings and simple encryption. (This is not a security feature, use file system acl to protect from
-    /// other users.)
-    /// </summary>
-    /// <param name="password">Password to use.</param>
     /// <param name="salt">Salt to use.</param>
     /// <param name="iterations">Number of iterations.</param>
     /// <returns>Returns a new <see cref="IniProperties"/> instance.</returns>
@@ -148,7 +123,7 @@ public struct IniProperties : IEquatable<IniProperties>, IDisposable
     /// <summary>Determines whether the specified <see cref="object"/>, is equal to this instance.</summary>
     /// <param name="obj">The <see cref="object"/> to compare with this instance.</param>
     /// <returns><c>true</c> if the specified <see cref="object"/> is equal to this instance; otherwise, <c>false</c>.</returns>
-    public override readonly bool Equals(object obj) => obj is IniProperties other && Equals(other);
+    public override readonly bool Equals(object? obj) => obj is IniProperties other && Equals(other);
 
     /// <summary>Determines whether the specified <see cref="IniProperties"/>, is equal to this instance.</summary>
     /// <param name="other">The <see cref="IniProperties"/> to compare with this instance.</param>

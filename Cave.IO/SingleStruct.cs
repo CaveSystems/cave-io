@@ -74,7 +74,7 @@ public struct SingleStruct : IEquatable<SingleStruct>
     /// <summary>Determines whether the specified <see cref="object"/>, is equal to this instance.</summary>
     /// <param name="obj">The <see cref="object"/> to compare with this instance.</param>
     /// <returns><c>true</c> if the specified <see cref="object"/> is equal to this instance; otherwise, <c>false</c>.</returns>
-    public override readonly bool Equals(object obj) => obj is SingleStruct s && Equals(s);
+    public override readonly bool Equals(object? obj) => obj is SingleStruct s && Equals(s);
 
     /// <summary>Determines whether the specified <see cref="SingleStruct"/>, is equal to this instance.</summary>
     /// <param name="other">The <see cref="SingleStruct"/> to compare with this instance.</param>

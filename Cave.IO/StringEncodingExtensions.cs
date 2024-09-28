@@ -67,9 +67,10 @@ public static class StringEncodingExtensions
     /// <param name="block">Byte array</param>
     /// <param name="start">Start index at the byte array</param>
     /// <param name="length">Number of bytes</param>
+    /// <param name="exception">Throw exception if text decoding ends with an incomplete character.</param>
     /// <returns>Returns a new string instance.</returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public static string Decode(this StringEncoding encoding, byte[] block, int start = 0, int length = -1)
+    public static string Decode(this StringEncoding encoding, byte[] block, int start = 0, int length = -1, bool exception = false)
     {
         if (block is null) throw new ArgumentNullException(nameof(block));
         if (start > 0 || length > -1) block = block.GetRange(start, length);
@@ -100,12 +101,11 @@ public static class StringEncodingExtensions
         if (bom != null && bom.Length > 0 && block.StartsWith(bom))
         {
             start = bom.Length;
-            //block = block.GetRange(bom.Length);
         }
         var chars = new char[block.Length];
         var decoder = textEncoding.GetDecoder();
         decoder.Convert(block, start, block.Length - start, chars, 0, chars.Length, false, out var bytesUsed, out var charsUsed, out var completed);
-        //return textEncoding.GetString(block);
+        if (exception && !completed) throw new InvalidOperationException($"Decode not complete (after bytesUsed {bytesUsed}).");
         return new string(chars, 0, charsUsed);
     }
 
@@ -211,6 +211,18 @@ public static class StringEncodingExtensions
             throw new ArgumentNullException(nameof(encoding));
         }
         return (StringEncoding)encoding.CodePage;
+    }
+
+    /// <summary>Converts an encoding instance by codepage to the corresponding <see cref="StringEncoding"/> enum value.</summary>
+    /// <param name="encodingInfo">The encoding to convert.</param>
+    /// <returns>Returns an enum value for the <see cref="Encoding.CodePage"/>.</returns>
+    public static StringEncoding ToStringEncoding(this EncodingInfo encodingInfo)
+    {
+        if (encodingInfo is null)
+        {
+            throw new ArgumentNullException(nameof(encodingInfo));
+        }
+        return (StringEncoding)encodingInfo.CodePage;
     }
 
     #endregion Public Methods

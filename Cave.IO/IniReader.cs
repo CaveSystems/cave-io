@@ -113,7 +113,7 @@ public class IniReader
 
     #region Internal Methods
 
-    internal static object ConvertValue(Type targetType, string value, IniProperties properties)
+    internal static object? ConvertValue(Type targetType, string value, IniProperties properties)
     {
         if (targetType == typeof(DateTime))
         {
@@ -236,7 +236,7 @@ public class IniReader
         where T : struct, IConvertible
     {
         var data = value.ToString();
-        if (!GetValue(section, name, ref data))
+        if (!GetValue(section, name, ref data) || data is null)
         {
             return false;
         }
@@ -292,7 +292,7 @@ public class IniReader
     /// <param name="name">The name of the setting.</param>
     /// <param name="value">The default value.</param>
     /// <returns>Returns true if the setting exist and the read value was returned, true otherwise (default value returned).</returns>
-    public bool GetValue(string section, string name, ref string value)
+    public bool GetValue(string section, string name, ref string? value)
     {
         var v = ReadSetting(section, name);
         if (string.IsNullOrEmpty(v))
@@ -661,24 +661,6 @@ public class IniReader
     /// <param name="section">Section to read.</param>
     /// <param name="throwEx">Throw an error for any invalid value in the section.</param>
     /// <returns>Returns a new struct instance.</returns>
-    [Obsolete("Use ReadObjectFields instead")]
-    public T ReadObject<T>(string section, bool throwEx = false)
-        where T : class, new()
-        => ReadObjectFields<T>(section, throwEx);
-
-    /// <summary>Reads a whole section as values of an object (this does not work with structs).</summary>
-    /// <param name="section">Section to read.</param>
-    /// <param name="container">Container to set the field at.</param>
-    /// <param name="throwEx">Throw an error for any unset value in the section.</param>
-    /// <returns>Returns true if all fields could be read. Throws an exception or returns false otherwise.</returns>
-    [Obsolete("Use ReadObjectFields instead")]
-    public bool ReadObject(string section, object container, bool throwEx = false) => ReadObjectFields(section, container, throwEx);
-
-    /// <summary>Reads a whole section as values of a struct.</summary>
-    /// <typeparam name="T">The type of the struct.</typeparam>
-    /// <param name="section">Section to read.</param>
-    /// <param name="throwEx">Throw an error for any invalid value in the section.</param>
-    /// <returns>Returns a new struct instance.</returns>
     public T ReadObjectFields<T>(string section, bool throwEx = false)
         where T : class, new()
     {
@@ -719,8 +701,8 @@ public class IniReader
 
             if (field.HasAttribute<IniSectionAttribute>())
             {
-                var sectionAttribute = field.GetAttribute<IniSectionAttribute>();
-                var fieldObject = Activator.CreateInstance(field.FieldType);
+                var sectionAttribute = field.GetAttribute<IniSectionAttribute>()!;
+                var fieldObject = Activator.CreateInstance(field.FieldType) ?? throw new InvalidOperationException($"Could not create instance of field {field}!");
                 switch (sectionAttribute.SettingsType)
                 {
                     case IniSettingsType.Fields: ReadObjectFields(sectionAttribute.Name ?? field.Name, fieldObject); break;
@@ -822,15 +804,15 @@ public class IniReader
 
             if (property.HasAttribute<IniSectionAttribute>())
             {
-                var sectionAttribute = property.GetAttribute<IniSectionAttribute>();
-                var fieldObject = Activator.CreateInstance(property.PropertyType);
+                var sectionAttribute = property.GetAttribute<IniSectionAttribute>()!;
+                var propertyObject = Activator.CreateInstance(property.PropertyType) ?? throw new InvalidOperationException($"Could not create instance of property {property}!");
                 switch (sectionAttribute.SettingsType)
                 {
-                    case IniSettingsType.Fields: ReadObjectFields(sectionAttribute.Name ?? property.Name, fieldObject); break;
-                    case IniSettingsType.Properties: ReadObjectProperties(sectionAttribute.Name ?? property.Name, fieldObject); break;
+                    case IniSettingsType.Fields: ReadObjectFields(sectionAttribute.Name ?? property.Name, propertyObject); break;
+                    case IniSettingsType.Properties: ReadObjectProperties(sectionAttribute.Name ?? property.Name, propertyObject); break;
                     default: throw new NotImplementedException($"IniSettingsType.{sectionAttribute.SettingsType} not implemented at {GetType()}!");
                 }
-                property.SetValue(container, fieldObject, null);
+                property.SetValue(container, propertyObject, null);
                 continue;
             }
 
@@ -944,7 +926,7 @@ public class IniReader
     /// <param name="section">Sectionname of the setting.</param>
     /// <param name="settingName">Name of the setting.</param>
     /// <returns>Returns null if the setting is not present a string otherwise.</returns>
-    public string ReadSetting(string section, string settingName)
+    public string? ReadSetting(string section, string settingName)
     {
         // find section
         var i = SectionStart(section);
@@ -1011,36 +993,15 @@ public class IniReader
     /// <param name="name">The name.</param>
     /// <param name="defaultValue">The default value.</param>
     /// <returns>Returns the (converted) value if a value is present or the default value if not.</returns>
-    public string ReadString(string section, string name, string defaultValue = null)
+    public string ReadString(string section, string name, string? defaultValue = null)
     {
-        string result = null;
-        if (!GetValue(section, name, ref result))
+        string? result = null;
+        if (!GetValue(section, name, ref result) || result is null)
         {
             result = defaultValue ?? throw new InvalidDataException($"Section [{section}] Setting {name} is unset! You can set {nameof(defaultValue)} to define a implicit result and disable this exception.");
         }
         return result;
     }
-
-    /// <summary>Reads a whole section as values of a struct.</summary>
-    /// <typeparam name="T">The type of the struct.</typeparam>
-    /// <param name="section">Section to read.</param>
-    /// <param name="throwEx">Throw an error for any unset value in the section.</param>
-    /// <returns>Returns a new struct instance.</returns>
-    [Obsolete("Use ReadStructFields instead")]
-    public T ReadStruct<T>(string section, bool throwEx = true)
-        where T : struct
-        => ReadStructFields<T>(section, throwEx);
-
-    /// <summary>Reads a whole section as values of a struct.</summary>
-    /// <typeparam name="T">The type of the struct.</typeparam>
-    /// <param name="section">Section to read.</param>
-    /// <param name="item">The structure.</param>
-    /// <param name="throwEx">Throw an error for any unset value in the section.</param>
-    /// <returns>Returns true if all fields could be read. Throws an exception or returns false otherwise.</returns>
-    [Obsolete("Use ReadStructFields instead")]
-    public bool ReadStruct<T>(string section, ref T item, bool throwEx = true)
-        where T : struct
-        => ReadStructFields<T>(section, ref item, throwEx);
 
     /// <summary>Reads a whole section as values of a struct.</summary>
     /// <typeparam name="T">The type of the struct.</typeparam>

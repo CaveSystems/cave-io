@@ -1,29 +1,77 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Cave.IO;
 
 /// <summary>Provides binary conversion routines.</summary>
-/// <remarks>Initializes a new instance of the <see cref="Bits"/> class.</remarks>
+/// <remarks>Initializes a new instance of the <see cref="Bits"/> class. Bits are counted from LSB to MSB.</remarks>
 /// <param name="data">Binary data to initialize.</param>
-public class Bits(byte[] data)
+/// <param name="bitCount">Bit count used at data.</param>
+public class Bits(byte[] data, int bitCount) : IEnumerable<bool>
 {
+    #region Private Methods
+
+    private IEnumerator<bool> GetBoolEnumerator()
+    {
+        var count = BitCount;
+        for (var i = data.Length - 1; i >= 0; i--)
+        {
+            var b = data[i];
+            for (var bit = 0x1; bit < 0x100; bit <<= 1)
+            {
+                if (--count < 0) break;
+                yield return (b & bit) != 0;
+            }
+        }
+    }
+
+    #endregion Private Methods
+
     #region Public Properties
 
+    /// <summary>Gets the number of bits</summary>
+    public int BitCount => bitCount;
+
     /// <summary>Gets a copy of all data.</summary>
-    public IList<byte> Data { get; } = data;
+    public IList<byte> Data => data;
 
     #endregion Public Properties
+
+    #region Public Indexers
+
+    /// <summary>Gets or sets the bit at the specified index</summary>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public bool this[int index]
+    {
+        get => (data[^(index / 8)] & (1 << (index % 8))) != 0;
+        set
+        {
+            var i = index / 8;
+            var bit = (byte)(1 << (index % 8));
+            if (value)
+            {
+                data[^i] |= bit;
+            }
+            else
+            {
+                data[^i] &= (byte)~bit;
+            }
+        }
+    }
+
+    #endregion Public Indexers
 
     #region Public Methods
 
     /// <summary>Implicitly converts an array to <see cref="Bits"/> data.</summary>
     /// <param name="data">The binary data.</param>
-    public static implicit operator Bits(byte[] data) => data == null ? new Bits([]) : new Bits(data);
+    public static implicit operator Bits(byte[] data) => data == null ? new Bits([], 0) : new Bits(data, data.Length * 8);
 
     /// <summary>Implicitly converts <see cref="Bits"/> data to an array.</summary>
     /// <param name="value">The binary data.</param>
-    public static implicit operator byte[](Bits value) => value?.Data as byte[] ?? [];
+    public static implicit operator byte[](Bits value) => [.. value.Data];
 
     /// <summary>Reflects 32 bits.</summary>
     /// <param name="x">The bits.</param>
@@ -220,6 +268,12 @@ public class Bits(byte[] data)
     /// <param name="binary">The binary value.</param>
     /// <returns>The value as UInt32.</returns>
     public static ushort ToUInt32(string binary) => (ushort)ToInt64(binary);
+
+    /// <inheritdoc/>
+    public IEnumerator<bool> GetEnumerator() => GetBoolEnumerator();
+
+    /// <inheritdoc/>
+    IEnumerator IEnumerable.GetEnumerator() => GetBoolEnumerator();
 
     #endregion Public Methods
 }

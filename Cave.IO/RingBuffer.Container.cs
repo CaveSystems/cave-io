@@ -1,5 +1,4 @@
-﻿#nullable enable
-
+﻿
 namespace Cave.IO;
 
 partial class RingBuffer<TValue>

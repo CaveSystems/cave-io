@@ -10,26 +10,26 @@ using Cave.IO;
 
 namespace StringEncodingGenerator;
 
-class Program
+sealed class Program
 {
-    static StreamWriter writer;
+    static StreamWriter? writer;
 
-    static void WriteLine(string text = null, params object[] args)
+    static void WriteLine(string? text = null, params object[] args)
     {
         if (text == null)
         {
             Console.WriteLine();
-            writer.WriteLine();
+            writer?.WriteLine();
         }
         else if (args.Length == 0)
         {
             Console.WriteLine(text);
-            writer.WriteLine(text);
+            writer?.WriteLine(text);
         }
         else
         {
             Console.WriteLine(text, args);
-            writer.WriteLine(text, args);
+            writer?.WriteLine(text, args);
         }
     }
 

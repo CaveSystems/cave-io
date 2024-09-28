@@ -62,8 +62,8 @@ namespace Tests.Cave.IO
         void TestReaderWriter(EncodingInfo encoding)
         {
             var stream = new MemoryStream();
-            var writer = new DataWriter(stream, encoding.GetEncoding());
-            var reader = new DataReader(stream, encoding.GetEncoding());
+            var writer = new DataWriter(stream, encoding.ToStringEncoding());
+            var reader = new DataReader(stream, encoding.ToStringEncoding());
             TestReaderWriter(reader, writer);
         }
 
@@ -258,8 +258,8 @@ namespace Tests.Cave.IO
             Assert.AreEqual(randomString.Replace("\0", ""), reader.ReadZeroTerminatedString(65536), msg);
             Assert.AreEqual("", reader.ReadZeroTerminatedString(1024), msg);
 
-            Assert.AreEqual(randomString, reader.ReadString(), msg);
-            Assert.AreEqual("", reader.ReadString(), msg);
+            Assert.AreEqual(randomString, reader.ReadPrefixedString(), msg);
+            Assert.AreEqual("", reader.ReadPrefixedString(), msg);
             Assert.AreEqual(null, reader.ReadPrefixedString(), msg);
 
             Assert.AreEqual(randomString.Replace(reader.LineFeed, ""), reader.ReadLine(), msg);

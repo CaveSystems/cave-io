@@ -5,15 +5,6 @@ namespace Cave.IO;
 /// <summary>Provides an alternate <see cref="BitConverter"/> class providing additional functionality.</summary>
 public class BitConverterBE : BitConverterBase
 {
-    #region Public Properties
-
-    /// <summary>Gets the default instance.</summary>
-    /// <value>The default instance.</value>
-    [Obsolete("Use instance instead of singleton.")]
-    public static BitConverterBE Instance { get; } = new();
-
-    #endregion Public Properties
-
     #region Public Methods
 
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>

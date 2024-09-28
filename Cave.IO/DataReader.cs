@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -126,33 +124,6 @@ public sealed class DataReader
         }
     }
 
-    /// <summary>Initializes a new instance of the <see cref="DataReader"/> class.</summary>
-    /// <param name="input">The stream to read from.</param>
-    /// <param name="newLine">New line mode.</param>
-    /// <param name="encoding">Encoding to use for characters and strings.</param>
-    /// <param name="endian">The endian type.</param>
-    /// <exception cref="ArgumentNullException">output.</exception>
-    /// <exception cref="ArgumentException">Stream does not support writing or is already closed.;output.</exception>
-    /// <exception cref="NotSupportedException">StringEncoding {0} not supported! or EndianType {0} not supported!.</exception>
-    [Obsolete("Encoding classes in net framework change during each framework revision. Use StringEncoding.UTF_XX whenever possible!")]
-    public DataReader(Stream input, Encoding encoding, NewLineMode newLine = NewLineMode.LF, EndianType endian = EndianType.LittleEndian)
-    {
-        BaseStream = input ?? throw new ArgumentNullException(nameof(input));
-        newLineMode = newLine;
-        stringEncoding = encoding?.ToStringEncoding() ?? throw new ArgumentOutOfRangeException(nameof(encoding));
-        endianType = endian;
-        endianDecoder = endian switch
-        {
-            EndianType.LittleEndian => new BitConverterLE(),
-            EndianType.BigEndian => new BitConverterBE(),
-            _ => throw new NotImplementedException($"EndianType {endian} not implemented!")
-        };
-        if (!BaseStream.CanRead)
-        {
-            throw new ArgumentException("Stream does not support reading or is already closed.", nameof(input));
-        }
-    }
-
     #endregion Public Constructors
 
     #region Public Properties
@@ -162,15 +133,6 @@ public sealed class DataReader
 
     /// <summary>Gets access to the base stream.</summary>
     public Stream BaseStream { get; }
-
-    /// <summary>Gets or sets the Encoding to use for characters and strings. Setting this property updates <see cref="StringEncoding"/> automatically.</summary>
-    /// <remarks>This can be used between all read calls.</remarks>
-    [Obsolete("Use StringEncoding whenever possible.")]
-    public Encoding Encoding
-    {
-        get => stringEncoding.Create();
-        set => StringEncoding = value.ToStringEncoding();
-    }
 
     /// <summary>Gets or sets the endian encoder type.</summary>
     /// <remarks>This can be used between all read calls.</remarks>
@@ -730,37 +692,18 @@ public sealed class DataReader
 
     /// <summary>Reads a string of the specified byte count from the stream.</summary>
     /// <param name="byteCount">Number of bytes to read.</param>
-    /// <returns>The string.</returns>
-    public string ReadString(int byteCount) => ReadString(byteCount, 0);
-
-    /// <summary>Reads a string of the specified byte count from the stream.</summary>
-    /// <param name="byteCount">Number of bytes to read. (Optional, <paramref name="charCount"/> can be used instead.)</param>
-    /// <param name="charCount">Number of characters to read. (Optional, <paramref name="byteCount"/> can be used instead.)</param>
-    /// <returns>The string read from the specified block of (bytes or chars).</returns>
-    public string ReadString(int byteCount = 0, int charCount = 0)
+    /// <returns>The string read from the specified block.</returns>
+    public string ReadString(int byteCount)
     {
-        if (byteCount == 0)
-        {
-            if (charCount == 0) throw new ArgumentOutOfRangeException(nameof(charCount));
-            return ReadChars(charCount);
-        }
-        if (charCount != 0) throw new ArgumentOutOfRangeException(nameof(charCount));
-
         var block = ReadBytes(byteCount);
         return DecodeString(block);
     }
-
-    /// <summary>Reads a string with length prefix from the stream.</summary>
-    /// <exception cref="InvalidDataException">Thrown if an invalid 7bit encoded value found.</exception>
-    /// <returns>The string.</returns>
-    [Obsolete("Use ReadPrefixedString()")]
-    public string? ReadString() => ReadPrefixedString();
 
     /// <summary>Reads the specified struct from the stream using the default marshaller.</summary>
     /// <typeparam name="T">the struct.</typeparam>
     /// <returns>The struct.</returns>
     public T ReadStruct<T>()
-        where T : struct
+    where T : struct
     {
         var size = MarshalStruct.SizeOf<T>();
         var buffer = ReadBytes(size);
@@ -1144,15 +1087,15 @@ public sealed class DataReader
     /// <returns>The string.</returns>
     public string ReadZeroTerminatedString(int maximumBytes)
     {
-        const string zeroChars = "\0";
+        const string ZeroChars = "\0";
         if (StringEncoding is StringEncoding.UTF_7)
         {
-            return ReadUTF7(maximumBytes, zeroChars);
+            return ReadUTF7(maximumBytes, ZeroChars);
         }
 
-        zeroBytes ??= StringEncoding.Encode(zeroChars, withRoundtripTest: true);
+        zeroBytes ??= StringEncoding.Encode(ZeroChars, withRoundtripTest: true);
 
-        return ReadUntil(zeroBytes, zeroChars, maximumBytes);
+        return ReadUntil(zeroBytes, ZeroChars, maximumBytes);
     }
 
     /// <summary>Seeks at the base stream (this requires the stream to be seekable).</summary>

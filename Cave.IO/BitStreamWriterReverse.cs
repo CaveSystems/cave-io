@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Cave.IO;
@@ -10,6 +11,7 @@ public sealed class BitStreamWriterReverse(Stream stream)
     #region Private Fields
 
     int bufferedByte;
+    bool isClosed;
     int position;
 
     #endregion Private Fields
@@ -32,13 +34,16 @@ public sealed class BitStreamWriterReverse(Stream stream)
     /// <summary>Closes the writer and the underlying stream.</summary>
     public void Close()
     {
-        Flush();
+        if (!isClosed)
+        {
+            Flush();
 #if NETSTANDARD13
         BaseStream?.Dispose();
 #else
-        BaseStream?.Close();
+            BaseStream?.Close();
 #endif
-        BaseStream = null;
+            isClosed = true;
+        }
     }
 
     /// <summary>Flushes the buffered bits to the stream and closes the writer (not the underlying stream).</summary>
@@ -49,83 +54,8 @@ public sealed class BitStreamWriterReverse(Stream stream)
             BaseStream.WriteByte((byte)bufferedByte);
         }
 
-        BaseStream = null;
+        isClosed = true;
     }
-
-    /// <summary>writes a bit to the buffer.</summary>
-    /// <param name="bit">The bit.</param>
-    public void WriteBit(bool bit)
-    {
-        if (bit)
-        {
-            var bitmask = 1 << position;
-            bufferedByte |= bitmask;
-        }
-
-        if (++position > 7)
-        {
-            BaseStream.WriteByte((byte)bufferedByte);
-            bufferedByte = 0;
-            position = 0;
-        }
-    }
-
-    /// <summary>writes some bits.</summary>
-    /// <param name="bits">The bits to write.</param>
-    /// <param name="count">Number of bits to write.</param>
-    public void WriteBits(long bits, int count)
-    {
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-
-        if (Math.Abs(count) > 63)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-
-        for (var i = count - 1; i > -1; i--)
-        {
-            WriteBit(((bits >> i) & 1) != 0);
-        }
-    }
-
-    /// <summary>writes some bits.</summary>
-    /// <param name="bits">The bits to write.</param>
-    /// <param name="count">Number of bits to write.</param>
-    public void WriteBits(int bits, int count)
-    {
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-
-        if (Math.Abs(count) > 31)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-
-        for (var i = count - 1; i > -1; i--)
-        {
-            WriteBit(((bits >> i) & 1) != 0);
-        }
-    }
-
-    /// <summary>writes some bits (todo: optimize me).</summary>
-    /// <param name="count">Number of bits to write.</param>
-    /// <param name="bit">The bit to write count times.</param>
-    public void WriteBits(int count, bool bit)
-    {
-        for (var i = 0; i < count; i++)
-        {
-            WriteBit(bit);
-        }
-    }
-
-    #endregion Public Methods
-
-    #region overrides
 
     /// <summary>Gets a hash code for this object.</summary>
     /// <returns>The hash code.</returns>
@@ -155,5 +85,80 @@ public sealed class BitStreamWriterReverse(Stream stream)
         return result;
     }
 
-    #endregion overrides
+    /// <summary>writes a bit to the buffer.</summary>
+    /// <param name="bit">The bit.</param>
+    public void WriteBit(bool bit)
+    {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
+        if (bit)
+        {
+            var bitmask = 1 << position;
+            bufferedByte |= bitmask;
+        }
+
+        if (++position > 7)
+        {
+            BaseStream.WriteByte((byte)bufferedByte);
+            bufferedByte = 0;
+            position = 0;
+        }
+    }
+
+    /// <summary>writes some bits.</summary>
+    /// <param name="bits">The bits to write.</param>
+    /// <param name="count">Number of bits to write.</param>
+    public void WriteBits(long bits, int count)
+    {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
+        if (count < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+
+        if (Math.Abs(count) > 63)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+
+        for (var i = count - 1; i > -1; i--)
+        {
+            WriteBit(((bits >> i) & 1) != 0);
+        }
+    }
+
+    /// <summary>writes some bits.</summary>
+    /// <param name="bits">The bits to write.</param>
+    /// <param name="count">Number of bits to write.</param>
+    public void WriteBits(int bits, int count)
+    {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
+        if (count < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+
+        if (Math.Abs(count) > 31)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+
+        for (var i = count - 1; i > -1; i--)
+        {
+            WriteBit(((bits >> i) & 1) != 0);
+        }
+    }
+
+    /// <summary>writes some bits (todo: optimize me).</summary>
+    /// <param name="count">Number of bits to write.</param>
+    /// <param name="bit">The bit to write count times.</param>
+    public void WriteBits(int count, bool bit)
+    {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
+        for (var i = 0; i < count; i++)
+        {
+            WriteBit(bit);
+        }
+    }
+
+    #endregion Public Methods
 }

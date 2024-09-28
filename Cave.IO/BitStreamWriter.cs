@@ -15,6 +15,8 @@ public class BitStreamWriter(Stream stream)
 
     #endregion Private Fields
 
+    bool isClosed;
+
     #region Public Properties
 
     /// <summary>Gets the BaseStream.</summary>
@@ -33,13 +35,16 @@ public class BitStreamWriter(Stream stream)
     /// <summary>Closes the writer and the underlying stream.</summary>
     public void Close()
     {
-        Flush();
+        if (!isClosed)
+        {
+            Flush();
 #if NETSTANDARD13
-        BaseStream?.Dispose();
+            BaseStream?.Dispose();
 #else
-        BaseStream?.Close();
+            BaseStream?.Close();
 #endif
-        BaseStream = null;
+            isClosed = true;
+        }
     }
 
     /// <summary>Flushes the buffered bits to the stream and closes the writer (not the underlying stream).</summary>
@@ -50,13 +55,14 @@ public class BitStreamWriter(Stream stream)
             BaseStream.WriteByte((byte)bufferedByte);
         }
 
-        BaseStream = null;
+        isClosed = true;
     }
 
     /// <summary>writes a bit to the buffer.</summary>
     /// <param name="bit">The bit.</param>
     public void WriteBit(bool bit)
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         if (bit)
         {
             var bitmask = 1 << (7 - position);
@@ -76,6 +82,7 @@ public class BitStreamWriter(Stream stream)
     /// <param name="count">Number of bits to write.</param>
     public void WriteBits(long bits, int count)
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         if (count < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -97,6 +104,7 @@ public class BitStreamWriter(Stream stream)
     /// <param name="count">Number of bits to write.</param>
     public void WriteBits(int bits, int count)
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         if (count < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -118,6 +126,7 @@ public class BitStreamWriter(Stream stream)
     /// <param name="bit">The bit to write count times.</param>
     public void WriteBits(int count, bool bit)
     {
+        if (isClosed) throw new InvalidOperationException("Stream already closed!");
         for (var i = 0; i < count; i++)
         {
             WriteBit(bit);
