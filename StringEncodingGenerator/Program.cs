@@ -10,7 +10,7 @@ using Cave.IO;
 
 namespace StringEncodingGenerator;
 
-class Program
+sealed class Program
 {
     static StreamWriter? writer;
 
