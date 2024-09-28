@@ -692,22 +692,9 @@ public sealed class DataReader
 
     /// <summary>Reads a string of the specified byte count from the stream.</summary>
     /// <param name="byteCount">Number of bytes to read.</param>
-    /// <returns>The string.</returns>
-    public string ReadString(int byteCount) => ReadString(byteCount, 0);
-
-    /// <summary>Reads a string of the specified byte count from the stream.</summary>
-    /// <param name="byteCount">Number of bytes to read. (Optional, <paramref name="charCount"/> can be used instead.)</param>
-    /// <param name="charCount">Number of characters to read. (Optional, <paramref name="byteCount"/> can be used instead.)</param>
-    /// <returns>The string read from the specified block of (bytes or chars).</returns>
-    public string ReadString(int byteCount = 0, int charCount = 0)
+    /// <returns>The string read from the specified block.</returns>
+    public string ReadString(int byteCount)
     {
-        if (byteCount == 0)
-        {
-            if (charCount == 0) throw new ArgumentOutOfRangeException(nameof(charCount));
-            return ReadChars(charCount);
-        }
-        if (charCount != 0) throw new ArgumentOutOfRangeException(nameof(charCount));
-
         var block = ReadBytes(byteCount);
         return DecodeString(block);
     }
@@ -716,7 +703,7 @@ public sealed class DataReader
     /// <typeparam name="T">the struct.</typeparam>
     /// <returns>The struct.</returns>
     public T ReadStruct<T>()
-        where T : struct
+    where T : struct
     {
         var size = MarshalStruct.SizeOf<T>();
         var buffer = ReadBytes(size);
