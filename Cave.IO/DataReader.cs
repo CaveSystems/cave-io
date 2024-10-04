@@ -662,6 +662,72 @@ public sealed class DataReader
         return ReadUntil(newLineData.Data, newLineData.LineFeed, maximumBytes);
     }
 
+    /// <summary>Reads a value from the stream.</summary>
+    /// <returns>The value.</returns>
+    public decimal? ReadPrefixedDecimal()
+    {
+        var header = ReadByte();
+        switch (header)
+        {
+            case 0: return null;
+            case 16: break;
+            default: throw new InvalidDataException("Header byte for prefixed decimal does not match byte size!");
+        }
+        var bits = new int[4];
+        for (var i = 0; i < 4; i++)
+        {
+            bits[i] = ReadInt32();
+        }
+
+        return new decimal(bits);
+    }
+
+    /// <summary>Reads a value from the stream.</summary>
+    /// <returns>The value.</returns>
+    public double? ReadPrefixedDouble()
+    {
+        var header = ReadByte();
+        switch (header)
+        {
+            case 0: return null;
+            case 8: break;
+            default: throw new InvalidDataException("Header byte for prefixed double does not match byte size!");
+        }
+        var bytes = ReadBytes(8);
+        return endianDecoder.ToDouble(bytes, 0);
+    }
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
+    public short? ReadPrefixedInt16() => (short?)BitCoder32.Read8BitPrefixedInt32(BaseStream);
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
+    public int? ReadPrefixedInt32() => BitCoder32.Read8BitPrefixedInt32(BaseStream);
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
+    public long? ReadPrefixedInt64() => BitCoder64.Read8BitPrefixedInt64(BaseStream);
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
+    public sbyte? ReadPrefixedInt8() => (sbyte?)BitCoder32.Read8BitPrefixedInt32(BaseStream);
+
+    /// <summary>Reads a value from the stream.</summary>
+    /// <returns>The value.</returns>
+    public float? ReadPrefixedSingle()
+    {
+        var header = ReadByte();
+        switch (header)
+        {
+            case 0: return null;
+            case 4: break;
+            default: throw new InvalidDataException("Header byte for prefixed single does not match byte size!");
+        }
+        var bytes = ReadBytes(4);
+        return endianDecoder.ToSingle(bytes, 0);
+    }
+
     /// <summary>Reads a string with length prefix from the stream.</summary>
     /// <exception cref="InvalidDataException">Thrown if an invalid 7bit encoded value found.</exception>
     /// <returns>The string.</returns>
@@ -681,6 +747,22 @@ public sealed class DataReader
 
         return ReadString(length);
     }
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
+    public ushort? ReadPrefixedUInt16() => (ushort?)BitCoder32.Read8BitPrefixedUInt32(BaseStream);
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
+    public uint? ReadPrefixedUInt32() => BitCoder32.Read8BitPrefixedUInt32(BaseStream);
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
+    public ulong? ReadPrefixedUInt64() => BitCoder64.Read8BitPrefixedUInt64(BaseStream);
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
+    public byte? ReadPrefixedUInt8() => (byte?)BitCoder32.Read8BitPrefixedUInt32(BaseStream);
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <returns>The value.</returns>

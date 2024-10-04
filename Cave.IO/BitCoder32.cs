@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Cave.IO;
@@ -29,6 +30,30 @@ public static class BitCoder32
         }
     }
 
+    /// <summary>Gets the data of a 8 bit shifted value (using little endian encoding).</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>The encoded value as byte array.</returns>
+    public static byte[] Get8BitShifted(uint value)
+    {
+        unchecked
+        {
+            var result = new byte[5];
+            byte i = 1;
+            while (value > 0)
+            {
+                result[i++] = (byte)value;
+                value >>= 8;
+            }
+            result[0] = i;
+            return result[0..i];
+        }
+    }
+
+    /// <summary>Gets the data of a 8 bit shifted value (using little endian encoding).</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>The encoded value as byte array.</returns>
+    public static byte[] Get8BitShifted(int value) => Get8BitShifted(unchecked((uint)value));
+
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>number of bytes needed.</returns>
@@ -56,6 +81,36 @@ public static class BitCoder32
         unchecked
         {
             return GetByteCount7BitEncoded((uint)value);
+        }
+    }
+
+    /// <summary>Gets the number of bytes needed for the specified value.</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>number of bytes needed.</returns>
+    public static int GetByteCount8BitShifted(uint value)
+    {
+        unchecked
+        {
+            var count = 0;
+            do
+            {
+                count++;
+                value >>= 8;
+            }
+            while (value != 0);
+
+            return count;
+        }
+    }
+
+    /// <summary>Gets the number of bytes needed for the specified value.</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>number of bytes needed.</returns>
+    public static int GetByteCount8BitShifted(int value)
+    {
+        unchecked
+        {
+            return GetByteCount8BitShifted((uint)value);
         }
     }
 
@@ -110,6 +165,37 @@ public static class BitCoder32
             }
 
             return result;
+        }
+    }
+
+    /// <summary>Reads a 8 bit prefixed and shifted value from the specified Stream.</summary>
+    /// <param name="stream">The <see cref="Stream"/> to read from.</param>
+    /// <returns>Returns the read value.</returns>
+    public static int? Read8BitPrefixedInt32(Stream stream)
+    {
+        unchecked
+        {
+            return (int?)Read8BitPrefixedUInt32(stream);
+        }
+    }
+
+    /// <summary>Reads a 8 bit prefixed and shifted value from the specified Stream.</summary>
+    /// <param name="stream">The <see cref="Stream"/> to read from.</param>
+    /// <returns>Returns the read value.</returns>
+    public static uint? Read8BitPrefixedUInt32(Stream stream)
+    {
+        unchecked
+        {
+            var count = stream.ReadByte();
+            if (count == 0) return null;
+            var value = (uint)0;
+            while (--count >= 0)
+            {
+                var b = stream.ReadByte();
+                if (b < 0) throw new EndOfStreamException();
+                value = (value << 8) | (uint)b;
+            }
+            return value;
         }
     }
 
@@ -192,6 +278,37 @@ public static class BitCoder32
         unchecked
         {
             return Write7BitEncoded(writer, (uint)value);
+        }
+    }
+
+    /// <summary>Writes the specified value 8 bit prefixed to the specified Stream.</summary>
+    /// <param name="writer">The <see cref="DataWriter"/> to write to.</param>
+    /// <param name="value">The value to write.</param>
+    /// <returns>Returns the number of bytes written.</returns>
+    public static int Write8BitPrefixed(DataWriter writer, uint value)
+    {
+        if (writer == null)
+        {
+            throw new ArgumentNullException(nameof(writer));
+        }
+
+        unchecked
+        {
+            var block = Get8BitShifted(value);
+            writer.Write(block);
+            return block.Length;
+        }
+    }
+
+    /// <summary>Writes the specified value 7 bit encoded to the specified Stream.</summary>
+    /// <param name="writer">The <see cref="DataWriter"/> to write to.</param>
+    /// <param name="value">The value to write.</param>
+    /// <returns>Returns the number of bytes written.</returns>
+    public static int Write8BitPrefixed(DataWriter writer, int value)
+    {
+        unchecked
+        {
+            return Write8BitPrefixed(writer, (uint)value);
         }
     }
 

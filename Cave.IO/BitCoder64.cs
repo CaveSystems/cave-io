@@ -29,6 +29,30 @@ public static class BitCoder64
         }
     }
 
+    /// <summary>Gets the data of a 8 bit shifted value (using little endian encoding).</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>The encoded value as byte array.</returns>
+    public static byte[] Get8BitShifted(ulong value)
+    {
+        unchecked
+        {
+            var result = new byte[9];
+            byte i = 1;
+            while (value > 0)
+            {
+                result[i++] = (byte)value;
+                value >>= 8;
+            }
+            result[0] = i;
+            return result[0..i];
+        }
+    }
+
+    /// <summary>Gets the data of a 8 bit shifted value (using little endian encoding).</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>The encoded value as byte array.</returns>
+    public static byte[] Get8BitShifted(long value) => Get8BitShifted(unchecked((ulong)value));
+
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>number of bytes needed.</returns>
@@ -56,6 +80,66 @@ public static class BitCoder64
         unchecked
         {
             return GetByteCount7BitEncoded((ulong)value);
+        }
+    }
+
+    /// <summary>Gets the number of bytes needed for the specified value.</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>number of bytes needed.</returns>
+    public static int GetByteCount8BitEncoded(ulong value)
+    {
+        unchecked
+        {
+            var count = 0;
+            do
+            {
+                count++;
+                value >>= 8;
+            }
+            while (value != 0);
+
+            return count;
+        }
+    }
+
+    /// <summary>Gets the number of bytes needed for the specified value.</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>number of bytes needed.</returns>
+    public static int GetByteCount8BitEncoded(long value)
+    {
+        unchecked
+        {
+            return GetByteCount8BitEncoded((ulong)value);
+        }
+    }
+
+    /// <summary>Gets the number of bytes needed for the specified value.</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>number of bytes needed.</returns>
+    public static int GetByteCount8BitShifted(ulong value)
+    {
+        unchecked
+        {
+            var count = 0;
+            do
+            {
+                count++;
+                value >>= 8;
+            }
+            while (value != 0);
+
+            return count;
+        }
+    }
+
+    /// <summary>Gets the number of bytes needed for the specified value.</summary>
+    /// <param name="value">The value to encode.</param>
+    /// <returns>number of bytes needed.</returns>
+    public static int GetByteCount8BitShifted(long value)
+    {
+        unchecked
+        {
+            return GetByteCount8BitShifted((ulong)value);
         }
     }
 
@@ -110,6 +194,37 @@ public static class BitCoder64
             }
 
             return result;
+        }
+    }
+
+    /// <summary>Reads a 8 bit prefixed and shifted value from the specified Stream.</summary>
+    /// <param name="stream">The <see cref="Stream"/> to read from.</param>
+    /// <returns>Returns the read value.</returns>
+    public static long? Read8BitPrefixedInt64(Stream stream)
+    {
+        unchecked
+        {
+            return (long?)Read8BitPrefixedUInt64(stream);
+        }
+    }
+
+    /// <summary>Reads a 8 bit prefixed and shifted value from the specified Stream.</summary>
+    /// <param name="stream">The <see cref="Stream"/> to read from.</param>
+    /// <returns>Returns the read value.</returns>
+    public static ulong? Read8BitPrefixedUInt64(Stream stream)
+    {
+        unchecked
+        {
+            var count = stream.ReadByte();
+            if (count == 0) return null;
+            var value = (ulong)0;
+            while (--count >= 0)
+            {
+                var b = stream.ReadByte();
+                if (b < 0) throw new EndOfStreamException();
+                value = (value << 8) | (uint)b;
+            }
+            return value;
         }
     }
 
@@ -192,6 +307,37 @@ public static class BitCoder64
         unchecked
         {
             return Write7BitEncoded(writer, (ulong)value);
+        }
+    }
+
+    /// <summary>Writes the specified value 8 bit prefixed to the specified Stream.</summary>
+    /// <param name="writer">The <see cref="DataWriter"/> to write to.</param>
+    /// <param name="value">The value to write.</param>
+    /// <returns>Returns the number of bytes written.</returns>
+    public static int Write8BitPrefixed(DataWriter writer, ulong value)
+    {
+        if (writer == null)
+        {
+            throw new ArgumentNullException(nameof(writer));
+        }
+
+        unchecked
+        {
+            var block = Get8BitShifted(value);
+            writer.Write(block);
+            return block.Length;
+        }
+    }
+
+    /// <summary>Writes the specified value 7 bit encoded to the specified Stream.</summary>
+    /// <param name="writer">The <see cref="DataWriter"/> to write to.</param>
+    /// <param name="value">The value to write.</param>
+    /// <returns>Returns the number of bytes written.</returns>
+    public static int Write8BitPrefixed(DataWriter writer, long value)
+    {
+        unchecked
+        {
+            return Write8BitPrefixed(writer, (ulong)value);
         }
     }
 
