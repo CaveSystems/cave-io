@@ -4,12 +4,12 @@ using System.Diagnostics;
 
 namespace Cave.IO;
 
-/// <summary>
-/// Provides a list of mime types
-/// </summary>
+/// <summary>Provides a list of mime types</summary>
 public static class MimeTypes
 {
-    static readonly Dictionary<string, string> items = new(StringComparer.InvariantCultureIgnoreCase)
+    #region Private Fields
+
+    static readonly Dictionary<string, string> Items = new(StringComparer.InvariantCultureIgnoreCase)
     {
         { ".323", "text/h323"},
         { ".3g2", "video/3gpp2"},
@@ -576,16 +576,22 @@ public static class MimeTypes
         { ".zip", "application/x-zip-compressed"},
     };
 
+    #endregion Private Fields
+
+    #region Public Methods
+
     /// <summary>Retrieves a mimetype from the specified extension.</summary>
     /// <param name="extension">The extension.</param>
     /// <returns></returns>
     public static string FromExtension(string extension)
     {
-        if (!items.TryGetValue(extension, out var result))
+        if (!Items.TryGetValue(extension, out var result))
         {
             result = "application/octet-stream";
             Debug.WriteLine(string.Format("Could not find MimeType for extension: {0}; using default: {1}!", extension, result));
         }
         return result;
     }
+
+    #endregion Public Methods
 }
