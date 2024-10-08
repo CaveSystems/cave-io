@@ -3,7 +3,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 
 namespace Cave.IO;
 
@@ -326,12 +325,12 @@ public sealed class DataWriter
     /// <returns>Number of bytes written.</returns>
     public int Write7BitEncoded32(uint value) => BitCoder32.Write7BitEncoded(this, value);
 
-    /// <summary>Writes the specified 64 bit value to the stream 7 bit encoded (1-10 bytes).</summary>
+    /// <summary>Writes the specified 64 bit value to the stream 7 bit encoded (1-9 bytes).</summary>
     /// <param name="value">The value to write.</param>
     /// <returns>Number of bytes written.</returns>
     public int Write7BitEncoded64(long value) => BitCoder64.Write7BitEncoded(this, value);
 
-    /// <summary>Writes the specified 64 bit value to the stream 7 bit encoded (1-10 bytes).</summary>
+    /// <summary>Writes the specified 64 bit value to the stream 7 bit encoded (1-9 bytes).</summary>
     /// <param name="value">The value to write.</param>
     /// <returns>Number of bytes written.</returns>
     public int Write7BitEncoded64(ulong value) => BitCoder64.Write7BitEncoded(this, value);
@@ -407,7 +406,7 @@ public sealed class DataWriter
 
     /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
     /// <param name="buffer">The buffer to write.</param>
-    public void WritePrefixed(byte[] buffer)
+    public void WritePrefixed(byte[]? buffer)
     {
         if (buffer == null)
         {
@@ -418,6 +417,117 @@ public sealed class DataWriter
             Write7BitEncoded32(buffer.Length);
             BaseStream.Write(buffer, 0, buffer.Length);
         }
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(float? value)
+    {
+        if (value is not float data)
+        {
+            Write((byte)0);
+        }
+        else
+        {
+            var bytes = endianEncoder.GetBytes(data);
+            WritePrefixed(bytes);
+        }
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(double? value)
+    {
+        if (value is not double data)
+        {
+            Write((byte)0);
+        }
+        else
+        {
+            var bytes = endianEncoder.GetBytes(data);
+            WritePrefixed(bytes);
+        }
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(decimal? value)
+    {
+        if (value is not decimal data)
+        {
+            Write((byte)0);
+        }
+        else
+        {
+            var bytes = endianEncoder.GetBytes(data);
+            WritePrefixed(bytes);
+        }
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(long? value)
+    {
+        if (value is not long value64) Write((byte)0);
+        else BitCoder64.Write8BitPrefixed(this, value64);
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(ulong? value)
+    {
+        if (value is not ulong value64) Write((byte)0);
+        else BitCoder64.Write8BitPrefixed(this, value64);
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(int? value)
+    {
+        if (value is not int value32) Write((byte)0);
+        else BitCoder32.Write8BitPrefixed(this, value32);
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(short? value)
+    {
+        if (value is not short value16) Write((byte)0);
+        else BitCoder32.Write8BitPrefixed(this, (ushort)value16);
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(sbyte? value)
+    {
+        if (value is not sbyte value8) Write((byte)0);
+        else BitCoder32.Write8BitPrefixed(this, (byte)value8);
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(uint? value)
+    {
+        if (value is not uint value32) Write((byte)0);
+        else BitCoder32.Write8BitPrefixed(this, value32);
     }
 
     /// <summary>Writes a part of the specified buffer to the stream with length prefix.</summary>
