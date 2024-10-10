@@ -60,12 +60,7 @@ public sealed class DataWriter
         NewLineMode = newLineMode;
         stringEncoding = encoding != StringEncoding.Undefined ? encoding : throw new ArgumentOutOfRangeException(nameof(encoding));
         endianType = endian;
-        endianEncoder = endian switch
-        {
-            EndianType.LittleEndian => new BitConverterLE(),
-            EndianType.BigEndian => new BitConverterBE(),
-            _ => throw new NotImplementedException($"EndianType {endianType} not implemented!")
-        };
+        endianEncoder = endian.GetBitConverter();
         if (!BaseStream.CanWrite)
         {
             throw new ArgumentException("Stream does not support writing or is already closed.", nameof(output));
@@ -94,12 +89,7 @@ public sealed class DataWriter
         set
         {
             endianType = value;
-            endianEncoder = endianType switch
-            {
-                EndianType.LittleEndian => new BitConverterLE(),
-                EndianType.BigEndian => new BitConverterBE(),
-                _ => throw new NotImplementedException($"EndianType {endianType} not implemented!")
-            };
+            endianEncoder = endianType.GetBitConverter();
         }
     }
 

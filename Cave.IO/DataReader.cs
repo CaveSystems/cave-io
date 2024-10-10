@@ -112,12 +112,7 @@ public sealed class DataReader
         newLineMode = newLine;
         stringEncoding = encoding != StringEncoding.Undefined ? encoding : throw new ArgumentOutOfRangeException(nameof(encoding));
         endianType = endian;
-        endianDecoder = endian switch
-        {
-            EndianType.LittleEndian => new BitConverterLE(),
-            EndianType.BigEndian => new BitConverterBE(),
-            _ => throw new NotImplementedException($"EndianType {endian} not implemented!")
-        };
+        endianDecoder = endian.GetBitConverter();
         if (!BaseStream.CanRead)
         {
             throw new ArgumentException("Stream does not support reading or is already closed.", nameof(input));
@@ -143,12 +138,7 @@ public sealed class DataReader
         set
         {
             endianType = value;
-            endianDecoder = endianType switch
-            {
-                EndianType.LittleEndian => new BitConverterLE(),
-                EndianType.BigEndian => new BitConverterBE(),
-                _ => throw new NotImplementedException($"EndianType {endianType} not implemented!")
-            };
+            endianDecoder = endianType.GetBitConverter();
         }
     }
 

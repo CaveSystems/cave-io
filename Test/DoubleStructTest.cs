@@ -1,6 +1,4 @@
-﻿
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 using System;
 using Cave.IO;
@@ -30,14 +28,7 @@ namespace Tests.Cave.IO
                 var b = BitConverter.ToInt64(BitConverter.GetBytes(value), 0);
                 Assert.AreEqual(value, DoubleStruct.ToDouble(a));
                 Assert.AreEqual(value, DoubleStruct.ToDouble(b));
-
-                IBitConverter bc = Endian.MachineType switch
-                {
-                    EndianType.BigEndian => new BitConverterBE(),
-                    EndianType.LittleEndian => new BitConverterLE(),
-                    _ => throw new NotSupportedException()
-                };
-
+                IBitConverter bc = Endian.MachineType.GetBitConverter();
                 var x = bc.ToUInt64(bc.GetBytes(value), 0);
                 var y = bc.ToInt64(bc.GetBytes(value), 0);
                 Assert.AreEqual(value, DoubleStruct.ToDouble(x));
