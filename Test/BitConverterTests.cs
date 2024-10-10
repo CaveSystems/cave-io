@@ -1,6 +1,4 @@
-﻿
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 using System;
 using Cave.IO;
@@ -17,8 +15,8 @@ namespace Tests.Cave.IO
         {
             foreach (var bc in new BitConverterBase[]
             {
-                new BitConverterBE(),
-                new BitConverterLE()
+                LittleEndian.Converter,
+                BigEndian.Converter
             })
             {
                 Assert.That(() => bc.ToBoolean(null, 0), Throws.InstanceOf<ArgumentNullException>());

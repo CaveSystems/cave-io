@@ -29,14 +29,7 @@ public class SingleStructTest
             var b = BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
             Assert.AreEqual(value, SingleStruct.ToSingle(a));
             Assert.AreEqual(value, SingleStruct.ToSingle(b));
-
-            IBitConverter bc = Endian.MachineType switch
-            {
-                EndianType.BigEndian => new BitConverterBE(),
-                EndianType.LittleEndian => new BitConverterLE(),
-                _ => throw new NotSupportedException()
-            };
-
+            IBitConverter bc = Endian.MachineType.GetBitConverter();
             var x = bc.ToUInt32(bc.GetBytes(value), 0);
             var y = bc.ToInt32(bc.GetBytes(value), 0);
             Assert.AreEqual(value, SingleStruct.ToSingle(x));
