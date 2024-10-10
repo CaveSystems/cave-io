@@ -5,6 +5,12 @@ namespace Cave.IO;
 /// <summary>Provides an alternate <see cref="BitConverter"/> class providing additional functionality.</summary>
 public class BitConverterBE : BitConverterBase
 {
+    #region Internal Constructors
+
+    internal BitConverterBE() { }
+
+    #endregion Internal Constructors
+
     #region Public Methods
 
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
