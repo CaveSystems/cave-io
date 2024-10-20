@@ -689,6 +689,15 @@ public sealed class DataReader
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    public Guid? ReadPrefixedGuid()
+    {
+        var len = ReadByte();
+        if (len == 0) return null;
+        return ReadGuid();
+    }
+
+    /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
+    /// <returns>Returns the value read</returns>
     public short? ReadPrefixedInt16() => (short?)BitCoder32.Read8BitPrefixedInt32(BaseStream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>

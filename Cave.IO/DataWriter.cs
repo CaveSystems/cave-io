@@ -520,6 +520,23 @@ public sealed class DataWriter
         else BitCoder32.Write8BitPrefixed(this, value32);
     }
 
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1 or 17 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    public void WritePrefixed(Guid? value)
+    {
+        if (value is not Guid guid)
+        {
+            Write((byte)0);
+        }
+        else
+        {
+            Write((byte)16);
+            Write(guid);
+        }
+    }
+
     /// <summary>Writes a part of the specified buffer to the stream with length prefix.</summary>
     /// <param name="buffer">The buffer to write.</param>
     /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>

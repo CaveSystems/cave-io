@@ -37,25 +37,24 @@ public class BitStreamWriter(Stream stream)
     {
         if (!isClosed)
         {
+            isClosed = true;
             Flush();
 #if NETSTANDARD13
             BaseStream?.Dispose();
 #else
             BaseStream?.Close();
 #endif
-            isClosed = true;
         }
     }
 
     /// <summary>Flushes the buffered bits to the stream and closes the writer (not the underlying stream).</summary>
     public void Flush()
     {
+        isClosed = true;
         if (position > 0)
         {
             BaseStream.WriteByte((byte)bufferedByte);
         }
-
-        isClosed = true;
     }
 
     /// <summary>writes a bit to the buffer.</summary>
