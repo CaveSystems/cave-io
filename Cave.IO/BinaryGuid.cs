@@ -14,6 +14,11 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
 
     #region Public Methods
 
+    /// <summary>Performs an implicit conversion from <see cref="string"/> to <see cref="BinaryGuid"/>.</summary>
+    /// <param name="guid">The unique identifier.</param>
+    /// <returns>The result of the conversion.</returns>
+    public static implicit operator BinaryGuid?(string? guid) => guid is null ? null : new Guid(guid);
+
     /// <summary>Performs an implicit conversion from <see cref="Guid"/> to <see cref="BinaryGuid"/>.</summary>
     /// <param name="id">The unique identifier.</param>
     /// <returns>The result of the conversion.</returns>
@@ -28,25 +33,25 @@ public sealed class BinaryGuid : IComparable<BinaryGuid>, IComparable
     /// <param name="g1">The first instance.</param>
     /// <param name="g2">The second instance.</param>
     /// <returns>The result of the operator.</returns>
-    public static bool operator !=(BinaryGuid g1, BinaryGuid g2) => !Equals(g1?.ToString(), g2?.ToString());
+    public static bool operator !=(BinaryGuid? g1, BinaryGuid? g2) => !Equals(g1?.ToString(), g2?.ToString());
 
     /// <inheritdoc/>
-    public static bool operator <(BinaryGuid left, BinaryGuid right) => left is null ? right is not null : left.CompareTo(right) < 0;
+    public static bool operator <(BinaryGuid? left, BinaryGuid? right) => left is null ? right is not null : left.CompareTo(right) < 0;
 
     /// <inheritdoc/>
-    public static bool operator <=(BinaryGuid left, BinaryGuid right) => left is null || left.CompareTo(right) <= 0;
+    public static bool operator <=(BinaryGuid? left, BinaryGuid? right) => left is null || left.CompareTo(right) <= 0;
 
     /// <summary>Implements the operator ==.</summary>
     /// <param name="g1">The first instance.</param>
     /// <param name="g2">The second instance.</param>
     /// <returns>The result of the operator.</returns>
-    public static bool operator ==(BinaryGuid g1, BinaryGuid g2) => Equals(g1?.ToString(), g2?.ToString());
+    public static bool operator ==(BinaryGuid? g1, BinaryGuid? g2) => Equals(g1?.ToString(), g2?.ToString());
 
     /// <inheritdoc/>
-    public static bool operator >(BinaryGuid left, BinaryGuid right) => left is not null && left.CompareTo(right) > 0;
+    public static bool operator >(BinaryGuid? left, BinaryGuid? right) => left is not null && left.CompareTo(right) > 0;
 
     /// <inheritdoc/>
-    public static bool operator >=(BinaryGuid left, BinaryGuid right) => left is null ? right is null : left.CompareTo(right) >= 0;
+    public static bool operator >=(BinaryGuid? left, BinaryGuid? right) => left is null ? right is null : left.CompareTo(right) >= 0;
 
     /// <summary>Parses the specified text.</summary>
     /// <param name="text">The text.</param>

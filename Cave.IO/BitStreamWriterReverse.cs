@@ -36,25 +36,24 @@ public sealed class BitStreamWriterReverse(Stream stream)
     {
         if (!isClosed)
         {
+            isClosed = true;
             Flush();
 #if NETSTANDARD13
-        BaseStream?.Dispose();
+            BaseStream?.Dispose();
 #else
             BaseStream?.Close();
 #endif
-            isClosed = true;
         }
     }
 
     /// <summary>Flushes the buffered bits to the stream and closes the writer (not the underlying stream).</summary>
     public void Flush()
     {
+        isClosed = true;
         if (position > 0)
         {
             BaseStream.WriteByte((byte)bufferedByte);
         }
-
-        isClosed = true;
     }
 
     /// <summary>Gets a hash code for this object.</summary>
