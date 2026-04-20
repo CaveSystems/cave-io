@@ -5,7 +5,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-
 namespace Cave.IO;
 
 /// <summary>Provides a lock free ring buffer without overflow checking.</summary>

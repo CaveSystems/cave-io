@@ -9,7 +9,7 @@ public static class MimeTypes
 {
     #region Private Fields
 
-    static readonly Dictionary<string, string> Items = new(StringComparer.InvariantCultureIgnoreCase)
+    static readonly Dictionary<string, string> items = new(StringComparer.InvariantCultureIgnoreCase)
     {
         { ".323", "text/h323"},
         { ".3g2", "video/3gpp2"},
@@ -585,7 +585,7 @@ public static class MimeTypes
     /// <returns></returns>
     public static string FromExtension(string extension)
     {
-        if (!Items.TryGetValue(extension, out var result))
+        if (!items.TryGetValue(extension, out var result))
         {
             result = "application/octet-stream";
             Debug.WriteLine(string.Format("Could not find MimeType for extension: {0}; using default: {1}!", extension, result));

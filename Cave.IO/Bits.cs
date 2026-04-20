@@ -12,7 +12,7 @@ public class Bits(byte[] data, int bitCount) : IEnumerable<bool>
 {
     #region Private Methods
 
-    private IEnumerator<bool> GetBoolEnumerator()
+    IEnumerator<bool> GetBoolEnumerator()
     {
         var count = BitCount;
         for (var i = data.Length - 1; i >= 0; i--)

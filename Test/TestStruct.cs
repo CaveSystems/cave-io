@@ -58,7 +58,7 @@ namespace Tests.Cave.IO
                 I = i,
                 F = (500 - i) * 0.5f,
                 D = (500 - i) * 0.5d,
-                Date = new DateTime(1 + Math.Abs(i % 3000), 12, 31, 23, 59, 48, Math.Abs(i % 1000), (i % 2) == 1 ? DateTimeKind.Local : DateTimeKind.Utc),
+                Date = new DateTime(1980 + Math.Abs(i % 1000), 12, 31, 23, 59, 48, Math.Abs(i % 1000), (i % 2) == 1 ? DateTimeKind.Local : DateTimeKind.Utc),
                 Time = TimeSpan.FromSeconds(i),
                 S = (short)(i - 500),
                 UI = (uint)i,

@@ -1,18 +1,24 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Cave.IO.Blob;
 
 namespace Cave.IO;
 
 /// <summary>Provides fast and efficient field and property de-/serialization.</summary>
+/// <remarks>
+/// This is only useful for simple types and structures and classes using simple properties/fields. Complex types or types with custom serialization
+/// requirements may not be handled correctly. A full featured complex serializer can be found at <see cref="BlobSerializer"/>.
+/// </remarks>
 public class BinarySerializer
 {
     #region Private Fields
 
-    readonly Dictionary<Type, MethodBase> staticParseLookup = new();
+    readonly Dictionary<Type, Func<string?, object?>> staticParseLookup = new();
 
     readonly Dictionary<string, Type> typeLookup = new();
 
@@ -35,6 +41,7 @@ public class BinarySerializer
         UINT = 0x16,
         LONG = 0x17,
         ULONG = 0x18,
+        POINTER = 0x19,
 
         FLOAT = 0x30,
         DOUBLE = 0x31,
@@ -94,6 +101,7 @@ public class BinarySerializer
 
         if (type == typeof(char)) return TypeCode.CHAR;
         if (type == typeof(string)) return TypeCode.STRING;
+        if (type == typeof(IntPtr) || type == typeof(UIntPtr)) return TypeCode.POINTER;
 
         if (type.IsEnum) return TypeCode.ENUM;
         if (type.IsValueType)
@@ -160,6 +168,7 @@ public class BinarySerializer
         TypeCode.CHAR => reader.ReadChar(),
         TypeCode.STRING => reader.ReadPrefixedString(),
         TypeCode.GUID => new Guid(reader.ReadBytes(16)),
+        TypeCode.POINTER => new IntPtr(reader.ReadInt64()),
         _ => throw new NotSupportedException(string.Format("Serialization of ObjectTypeCode {0} is not supported!", objTypeCode)),
     };
 
@@ -179,6 +188,7 @@ public class BinarySerializer
             case TypeCode.UINT: writer.Write((uint)obj); return;
             case TypeCode.LONG: writer.Write((long)obj); return;
             case TypeCode.ULONG: writer.Write((ulong)obj); return;
+            case TypeCode.POINTER: writer.Write(((IntPtr)obj).ToInt64()); return;
 
             case TypeCode.FLOAT: writer.Write((float)obj); return;
             case TypeCode.DOUBLE: writer.Write((double)obj); return;
@@ -228,11 +238,7 @@ public class BinarySerializer
         return array;
     }
 
-    MethodBase? GetParse(Type type)
-    {
-        staticParseLookup.TryGetValue(type, out var parse);
-        return parse;
-    }
+    Func<string?, object?>? GetParse(Type type) => staticParseLookup.TryGetValue(type, out var parse) ? parse : null;
 
     void WriteArray(Type arrayType, Array array, DataWriter writer)
     {
@@ -269,7 +275,15 @@ public class BinarySerializer
     void WriteEnumeration(Type arrayType, IEnumerable enumeration, DataWriter writer)
     {
         TypeCode elementTypeCode;
-        if (arrayType.IsGenericType)
+
+        var enumerableInterface = arrayType.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+        if (enumerableInterface != null)
+        {
+            var args = enumerableInterface.GetGenericArguments();
+            if (args.Length != 1) throw new NotSupportedException("Enumerations are only supported with a single generic type! Use a custom serializer!");
+            elementTypeCode = FromType(args.Single());
+        }
+        else if (arrayType.IsGenericType)
         {
             var args = arrayType.GetGenericArguments();
             if (args.Length != 1) throw new NotSupportedException("Enumerations are only supported with a single generic type! Use a custom serializer!");
@@ -358,6 +372,93 @@ public class BinarySerializer
     /// <returns></returns>
     public object? Deserialize(Type type, byte[] block) => Deserialize(type, new MemoryStream(block));
 
+    object? ReadArray(Type type, TypeCode typeCode, DataReader reader)
+    {
+        var elementType = type.GetElementType();
+        if (elementType is null)
+        {
+            var args = type.GetGenericArguments();
+            if (args.Length > 1) throw new NotSupportedException($"{typeCode} are supported only with a single generic element! Affected type: {type}");
+            elementType = args.FirstOrDefault();
+        }
+        if (elementType is null)
+        {
+            var args = type.GetInterfaces().Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)).Select(i => i.GetGenericArguments()[0]).ToList();
+            if (args.Count != 1) throw new NotSupportedException($"{typeCode} are supported only with a single generic element! Affected type: {type}");
+            elementType = args.Single();
+        }
+        object array = DeserializeArray(elementType, reader);
+        if (!type.IsAssignableFrom(array.GetType()))
+        {
+            array = Activator.CreateInstance(type, [array])!;
+        }
+        return array;
+    }
+
+    object? ReadStruct(Type type, TypeCode typeCode, DataReader reader)
+    {
+        if (StructFlags.HasFlag(SerializerFlags.TypeName) || StructFlags.HasFlag(SerializerFlags.AssemblyName))
+        {
+            var className = reader.ReadPrefixedString() ?? throw new InvalidDataException("Empty classname at deserialization!");
+            if (!typeLookup.TryGetValue(className, out var itemType))
+            {
+                typeLookup[className] = itemType = AppDom.FindType(className, AppDom.LoadFlags.None) ?? throw new InvalidOperationException($"Could not deserialize type {className}!");
+            }
+        }
+
+        var parse = GetParse(type);
+        if (parse != null)
+        {
+            var str = reader.ReadPrefixedString();
+            return parse.Invoke(str);
+        }
+
+        var result = Activator.CreateInstance(type);
+        if (StructFlags.HasFlag(SerializerFlags.Fields))
+        {
+            var fields = type.GetFields(GetBindingFlags(StructFlags));
+            foreach (var field in fields)
+            {
+                var value = Deserialize(field.FieldType, reader);
+                field.SetValue(result, value);
+            }
+        }
+        if (StructFlags.HasFlag(SerializerFlags.Properties))
+        {
+            var properties = type.GetProperties(GetBindingFlags(StructFlags)).Where(CanWrite);
+            foreach (var property in properties)
+            {
+                var value = Deserialize(property.PropertyType, reader);
+                property.SetValue(result, value, null);
+            }
+        }
+        return result;
+    }
+
+    object? ReadClass(Type type, TypeCode typeCode, DataReader reader, object? prototype)
+    {
+        var result = prototype ?? Activator.CreateInstance(type);
+        if (ClassFlags.HasFlag(SerializerFlags.Fields))
+        {
+            var fields = type.GetFields(GetBindingFlags(StructFlags));
+            foreach (var field in fields)
+            {
+                var value = Deserialize(field.FieldType, reader);
+                field.SetValue(result, value);
+            }
+        }
+        if (ClassFlags.HasFlag(SerializerFlags.Properties))
+        {
+            var properties = type.GetProperties(GetBindingFlags(StructFlags)).Where(CanWrite);
+            foreach (var property in properties)
+            {
+                var value = Deserialize(property.PropertyType, reader);
+                property.SetValue(result, value, null);
+            }
+        }
+        return result;
+    }
+
     /// <summary>Deserializes the specified type from a <see cref="DataReader"/>.</summary>
     /// <param name="type">The type to deserialize</param>
     /// <param name="reader">The reader to deserialize from</param>
@@ -404,52 +505,25 @@ public class BinarySerializer
             throw new Exception($"No serializer registered for type {type}!");
         }
 
+        object? result;
+
         switch (typeCode)
         {
             case TypeCode.ENUMERATION:
+                result = ReadArray(type, typeCode, reader);
+                result = ReadClass(type, typeCode, reader, result);
+                break;
+
             case TypeCode.ARRAY:
             {
-                var elementType = type.GetElementType();
-                if (elementType is null)
-                {
-                    var args = type.GetGenericArguments();
-                    if (args.Length != 1) throw new NotSupportedException($"{typeCode} are supported only with a single generic element! Affected type: {type}");
-                    elementType = args.Single();
-                }
-                return DeserializeArray(elementType, reader);
+                result = ReadArray(type, typeCode, reader);
+                break;
             }
 
             case TypeCode.STRUCT:
             {
-                if (StructFlags.HasFlag(SerializerFlags.TypeName) || StructFlags.HasFlag(SerializerFlags.AssemblyName))
-                {
-                    var className = reader.ReadPrefixedString() ?? throw new InvalidDataException("Empty classname at deserialization!");
-                    if (!typeLookup.TryGetValue(className, out var itemType))
-                    {
-                        typeLookup[className] = itemType = AppDom.FindType(className, AppDom.LoadFlags.None) ?? throw new InvalidOperationException($"Could not deserialize type {className}!");
-                    }
-                }
-
-                var result = Activator.CreateInstance(type);
-                if (StructFlags.HasFlag(SerializerFlags.Fields))
-                {
-                    var fields = type.GetFields(GetBindingFlags(StructFlags));
-                    foreach (var field in fields)
-                    {
-                        var value = Deserialize(field.FieldType, reader);
-                        field.SetValue(result, value);
-                    }
-                }
-                if (StructFlags.HasFlag(SerializerFlags.Properties))
-                {
-                    var properties = type.GetProperties(GetBindingFlags(StructFlags));
-                    foreach (var property in properties)
-                    {
-                        var value = Deserialize(property.PropertyType, reader);
-                        property.SetValue(result, value, null);
-                    }
-                }
-                return result;
+                result = ReadStruct(type, typeCode, reader);
+                break;
             }
 
             case TypeCode.CLASS:
@@ -467,39 +541,17 @@ public class BinarySerializer
                 if (parse != null)
                 {
                     var str = reader.ReadPrefixedString();
-                    if (parse.IsConstructor)
-                    {
-                        return ((ConstructorInfo)parse).Invoke([str]);
-                    }
-                    else
-                    {
-                        return parse.Invoke(null, [str]);
-                    }
+                    return parse.Invoke(str);
                 }
 
-                var result = Activator.CreateInstance(type);
-                if (ClassFlags.HasFlag(SerializerFlags.Fields))
-                {
-                    var fields = type.GetFields(GetBindingFlags(StructFlags));
-                    foreach (var field in fields)
-                    {
-                        var value = Deserialize(field.FieldType, reader);
-                        field.SetValue(result, value);
-                    }
-                }
-                if (ClassFlags.HasFlag(SerializerFlags.Properties))
-                {
-                    var properties = type.GetProperties(GetBindingFlags(StructFlags));
-                    foreach (var property in properties)
-                    {
-                        var value = Deserialize(property.PropertyType, reader);
-                        property.SetValue(result, value, null);
-                    }
-                }
-                return result;
+                result = ReadClass(type, typeCode, reader, null);
+                break;
             }
+
+            default:
+                throw new NotImplementedException($"Unknown TypeCode {typeCode} at element type {type}!");
         }
-        throw new NotImplementedException($"Unknown TypeCode {typeCode} at element type {type}!");
+        return result;
     }
 
     /// <summary>Serializes the specified object</summary>
@@ -522,17 +574,20 @@ public class BinarySerializer
         data = result.ToArray();
     }
 
+    int depth = 0;
+
     /// <summary>Serializes the specified object to a <see cref="DataWriter"/></summary>
     /// <param name="value">The object to serialize</param>
     /// <param name="writer">The writer to serialize to</param>
-    public void Serialize(object? value, DataWriter writer)
+    public int Serialize(object? value, DataWriter writer)
     {
         if (writer == null) throw new ArgumentNullException(nameof(writer));
+        if (++depth > 100) throw new InvalidOperationException("Maximum serialization depth exceeded! Possible circular reference?");
 
         if (value is null)
         {
             writer.Write((byte)TypeCode.NULL);
-            return;
+            return --depth;
         }
         var type = value.GetType() ?? throw new InvalidOperationException($"Could not get type of value {value}!");
         var objTypeCode = FromType(type);
@@ -541,20 +596,20 @@ public class BinarySerializer
         if (IsPrimitive(objTypeCode))
         {
             WritePrimitive(false, objTypeCode, value, writer);
-            return;
+            return --depth;
         }
 
         if (objTypeCode == TypeCode.ENUM)
         {
             writer.Write7BitEncoded64(Convert.ToInt64(value));
-            return;
+            return --depth;
         }
 
         var serializer = Serializers?.FirstOrDefault(s => s.CanSerialize(value));
         if (serializer != null)
         {
             serializer.Serialize(writer, value);
-            return;
+            return --depth;
         }
         if (objTypeCode == TypeCode.UNKNOWN)
         {
@@ -566,12 +621,13 @@ public class BinarySerializer
             case TypeCode.ENUMERATION:
             {
                 WriteEnumeration(type, (IEnumerable)value, writer);
-                return;
+                WriteClassContent(type, writer, value);
+                return --depth;
             }
             case TypeCode.ARRAY:
             {
                 WriteArray(value.GetType(), (Array)value, writer);
-                return;
+                return --depth;
             }
 
             case TypeCode.STRUCT:
@@ -584,6 +640,14 @@ public class BinarySerializer
                 {
                     writer.WritePrefixed(type.FullName);
                 }
+
+                var parse = GetParse(type);
+                if (parse != null)
+                {
+                    writer.WritePrefixed(value.ToString());
+                    return --depth;
+                }
+
                 if (StructFlags.HasFlag(SerializerFlags.Fields))
                 {
                     var fields = type.GetFields(GetBindingFlags(StructFlags));
@@ -595,14 +659,14 @@ public class BinarySerializer
                 }
                 if (StructFlags.HasFlag(SerializerFlags.Properties))
                 {
-                    var properties = type.GetProperties(GetBindingFlags(StructFlags));
+                    var properties = type.GetProperties(GetBindingFlags(StructFlags)).Where(CanWrite);
                     foreach (var property in properties)
                     {
                         var fieldValue = property.GetValue(value, null);
                         Serialize(fieldValue, writer);
                     }
                 }
-                return;
+                return --depth;
             }
 
             case TypeCode.CLASS:
@@ -620,48 +684,79 @@ public class BinarySerializer
                 if (parse != null)
                 {
                     writer.WritePrefixed(value.ToString());
-                    return;
+                    return --depth;
                 }
 
-                if (ClassFlags.HasFlag(SerializerFlags.Fields))
-                {
-                    var fields = type.GetFields(GetBindingFlags(StructFlags));
-                    foreach (var field in fields)
-                    {
-                        var fieldValue = field.GetValue(value);
-                        Serialize(fieldValue, writer);
-                    }
-                }
-                if (ClassFlags.HasFlag(SerializerFlags.Properties))
-                {
-                    var properties = type.GetProperties(GetBindingFlags(StructFlags));
-                    foreach (var property in properties)
-                    {
-                        var fieldValue = property.GetValue(value, null);
-                        Serialize(fieldValue, writer);
-                    }
-                }
-                return;
+                WriteClassContent(type, writer, value);
+                return --depth;
             }
         }
 
         throw new NotImplementedException($"Unknown TypeCode {objTypeCode} at element type {value?.GetType()}!");
     }
 
+    void WriteClassContent(Type type, DataWriter writer, object value)
+    {
+        if (ClassFlags.HasFlag(SerializerFlags.Fields))
+        {
+            var fields = type.GetFields(GetBindingFlags(ClassFlags));
+            foreach (var field in fields)
+            {
+                var fieldValue = field.GetValue(value);
+                Serialize(fieldValue, writer);
+            }
+        }
+        if (ClassFlags.HasFlag(SerializerFlags.Properties))
+        {
+            var properties = type.GetProperties(GetBindingFlags(ClassFlags)).Where(CanWrite);
+            foreach (var property in properties)
+            {
+                var fieldValue = property.GetValue(value);
+                Serialize(fieldValue, writer);
+            }
+        }
+    }
+
+    static bool CanWrite(PropertyInfo info) => info.CanWrite;
+
     /// <summary>Registers the specified type for ToString() serialization and Cctor(string) deserialization.</summary>
     /// <param name="type">The type to register.</param>
     public void UseToStringAndCctor(Type type)
     {
-        var parse = type.GetConstructor([typeof(string)]) ?? throw new ArgumentException("Could not find a matching Cctor(string) method!");
-        staticParseLookup.Add(type, parse);
+        Func<string?, object?>? func = null;
+        if (type.GetConstructor([typeof(string)]) is ConstructorInfo method1)
+        {
+            func = (string? s) => s is null ? null : method1.Invoke([s]);
+        }
+        else if (type.GetConstructor([typeof(string), typeof(IFormatProvider)]) is ConstructorInfo method2)
+        {
+            func = (string? s) => s is null ? null : method2.Invoke([s, CultureInfo.InvariantCulture]);
+        }
+        if (func is null)
+        {
+            throw new ArgumentException("Could not find a matching Cctor(string) method!");
+        }
+        staticParseLookup.Add(type, func);
     }
 
     /// <summary>Registers the specified type for ToString() serialization and static Parse(string) deserialization.</summary>
     /// <param name="type">The type to register.</param>
     public void UseToStringAndParse(Type type)
     {
-        var parse = type.GetMethod("Parse", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public, null, [typeof(string)], null) ?? throw new ArgumentException("Could not find a matching static Parse(string) method!");
-        staticParseLookup.Add(type, parse);
+        Func<string?, object?>? func = null;
+        if (type.GetMethod("Parse", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public, null, [typeof(string)], null) is MethodBase method1)
+        {
+            func = (string? s) => s is null ? null : method1.Invoke(null, [s]);
+        }
+        else if (type.GetMethod("Parse", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public, null, [typeof(string), typeof(IFormatProvider)], null) is MethodBase method2)
+        {
+            func = (string? s) => s is null ? null : method2.Invoke(null, [s, CultureInfo.InvariantCulture]);
+        }
+        if (func is null)
+        {
+            throw new ArgumentException("Could not find a matching static Parse(string) method!");
+        }
+        staticParseLookup.Add(type, func);
     }
 
     #endregion Public Methods

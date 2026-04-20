@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Cave.IO;
 
@@ -11,6 +11,78 @@ public static class MarshalStruct
 {
     #region Public Methods
 
+    /// <summary>
+    /// Determines whether the specified type is safe to use with platform invocation (P/Invoke) operations.
+    /// </summary>
+    /// <param name="t">The type to evaluate for P/Invoke safety.</param>
+    /// <returns>true if the type is blittable or a fixed-size struct and can be safely used in P/Invoke calls; otherwise, false.</returns>
+    public static bool IsPInvokeSafe(Type t) => IsBlittable(t) || IsFixedSizeStruct(t);
+
+    /// <summary>
+    /// Determines whether the specified type is blittable, meaning it can be directly copied to unmanaged memory
+    /// without conversion.
+    /// </summary>
+    /// <remarks>A type is considered blittable if it is a primitive, enum, IntPtr, UIntPtr, or a value type
+    /// with sequential or explicit layout and all its fields are blittable. Blittable types are required for certain
+    /// interop scenarios, such as P/Invoke or direct memory access.</remarks>
+    /// <param name="t">The type to check for blittability.</param>
+    /// <returns>true if the type is blittable; otherwise, false.</returns>
+    public static bool IsBlittable(Type t)
+    {
+        if (t.IsPrimitive || t.IsEnum || t == typeof(IntPtr) || t == typeof(UIntPtr)) return true;
+        if (!t.IsValueType) return false;
+        var layout = t.StructLayoutAttribute;
+        if (layout == null || (layout.Value != LayoutKind.Sequential && layout.Value != LayoutKind.Explicit)) return false;
+        foreach (var f in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        {
+            if (!IsBlittableField(f)) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Determines whether the specified field is blittable, meaning it can be directly copied to unmanaged memory
+    /// without conversion.
+    /// </summary>
+    /// <remarks>A field is considered blittable if its type is a primitive, enum, IntPtr, UIntPtr, or a value
+    /// type that is itself blittable.</remarks>
+    /// <param name="f">The field to evaluate for blittability.</param>
+    /// <returns>true if the field is blittable; otherwise, false.</returns>
+    static bool IsBlittableField(FieldInfo f)
+    {
+        var t = f.FieldType;
+        if (t.IsPrimitive || t.IsEnum || t == typeof(IntPtr) || t == typeof(UIntPtr)) return true;
+        if (!t.IsValueType) return false;
+        return IsBlittable(t);
+    }
+
+    /// <summary>
+    /// Determines whether the specified type is a value type with a fixed, well-defined memory layout suitable for
+    /// interop scenarios.
+    /// </summary>
+    /// <remarks>A fixed-size struct is a value type with either sequential or explicit layout and a size
+    /// determinable by Marshal.SizeOf. This is commonly required for interoperability with unmanaged code.</remarks>
+    /// <param name="t">The type to evaluate for fixed-size struct characteristics. Must not be null.</param>
+    /// <returns>true if the type is a value type with sequential or explicit layout and a fixed size; otherwise, false.</returns>
+    public static bool IsFixedSizeStruct(Type t)
+    {
+        if (!t.IsValueType) return false;
+
+        var layout = t.StructLayoutAttribute;
+        if (layout == null || (layout.Value != LayoutKind.Sequential && layout.Value != LayoutKind.Explicit)) return false;
+
+        try
+        {
+            Marshal.SizeOf(t);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+
     /// <summary>Marshalls the specified buffer to a new structure instance.</summary>
     /// <typeparam name="T">The type of the struct.</typeparam>
     /// <param name="buffer">Buffer to copy.</param>
@@ -18,6 +90,13 @@ public static class MarshalStruct
     public static void Copy<T>(byte[] buffer, out T result)
         where T : struct
         => Copy(buffer, 0, out result);
+
+    /// <summary>Marshalls the specified buffer to a new structure instance.</summary>
+    /// <param name="structureType">Structure type</param>
+    /// <param name="buffer">Buffer to copy.</param>
+    /// <param name="result">The new struct.</param>
+    public static void Copy(Type structureType, byte[] buffer, out object result)
+        => Copy(structureType, buffer, 0, out result);
 
     /// <summary>Marshalls the specified buffer to a new structure instance.</summary>
     /// <typeparam name="T">The type of the struct.</typeparam>
@@ -47,6 +126,29 @@ public static class MarshalStruct
         }
     }
 
+    /// <summary>Marshalls the specified buffer to a new structure instance.</summary>
+    /// <param name="structureType">Structure type</param>
+    /// <param name="buffer">Buffer to copy.</param>
+    /// <param name="offset">Offset to start reading the byte buffer at.</param>
+    /// <param name="result">The new struct.</param>
+    public static void Copy(Type structureType, byte[] buffer, int offset, out object result)
+    {
+        var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+        try
+        {
+            var address = handle.AddrOfPinnedObject();
+            if (offset != 0)
+            {
+                address = new IntPtr(address.ToInt64() + offset);
+            }
+            result = Marshal.PtrToStructure(address, structureType)!;
+        }
+        finally
+        {
+            handle.Free();
+        }
+    }
+
     /// <summary>Marshalls the specified structure to a new byte[] instance.</summary>
     /// <typeparam name="T">The type of the struct.</typeparam>
     /// <param name="item">The item do marshal.</param>
@@ -67,6 +169,24 @@ public static class MarshalStruct
         }
     }
 
+    /// <summary>Marshalls the specified structure to a new byte[] instance.</summary>
+    /// <param name="structure">The item do marshal.</param>
+    /// <param name="data">The new byte array.</param>
+    public static void Copy(object structure, out byte[] data)
+    {
+        var size = SizeOf(structure.GetType());
+        data = new byte[size];
+        var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+        try
+        {
+            Marshal.StructureToPtr(structure, handle.AddrOfPinnedObject(), true);
+        }
+        finally
+        {
+            handle.Free();
+        }
+    }
+
     /// <summary>Gets a new byte buffer containing the data of the struct.</summary>
     /// <typeparam name="T">struct type.</typeparam>
     /// <param name="item">the struct to read.</param>
@@ -77,6 +197,11 @@ public static class MarshalStruct
         Copy(item, out var data);
         return data;
     }
+
+    /// <summary>Gets a new byte buffer containing the data of the struct.</summary>
+    /// <param name="structure">the struct to read.</param>
+    /// <param name="result">returns a new byte buffer.</param>
+    public static void GetBytes(object structure, out byte[] result) => Copy(structure, out result);
 
     /// <summary>Gets a new struct instance containing the data of the buffer.</summary>
     /// <typeparam name="T">struct type.</typeparam>
@@ -195,12 +320,32 @@ public static class MarshalStruct
     }
 
     /// <summary>Gets the size of the specified structure.</summary>
+    /// <returns>The size.</returns>
+    public static int SizeOf(Type structureType) => Marshal.SizeOf(structureType);
+
+    /// <summary>Writes a struct to a stream (see <see cref="DataWriter"/> for a comfortable reader class supporting this, too).</summary>
+    /// <param name="stream">Stream to write to.</param>
+    /// <param name="structure">the struct to write.</param>
+    public static void Write<T>(Stream stream, object structure)
+        where T : struct
+    {
+        if (stream == null)
+        {
+            throw new ArgumentNullException(nameof(stream));
+        }
+
+        Copy(structure, out var data);
+        stream.Write(data, 0, data.Length);
+    }
+
+    /// <summary>Gets the size of the specified structure.</summary>
     /// <typeparam name="T">The type of the struct.</typeparam>
     /// <returns>The size.</returns>
     public static int SizeOf<T>()
         where T : struct =>
 #if NET20 || NET35 || NET40 || NET45
         Marshal.SizeOf(typeof(T));
+
 #else
         Marshal.SizeOf<T>();
 

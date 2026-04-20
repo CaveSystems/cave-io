@@ -2,7 +2,6 @@
 
 namespace Cave.IO;
 
-
 /// <summary>Provides a ring buffer interface for ring buffer implementations.</summary>
 /// <typeparam name="TValue">Value type.</typeparam>
 public interface IRingBuffer<TValue> : IRingBufferCursor<TValue>

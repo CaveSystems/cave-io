@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Text;
 
@@ -784,11 +783,21 @@ public sealed class DataReader
     /// <typeparam name="T">the struct.</typeparam>
     /// <returns>The struct.</returns>
     public T ReadStruct<T>()
-    where T : struct
+        where T : struct
     {
         var size = MarshalStruct.SizeOf<T>();
         var buffer = ReadBytes(size);
         MarshalStruct.Copy(buffer, out T result);
+        return result;
+    }
+
+    /// <summary>Reads the specified struct from the stream using the default marshaller.</summary>
+    /// <returns>The struct.</returns>
+    public object ReadStruct(Type type)
+    {
+        var size = MarshalStruct.SizeOf(type);
+        var buffer = ReadBytes(size);
+        MarshalStruct.Copy(type, buffer, out var result);
         return result;
     }
 

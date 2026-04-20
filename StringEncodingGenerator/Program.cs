@@ -107,5 +107,5 @@ sealed class Program
         writer.Close();
     }
 
-    private static int TryGetCodePage(Encoding encoding) { try { return encoding.WindowsCodePage; } catch { return 0; } }
+    static int TryGetCodePage(Encoding encoding) { try { return encoding.WindowsCodePage; } catch { return 0; } }
 }

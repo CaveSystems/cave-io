@@ -1,46 +1,59 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFrameworks>
-            net20;net35;net40;net45;net46;net47;net48;
-            netstandard2.0;netstandard2.1;
-            net6.0;net8.0;
-        </TargetFrameworks>
-        
-        <!--project-->
-        <RootNamespace>Cave.IO</RootNamespace>
-        <AssemblyOriginatorKeyFile>cave-io.snk</AssemblyOriginatorKeyFile>
-        <Product>CaveSystems IO Library</Product>
-        <PackageTags>CaveSystems IO</PackageTags>
-        <Description>
-            CaveSystems IO Library.
-            This package contains:
-            * Fast non buffering data readers and writers.
-            * Endian conversion.
-            * Stream buffers (fifo, ring).
-            * Fast struct marshalling.
-            * Ini (Settings) readers and writers.
-        </Description>
-        <PackageProjectUrl>https://github.com/CaveSystems/cave-io</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/CaveSystems/cave-io</RepositoryUrl>
+	<PropertyGroup>
+		<TargetFrameworks>
+			net20;net35;net40;net45;net46;net47;net48;
+			netstandard2.0;netstandard2.1;
+			net8.0;
+		</TargetFrameworks>
 
-        <!--settings-->
-        <PackageReleaseNotes />
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <SignAssembly>true</SignAssembly>
-        <NeutralLanguage />
-        <DelaySign>false</DelaySign>
-        <LangVersion>preview</LangVersion>
-    </PropertyGroup>
+		<!--project-->
+		<RootNamespace>Cave.IO</RootNamespace>
+		<AssemblyOriginatorKeyFile>cave-io.snk</AssemblyOriginatorKeyFile>
+		<Product>CaveSystems IO Library</Product>
+		<PackageTags>CaveSystems IO</PackageTags>
+		<Description>
+			CaveSystems IO Library.
+			This package contains:
+			* Fast non-buffering data readers and writers.
+			* Endian conversion utilities.
+			* FIFO and ring buffer stream implementations.
+			* High‑performance struct marshalling.
+			* INI (settings) readers and writers.
+			* BinarySerializer for lightweight object serialization.
+			* BlobSerializer framework for advanced, version‑resilient binary serialization
+			(reflection-based converters, custom converters, dictionary/enumerable support).
+		</Description>
+		<PackageProjectUrl>https://github.com/CaveSystems/cave-io</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/CaveSystems/cave-io</RepositoryUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <ItemGroup>
-        <PackageReference Include="Cave.Extensions" Version="4.0.3" />
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-    </ItemGroup>
+		<!--settings-->
+		<PackageReleaseNotes />
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<SignAssembly>true</SignAssembly>
+		<NeutralLanguage />
+		<DelaySign>false</DelaySign>
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
 
-     <ItemGroup Condition="$(TargetFramework.StartsWith('netstandard1'))">
-        <PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0" />
-    </ItemGroup>
+	<ItemGroup>
+		<None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Cave.CleanCodeAnalyzer" Version="1.0.1" />
+		<PackageReference Include="Cave.Extensions" Version="4.0.9" />
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup Condition="$(TargetFramework.StartsWith('netstandard1'))">
+		<PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.202" />
+	</ItemGroup>
 </Project>
