@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Cave.IO;
@@ -11,6 +12,8 @@ namespace Cave.IO;
 /// </summary>
 public sealed class DataReader
 {
+    internal static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
     #region Private Fields
 
     bool closed;
@@ -25,6 +28,7 @@ public sealed class DataReader
 
     #region Private Methods
 
+    [MethodImpl((MethodImplOptions)256)]
     string DecodeString(byte[] block, int start = 0, int length = -1) => StringEncoding.Decode(block, start, length);
 
     char ReadCharUTF7()
@@ -141,9 +145,6 @@ public sealed class DataReader
         }
     }
 
-    /// <summary>Gets the line feed string.</summary>
-    public string LineFeed => (newLineData ??= new NewLineData(StringEncoding, newLineMode)).LineFeed;
-
     /// <summary>Gets or sets the new line mode used.</summary>
     /// <remarks>This can be used between all read calls.</remarks>
     public NewLineMode NewLineMode
@@ -159,6 +160,9 @@ public sealed class DataReader
         get => stringEncoding;
         set { stringEncoding = value; newLineData = null; zeroBytes = null; }
     }
+
+    /// <summary>Gets the line feed string.</summary>
+    public string LineFeed => (newLineData ??= new NewLineData(StringEncoding, newLineMode)).LineFeed;
 
     #endregion Public Properties
 
@@ -176,22 +180,27 @@ public sealed class DataReader
     }
 
     /// <summary>Flushes the stream.</summary>
+    [MethodImpl((MethodImplOptions)256)] 
     public void Flush() => BaseStream.Flush();
 
     /// <summary>Reads a 7 bit encoded 32 bit value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Read7BitEncodedInt32() => BitCoder32.Read7BitEncodedInt32(BaseStream);
 
     /// <summary>Reads a 7 bit encoded 64 bit value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public long Read7BitEncodedInt64() => BitCoder64.Read7BitEncodedInt64(BaseStream);
 
     /// <summary>Reads a 7 bit encoded 32 bit value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public uint Read7BitEncodedUInt32() => BitCoder32.Read7BitEncodedUInt32(BaseStream);
 
     /// <summary>Reads a 7 bit encoded 64 bit value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public ulong Read7BitEncodedUInt64() => BitCoder64.Read7BitEncodedUInt64(BaseStream);
 
     /// <summary>Reads an array of the specified struct type from the stream using the default marshaller.</summary>
@@ -232,14 +241,17 @@ public sealed class DataReader
     /// <summary>Reads an us ascii text from string.</summary>
     /// <param name="charCount">Character count to read.</param>
     /// <returns>Returns the read text.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public string ReadASCII(int charCount) => ASCII.GetString(ReadBytes(charCount));
 
     /// <summary>Reads the specified value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public bool ReadBool() => ReadByte() != 0;
 
     /// <summary>Reads the specified value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public byte ReadByte()
     {
         var b = BaseStream.ReadByte();
@@ -392,6 +404,7 @@ public sealed class DataReader
 
     /// <summary>Reads a DateTime value from the stream with <see cref="DateTimeKind"/>.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public DateTime ReadDateTime()
     {
         var kind = (DateTimeKind)Read7BitEncodedInt32();
@@ -410,6 +423,7 @@ public sealed class DataReader
 
     /// <summary>Reads a value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public decimal ReadDecimal()
     {
         var bits = new int[4];
@@ -423,22 +437,28 @@ public sealed class DataReader
 
     /// <summary>Reads a value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public double ReadDouble()
     {
         var bytes = ReadBytes(8);
         return endianDecoder.ToDouble(bytes, 0);
     }
 
-    /// <summary>Reads a 32bit linux epoch value.</summary>
+    /// <summary>Reads a 32bit linux epoch value (localtime).</summary>
+    /// <remarks>This will not read timezone information; local time is assumed!</remarks>
     /// <returns>The value.</returns>
-    public DateTime ReadEpoch32() => new DateTime(1970, 1, 1) + TimeSpan.FromSeconds(ReadUInt32());
+    [MethodImpl((MethodImplOptions)256)]
+    public DateTime ReadEpoch32() => UnixEpoch + TimeSpan.FromSeconds(ReadUInt32());
 
-    /// <summary>Reads a 64bit linux epoch value.</summary>
+    /// <summary>Reads a 64bit linux epoch value (localtime).</summary>
+    /// <remarks>This will not read timezone information; local time is assumed!</remarks>
     /// <returns>The value.</returns>
-    public DateTime ReadEpoch64() => new DateTime(1970, 1, 1) + TimeSpan.FromSeconds(ReadUInt64());
+    [MethodImpl((MethodImplOptions)256)]
+    public DateTime ReadEpoch64() => UnixEpoch + TimeSpan.FromSeconds(ReadUInt64());
 
     /// <summary>Reads a guid from the stream.</summary>
     /// <returns>The guid.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public Guid ReadGuid() => new(ReadBytes(16));
 
     /// <summary>Reads a HZ encoded string.</summary>
@@ -493,6 +513,7 @@ public sealed class DataReader
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public short ReadInt16()
     {
         var bytes = ReadBytes(2);
@@ -501,6 +522,7 @@ public sealed class DataReader
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int ReadInt32()
     {
         var bytes = ReadBytes(4);
@@ -509,6 +531,7 @@ public sealed class DataReader
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public long ReadInt64()
     {
         var bytes = ReadBytes(8);
@@ -517,13 +540,8 @@ public sealed class DataReader
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
-    public sbyte ReadInt8()
-    {
-        unchecked
-        {
-            return (sbyte)ReadByte();
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public sbyte ReadInt8() => unchecked((sbyte)ReadByte());
 
     /// <summary>Reads an iso 2022 string</summary>
     /// <param name="codepoints">Number of codepoints to read</param>
@@ -651,6 +669,17 @@ public sealed class DataReader
         return ReadUntil(newLineData.Data, newLineData.LineFeed, maximumBytes);
     }
 
+    /// <summary>Reads a Boolean value that is prefixed by a byte, or returns null if no value is available.</summary>
+    /// <returns>A Boolean value if a prefixed byte is present; otherwise, null. Returns <see langword="true"/> if the byte is nonzero; otherwise, <see langword="false"/>.</returns>
+    [MethodImpl((MethodImplOptions)256)]
+    public bool? ReadNullableBool() => ReadInt8() switch { -1 => null, 0 => false, 1 => true, _ => throw new InvalidDataException("Invalid value for nullable Boolean.") };
+
+    /// <summary>Reads a 64-bit integer value and returns it as a DateTime if available.</summary>
+    /// <remarks>The method interprets the read 64-bit integer as the number of ticks for the DateTime constructor. Returns null if no value is available.</remarks>
+    /// <returns>A DateTime representing the read value if successful; otherwise, null.</returns>
+    [MethodImpl((MethodImplOptions)256)] 
+    public DateTime? ReadPrefixedDateTime() => ReadPrefixedInt64() is long value ? new DateTime(value) : null;
+
     /// <summary>Reads a value from the stream.</summary>
     /// <returns>The value.</returns>
     public decimal? ReadPrefixedDecimal()
@@ -697,18 +726,22 @@ public sealed class DataReader
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public short? ReadPrefixedInt16() => (short?)BitCoder32.Read8BitPrefixedInt32(BaseStream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int? ReadPrefixedInt32() => BitCoder32.Read8BitPrefixedInt32(BaseStream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public long? ReadPrefixedInt64() => BitCoder64.Read8BitPrefixedInt64(BaseStream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public sbyte? ReadPrefixedInt8() => (sbyte?)BitCoder32.Read8BitPrefixedInt32(BaseStream);
 
     /// <summary>Reads a value from the stream.</summary>
@@ -746,24 +779,35 @@ public sealed class DataReader
         return ReadString(length);
     }
 
+    /// <summary>Reads a 64-bit integer value with a prefix and returns it as a nullable TimeSpan.</summary>
+    /// <remarks>The returned TimeSpan is constructed from the 64-bit integer value, which is interpreted as ticks.</remarks>
+    /// <returns>A TimeSpan representing the value read if successful; otherwise, null if no value is available.</returns>
+    [MethodImpl((MethodImplOptions)256)]
+    public TimeSpan? ReadPrefixedTimeSpan() => ReadPrefixedInt64() is long value ? new TimeSpan(value) : null;
+
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public ushort? ReadPrefixedUInt16() => (ushort?)BitCoder32.Read8BitPrefixedUInt32(BaseStream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public uint? ReadPrefixedUInt32() => BitCoder32.Read8BitPrefixedUInt32(BaseStream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public ulong? ReadPrefixedUInt64() => BitCoder64.Read8BitPrefixedUInt64(BaseStream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public byte? ReadPrefixedUInt8() => (byte?)BitCoder32.Read8BitPrefixedUInt32(BaseStream);
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public float ReadSingle()
     {
         var bytes = ReadBytes(4);
@@ -773,6 +817,7 @@ public sealed class DataReader
     /// <summary>Reads a string of the specified byte count from the stream.</summary>
     /// <param name="byteCount">Number of bytes to read.</param>
     /// <returns>The string read from the specified block.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public string ReadString(int byteCount)
     {
         var block = ReadBytes(byteCount);
@@ -782,6 +827,7 @@ public sealed class DataReader
     /// <summary>Reads the specified struct from the stream using the default marshaller.</summary>
     /// <typeparam name="T">the struct.</typeparam>
     /// <returns>The struct.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public T ReadStruct<T>()
         where T : struct
     {
@@ -793,6 +839,7 @@ public sealed class DataReader
 
     /// <summary>Reads the specified struct from the stream using the default marshaller.</summary>
     /// <returns>The struct.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public object ReadStruct(Type type)
     {
         var size = MarshalStruct.SizeOf(type);
@@ -803,10 +850,12 @@ public sealed class DataReader
 
     /// <summary>Reads a value from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public TimeSpan ReadTimeSpan() => new(ReadInt64());
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public ushort ReadUInt16()
     {
         var bytes = ReadBytes(2);
@@ -815,6 +864,7 @@ public sealed class DataReader
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public uint ReadUInt32()
     {
         var bytes = ReadBytes(4);
@@ -823,6 +873,7 @@ public sealed class DataReader
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public ulong ReadUInt64()
     {
         var bytes = ReadBytes(8);
@@ -831,6 +882,7 @@ public sealed class DataReader
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public byte ReadUInt8() => ReadByte();
 
     /// <summary>Reads bytes from the stream until one of the specified end markers are found or buffer length is reached.</summary>
@@ -1000,12 +1052,14 @@ public sealed class DataReader
     /// <param name="codepoints">Character count to read.</param>
     /// <returns>Returns the read text.</returns>
     /// <exception cref="InvalidDataException"></exception>
+    [MethodImpl((MethodImplOptions)256)] 
     public string ReadUTF32BE(int codepoints) => new UTF32BE(ReadBytes(codepoints * 4)).ToString();
 
     /// <summary>Reads an utf32 text from string.</summary>
     /// <param name="codepoints">Number of unicode codepoints (not bytes) to read (one unicode codepoint may contain two csharp unicode characters).</param>
     /// <returns>Returns the read text.</returns>
     /// <exception cref="InvalidDataException"></exception>
+    [MethodImpl((MethodImplOptions)256)] 
     public string ReadUTF32LE(int codepoints) => new UTF32LE(ReadBytes(codepoints * 4)).ToString();
 
     /// <summary>Reads an utf7 text from string.</summary>
@@ -1160,6 +1214,7 @@ public sealed class DataReader
     /// <summary>Reads a zero terminated string from the stream.</summary>
     /// <param name="byteCount">Fieldlength in bytes.</param>
     /// <returns>The string.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public string ReadZeroTerminatedFixedLengthString(int byteCount)
     {
         var result = ReadString(byteCount);
@@ -1175,6 +1230,7 @@ public sealed class DataReader
     /// <summary>Reads a zero terminated string from the stream.</summary>
     /// <param name="maximumBytes">The number of bytes to write at maximum.</param>
     /// <returns>The string.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public string ReadZeroTerminatedString(int maximumBytes)
     {
         const string ZeroChars = "\0";
@@ -1192,10 +1248,12 @@ public sealed class DataReader
     /// <param name="offset">Offset to seek to.</param>
     /// <param name="origin">Origin to seek from.</param>
     /// <returns>A value of type SeekOrigin indicating the reference point used to obtain the new position.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public long Seek(long offset, SeekOrigin origin) => BaseStream.Seek(offset, origin);
 
     /// <summary>Skips some bytes at the base stream.</summary>
     /// <param name="count">Length to skip in bytes.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Skip(long count)
     {
         if (count < 0)

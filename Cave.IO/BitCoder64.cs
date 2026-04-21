@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Cave.IO;
 
@@ -13,21 +14,29 @@ public static class BitCoder64
     /// <returns>The encoded value as byte array.</returns>
     public static byte[] Get7BitEncoded(ulong value)
     {
-        using var stream = new MemoryStream();
-        Write7BitEncoded(stream, value);
-        return stream.ToArray();
+        var buffer = new byte[10];
+        var index = 0;
+
+        while (value >= 0x80)
+        {
+            buffer[index++] = (byte)(value | 0x80);
+            value >>= 7;
+        }
+
+        buffer[index++] = (byte)value;
+        if (index != buffer.Length)
+        {
+            buffer = buffer[0..index];
+        }
+        return buffer;
     }
+
 
     /// <summary>Gets the data of a 7 bit encoded value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>The encoded value as byte array.</returns>
-    public static byte[] Get7BitEncoded(long value)
-    {
-        unchecked
-        {
-            return Get7BitEncoded((ulong)value);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static byte[] Get7BitEncoded(long value) => Get7BitEncoded(unchecked((ulong)value));
 
     /// <summary>Gets the data of a 8 bit shifted value (using little endian encoding).</summary>
     /// <param name="value">The value to encode.</param>
@@ -75,13 +84,8 @@ public static class BitCoder64
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>number of bytes needed.</returns>
-    public static int GetByteCount7BitEncoded(long value)
-    {
-        unchecked
-        {
-            return GetByteCount7BitEncoded((ulong)value);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static int GetByteCount7BitEncoded(long value) => GetByteCount7BitEncoded(unchecked((ulong)value));
 
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
@@ -105,13 +109,8 @@ public static class BitCoder64
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>number of bytes needed.</returns>
-    public static int GetByteCount8BitEncoded(long value)
-    {
-        unchecked
-        {
-            return GetByteCount8BitEncoded((ulong)value);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static int GetByteCount8BitEncoded(long value) => GetByteCount8BitEncoded(unchecked((ulong)value));
 
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
@@ -135,64 +134,36 @@ public static class BitCoder64
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>number of bytes needed.</returns>
-    public static int GetByteCount8BitShifted(long value)
-    {
-        unchecked
-        {
-            return GetByteCount8BitShifted((ulong)value);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static int GetByteCount8BitShifted(long value) => GetByteCount8BitShifted(unchecked((ulong)value));
 
     /// <summary>Reads a 7 bit encoded value from the specified Stream.</summary>
     /// <param name="stream">The <see cref="Stream"/> to read from.</param>
     /// <returns>Returns the read value.</returns>
-    public static long Read7BitEncodedInt64(Stream stream)
-    {
-        unchecked
-        {
-            return (long)Read7BitEncodedUInt64(stream);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static long Read7BitEncodedInt64(Stream stream) => unchecked((long)Read7BitEncodedUInt64(stream));
 
     /// <summary>Reads a 7 bit encoded value from the specified Stream.</summary>
     /// <param name="stream">The <see cref="Stream"/> to read from.</param>
     /// <returns>Returns the read value.</returns>
     public static ulong Read7BitEncodedUInt64(Stream stream)
     {
-        if (stream == null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
-
         unchecked
         {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
             var b = stream.ReadByte();
-            var count = 1;
-            if (b == -1)
-            {
-                throw new EndOfStreamException();
-            }
-
+            if (b == -1) throw new EndOfStreamException();
             var result = (ulong)(b & 0x7F);
             var bitPos = 7;
-            while (b > 0x7F)
+            var count = 1;
+            while ((b & 0x80) != 0)
             {
                 b = stream.ReadByte();
-                if (++count > 10)
-                {
-                    throw new InvalidDataException("7Bit encoded 64 bit integer may not exceed 10 bytes!");
-                }
-
-                if (b == -1)
-                {
-                    throw new EndOfStreamException();
-                }
-
-                var value = (ulong)(b & 0x7F);
-                result = (value << bitPos) | result;
+                if (b == -1) throw new EndOfStreamException();
+                if (++count > 10) throw new InvalidDataException("7Bit encoded 64 bit integer may not exceed 10 bytes!");
+                result |= (ulong)(b & 0x7F) << bitPos;
                 bitPos += 7;
             }
-
             return result;
         }
     }
@@ -200,32 +171,29 @@ public static class BitCoder64
     /// <summary>Reads a 8 bit prefixed and shifted value from the specified Stream.</summary>
     /// <param name="stream">The <see cref="Stream"/> to read from.</param>
     /// <returns>Returns the read value.</returns>
-    public static long? Read8BitPrefixedInt64(Stream stream)
-    {
-        unchecked
-        {
-            return (long?)Read8BitPrefixedUInt64(stream);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static long? Read8BitPrefixedInt64(Stream stream) => unchecked((long?)Read8BitPrefixedUInt64(stream));
 
     /// <summary>Reads a 8 bit prefixed and shifted value from the specified Stream.</summary>
     /// <param name="stream">The <see cref="Stream"/> to read from.</param>
     /// <returns>Returns the read value.</returns>
     public static ulong? Read8BitPrefixedUInt64(Stream stream)
     {
-        unchecked
+        var count = stream.ReadByte();
+        if (count == 0) return null;
+        if (--count == 0) return 0;
+        if (count > 8) throw new InvalidDataException("8Bit prefixed 64 bit integer may not exceed 8 bytes!");
+
+        var buffer = new byte[count];
+        var read = stream.Read(buffer, 0, count);
+        if (read != count) throw new EndOfStreamException();
+
+        ulong value = 0;
+        for (var i = 0; i < count; i++)
         {
-            var count = stream.ReadByte();
-            if (count == 0) return null;
-            var value = (ulong)0;
-            while (--count >= 0)
-            {
-                var b = stream.ReadByte();
-                if (b < 0) throw new EndOfStreamException();
-                value = (value << 8) | (uint)b;
-            }
-            return value;
+            value |= (ulong)buffer[i] << (i * 8);
         }
+        return value;
     }
 
     /// <summary>Writes the specified value 7 bit encoded to the specified Stream.</summary>
@@ -234,26 +202,19 @@ public static class BitCoder64
     /// <returns>Returns the number of bytes written.</returns>
     public static int Write7BitEncoded(Stream stream, ulong value)
     {
-        if (stream == null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
-
         unchecked
         {
-            var i = 1;
-            var b = (byte)(value & 0x7F);
-            var data = value >> 7;
-            while (data != 0)
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            var buffer = new byte[10];
+            var index = 0;
+            while (value >= 0x80)
             {
-                stream.WriteByte((byte)(0x80 | b));
-                i++;
-                b = (byte)(data & 0x7F);
-                data >>= 7;
+                buffer[index++] = (byte)(value | 0x80);
+                value >>= 7;
             }
-
-            stream.WriteByte(b);
-            return i;
+            buffer[index++] = (byte)value;
+            stream.Write(buffer, 0, index);
+            return index;
         }
     }
 
@@ -261,59 +222,35 @@ public static class BitCoder64
     /// <param name="stream">The <see cref="Stream"/> to write to.</param>
     /// <param name="value">The value to write.</param>
     /// <returns>Returns the number of bytes written.</returns>
-    public static int Write7BitEncoded(Stream stream, long value)
-    {
-        unchecked
-        {
-            return Write7BitEncoded(stream, (ulong)value);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static int Write7BitEncoded(Stream stream, long value) => Write7BitEncoded(stream, unchecked((ulong)value));
 
     /// <summary>Writes the specified value 7 bit encoded to the specified Stream.</summary>
     /// <param name="writer">The <see cref="DataWriter"/> to write to.</param>
     /// <param name="value">The value to write.</param>
     /// <returns>Returns the number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static int Write7BitEncoded(DataWriter writer, ulong value)
     {
         if (writer == null)
         {
             throw new ArgumentNullException(nameof(writer));
         }
-
-        unchecked
-        {
-            var i = 1;
-            var b = (byte)(value & 0x7F);
-            var data = value >> 7;
-            while (data != 0)
-            {
-                writer.Write((byte)(0x80 | b));
-                i++;
-                b = (byte)(data & 0x7F);
-                data >>= 7;
-            }
-
-            writer.Write(b);
-            return i;
-        }
+        return Write7BitEncoded(writer.BaseStream, value);
     }
 
     /// <summary>Writes the specified value 7 bit encoded to the specified Stream.</summary>
     /// <param name="writer">The <see cref="DataWriter"/> to write to.</param>
     /// <param name="value">The value to write.</param>
     /// <returns>Returns the number of bytes written.</returns>
-    public static int Write7BitEncoded(DataWriter writer, long value)
-    {
-        unchecked
-        {
-            return Write7BitEncoded(writer, (ulong)value);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static int Write7BitEncoded(DataWriter writer, long value) => Write7BitEncoded(writer, unchecked((ulong)value));
 
     /// <summary>Writes the specified value 8 bit prefixed to the specified Stream.</summary>
     /// <param name="writer">The <see cref="DataWriter"/> to write to.</param>
     /// <param name="value">The value to write.</param>
     /// <returns>Returns the number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static int Write8BitPrefixed(DataWriter writer, ulong value)
     {
         if (writer == null)
@@ -333,13 +270,8 @@ public static class BitCoder64
     /// <param name="writer">The <see cref="DataWriter"/> to write to.</param>
     /// <param name="value">The value to write.</param>
     /// <returns>Returns the number of bytes written.</returns>
-    public static int Write8BitPrefixed(DataWriter writer, long value)
-    {
-        unchecked
-        {
-            return Write8BitPrefixed(writer, (ulong)value);
-        }
-    }
+    [MethodImpl((MethodImplOptions)256)]
+    public static int Write8BitPrefixed(DataWriter writer, long value) => Write8BitPrefixed(writer, unchecked((ulong)value));
 
     #endregion Public Methods
 }

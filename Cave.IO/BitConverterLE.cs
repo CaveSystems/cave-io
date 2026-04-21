@@ -11,7 +11,7 @@ public class BitConverterLE : BitConverterBase
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
     /// <returns>The value as encoded byte array.</returns>
-    public override byte[] GetBytes(ushort value) => [(byte)(value % 256), (byte)(value / 256)];
+    public override byte[] GetBytes(ushort value) => [(byte)(value & 0xFF), (byte)(value >> 8)];
 
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
@@ -21,8 +21,8 @@ public class BitConverterLE : BitConverterBase
         var result = new byte[4];
         for (var i = 0; i < 4; i++)
         {
-            result[i] = (byte)(value % 256);
-            value /= 256;
+            result[i] = (byte)(value & 0xFF);
+            value >>= 8;
         }
 
         return result;
@@ -36,8 +36,8 @@ public class BitConverterLE : BitConverterBase
         var result = new byte[8];
         for (var i = 0; i < 8; i++)
         {
-            result[i] = (byte)(value % 256);
-            value /= 256;
+            result[i] = (byte)(value & 0xFF);
+            value >>= 8;
         }
 
         return result;

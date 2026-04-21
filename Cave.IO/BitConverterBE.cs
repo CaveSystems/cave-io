@@ -11,7 +11,7 @@ public class BitConverterBE : BitConverterBase
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
     /// <returns>The value as encoded byte array.</returns>
-    public override byte[] GetBytes(ushort value) => unchecked(new[] { (byte)(value / 256), (byte)(value % 256) });
+    public override byte[] GetBytes(ushort value) => unchecked(new[] { (byte)(value >> 8), (byte)(value & 0xFF) });
 
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
@@ -21,8 +21,8 @@ public class BitConverterBE : BitConverterBase
         var result = new byte[4];
         for (var i = 3; i >= 0; i--)
         {
-            result[i] = (byte)(value % 256);
-            value /= 256;
+            result[i] = (byte)(value & 0xFF);
+            value >>= 8;
         }
 
         return result;
@@ -36,8 +36,8 @@ public class BitConverterBE : BitConverterBase
         var result = new byte[8];
         for (var i = 7; i >= 0; i--)
         {
-            result[i] = (byte)(value % 256);
-            value /= 256;
+            result[i] = (byte)(value & 0xFF);
+            value >>= 8;
         }
 
         return result;
@@ -52,7 +52,7 @@ public class BitConverterBE : BitConverterBase
     public override ushort ToUInt16(byte[] data, int index)
     {
         if (data is null) throw new ArgumentNullException(nameof(data));
-        return unchecked((ushort)((data[index] * 256) + data[index + 1]));
+        return unchecked((ushort)((data[index] << 8) + data[index + 1]));
     }
 
     /// <summary>Returns a value converted from the specified data at a specified index.</summary>

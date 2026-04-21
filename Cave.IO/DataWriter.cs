@@ -12,6 +12,8 @@ namespace Cave.IO;
 /// </summary>
 public sealed class DataWriter
 {
+    internal static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
+
     #region Private Fields
 
     bool closed;
@@ -26,6 +28,7 @@ public sealed class DataWriter
 
     #region Private Methods
 
+    [MethodImpl((MethodImplOptions)256)]
     byte[] EncodeString(string text) => stringEncoding.Encode(text, withRoundtripTest: !DisableEncodingRoundtripTest);
 
     [MethodImpl((MethodImplOptions)256)]
@@ -93,9 +96,6 @@ public sealed class DataWriter
         }
     }
 
-    /// <summary>Gets the line feed string.</summary>
-    public string LineFeed => (newLineData ??= new NewLineData(StringEncoding, newLineMode)).LineFeed;
-
     /// <summary>Gets or sets the new line mode used.</summary>
     /// <remarks>This can be used between all write calls.</remarks>
     public NewLineMode NewLineMode
@@ -111,6 +111,9 @@ public sealed class DataWriter
         get => stringEncoding;
         set { stringEncoding = value; zeroTested = false; newLineData = null; }
     }
+
+    /// <summary>Gets the line feed string.</summary>
+    public string LineFeed => (newLineData ??= new NewLineData(StringEncoding, newLineMode)).LineFeed;
 
     #endregion Public Properties
 
@@ -128,24 +131,29 @@ public sealed class DataWriter
     }
 
     /// <summary>Flushes the stream.</summary>
+    [MethodImpl((MethodImplOptions)256)]
     public void Flush() => BaseStream.Flush();
 
     /// <summary>Seeks at the base stream (this requires the stream to be seekable).</summary>
     /// <param name="offset">Offset to seek to.</param>
     /// <param name="origin">Origin to seek from.</param>
     /// <returns>A value of type SeekOrigin indicating the reference point used to obtain the new position.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public long Seek(int offset, SeekOrigin origin) => BaseStream.Seek(offset, origin);
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(bool value) => BaseStream.WriteByte(value ? (byte)1 : (byte)0);
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(byte value) => BaseStream.WriteByte(value);
 
     /// <summary>Writes the specified buffer directly to the stream.</summary>
     /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(byte[] buffer)
     {
         if (buffer == null)
@@ -160,6 +168,7 @@ public sealed class DataWriter
     /// <param name="buffer">The buffer to write.</param>
     /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
     /// <param name="count">The number of bytes to be written to the current stream.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(byte[] buffer, int offset, int count)
     {
         if (buffer == null)
@@ -173,11 +182,13 @@ public sealed class DataWriter
     /// <summary>Writes the specified character directly to the stream.</summary>
     /// <param name="c">The character to write.</param>
     /// <returns>The number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write(char c) => Write(new[] { c });
 
     /// <summary>Writes the specified characters directly to the stream.</summary>
     /// <param name="chars">Array of characters to write.</param>
     /// <returns>The number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write(char[] chars)
     {
         if (chars == null)
@@ -192,6 +203,7 @@ public sealed class DataWriter
     /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
     /// <param name="count">The number of bytes to be written to the current stream.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write(char[] chars, int offset, int count)
     {
         if (chars == null)
@@ -207,6 +219,7 @@ public sealed class DataWriter
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(decimal value)
     {
         foreach (var decimalData in decimal.GetBits(value))
@@ -217,30 +230,37 @@ public sealed class DataWriter
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(double value) => Write(endianEncoder.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(short value) => Write(endianEncoder.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(int value) => Write(endianEncoder.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(long value) => Write(endianEncoder.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(sbyte value) => Write(unchecked((byte)value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(float value) => Write(endianEncoder.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(Guid value)
     {
         var data = value.ToByteArray();
@@ -253,6 +273,7 @@ public sealed class DataWriter
     /// <param name="text">Text to write.</param>
     /// <param name="byteCount">Optional: if set the specified number of bytes will be written (cropping and zero filling will be applied).</param>
     /// <returns>Returns the number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write(IUnicode text, int byteCount = 0)
     {
         if (byteCount > 0)
@@ -273,6 +294,7 @@ public sealed class DataWriter
     /// <summary>Writes the specified <paramref name="text"/> to the stream.</summary>
     /// <param name="text">String to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write(string text)
     {
         if (text is null) throw new ArgumentNullException(nameof(text));
@@ -283,22 +305,27 @@ public sealed class DataWriter
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(ushort value) => Write(endianEncoder.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(uint value) => Write(endianEncoder.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(ulong value) => Write(endianEncoder.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(TimeSpan value) => Write(value.Ticks);
 
     /// <summary>Writes the specified datetime value with <see cref="DateTimeKind"/>.</summary>
     /// <param name="value">The value to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void Write(DateTime value)
     {
         Write7BitEncoded32((int)value.Kind);
@@ -308,21 +335,25 @@ public sealed class DataWriter
     /// <summary>Writes the specified 32 bit value to the stream 7 bit encoded (1-5 bytes).</summary>
     /// <param name="value">The value to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write7BitEncoded32(int value) => BitCoder32.Write7BitEncoded(this, value);
 
     /// <summary>Writes the specified 32 bit value to the stream 7 bit encoded (1-5 bytes).</summary>
     /// <param name="value">The value to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write7BitEncoded32(uint value) => BitCoder32.Write7BitEncoded(this, value);
 
     /// <summary>Writes the specified 64 bit value to the stream 7 bit encoded (1-9 bytes).</summary>
     /// <param name="value">The value to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write7BitEncoded64(long value) => BitCoder64.Write7BitEncoded(this, value);
 
     /// <summary>Writes the specified 64 bit value to the stream 7 bit encoded (1-9 bytes).</summary>
     /// <param name="value">The value to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int Write7BitEncoded64(ulong value) => BitCoder64.Write7BitEncoded(this, value);
 
     /// <summary>Writes an array of the specified struct type to the stream using the default marshaller prefixed by array length.</summary>
@@ -359,21 +390,27 @@ public sealed class DataWriter
         return headerSize + bytes.Length;
     }
 
-    /// <summary>Writes a 32bit linux epoch value.</summary>
+    /// <summary>Writes a 32bit linux epoch value (localtime).</summary>
+    /// <remarks>This will not write timezone informaton and the reader will assume local time!</remarks>
     /// <param name="value">The value to write.</param>
-    public void WriteEpoch32(DateTime value) => Write((uint)(value - new DateTime(1970, 1, 1)).TotalSeconds);
+    [MethodImpl((MethodImplOptions)256)]
+    public void WriteEpoch32(DateTime value) => Write((uint)(value - UnixEpoch).TotalSeconds);
 
-    /// <summary>Writes a 64bit linux epoch value.</summary>
+    /// <summary>Writes a 64bit linux epoch value (localtime).</summary>
+    /// <remarks>This will not write timezone informaton and the reader will assume local time!</remarks>
     /// <param name="value">The value to write.</param>
-    public void WriteEpoch64(DateTime value) => Write((ulong)(value - new DateTime(1970, 1, 1)).TotalSeconds);
+    [MethodImpl((MethodImplOptions)256)]
+    public void WriteEpoch64(DateTime value) => Write((ulong)(value - UnixEpoch).TotalSeconds);
 
     /// <summary>Writes the "new line" marking to the stream. This depends on the chosen <see cref="NewLineMode"/>.</summary>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int WriteLine() => Write(LineFeed);
 
     /// <summary>Writes the specified string followed by a "new line" marking to the stream. This depends on the chosen <see cref="NewLineMode"/>.</summary>
     /// <param name="text">Text to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int WriteLine(string text)
     {
         if (text is null) throw new ArgumentNullException(nameof(text));
@@ -385,6 +422,7 @@ public sealed class DataWriter
     /// <remarks>This does not use the writers <see cref="StringEncoding"/>, instead the original <paramref name="text"/> unicode data is written.</remarks>
     /// <param name="text">Text to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int WriteLine(IUnicode text)
     {
         if (text is null)
@@ -394,8 +432,18 @@ public sealed class DataWriter
         return Write(text.Concat(LineFeed));
     }
 
+    /// <summary>Writes a nullable Boolean value using a custom encoding.</summary>
+    /// <remarks>
+    /// The method encodes null as 0, <see langword="true"/> as 1, and <see langword="false"/> as -1. This encoding may be required for interoperability with
+    /// specific data formats.
+    /// </remarks>
+    /// <param name="value">The nullable Boolean value to write. If null, a default value is written; otherwise, the Boolean value is encoded.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WriteNullable(bool? value) => Write((sbyte)(value switch { null => -1, true => 1, false => 0 }));
+
     /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
     /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(byte[]? buffer)
     {
         if (buffer == null)
@@ -413,6 +461,7 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(float? value)
     {
         if (value is not float data)
@@ -430,6 +479,7 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(double? value)
     {
         if (value is not double data)
@@ -447,6 +497,7 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(decimal? value)
     {
         if (value is not decimal data)
@@ -464,6 +515,21 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(DateTime? value) => WritePrefixed(value?.Ticks);
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(TimeSpan? value) => WritePrefixed(value?.Ticks);
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(long? value)
     {
         if (value is not long value64) Write((byte)0);
@@ -474,6 +540,7 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(ulong? value)
     {
         if (value is not ulong value64) Write((byte)0);
@@ -484,6 +551,7 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(int? value)
     {
         if (value is not int value32) Write((byte)0);
@@ -494,6 +562,7 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(short? value)
     {
         if (value is not short value16) Write((byte)0);
@@ -504,6 +573,7 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(sbyte? value)
     {
         if (value is not sbyte value8) Write((byte)0);
@@ -514,6 +584,18 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(byte? value)
+    {
+        if (value is not byte value8) Write((byte)0);
+        else BitCoder32.Write8BitPrefixed(this, (byte)value8);
+    }
+
+    /// <summary>
+    /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..5 bytes and allows to write a null value.
+    /// </summary>
+    /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(uint? value)
     {
         if (value is not uint value32) Write((byte)0);
@@ -524,6 +606,7 @@ public sealed class DataWriter
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1 or 17 bytes and allows to write a null value.
     /// </summary>
     /// <param name="value">Value to write</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(Guid? value)
     {
         if (value is not Guid guid)
@@ -541,6 +624,7 @@ public sealed class DataWriter
     /// <param name="buffer">The buffer to write.</param>
     /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
     /// <param name="count">The number of bytes to be written to the current stream.</param>
+    [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(byte[] buffer, int offset, int count)
     {
         if (buffer == null)
@@ -555,6 +639,7 @@ public sealed class DataWriter
     /// <summary>Writes the specified string with length prefix directly to the stream.</summary>
     /// <param name="text">String to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int WritePrefixed(string? text)
     {
         if (text == null)
@@ -572,6 +657,7 @@ public sealed class DataWriter
     /// <remarks>This does not use the writers <see cref="StringEncoding"/>, instead the original <paramref name="text"/> unicode data is written.</remarks>
     /// <param name="text">String to write.</param>
     /// <returns>Number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int WritePrefixed(IUnicode text)
     {
         if (text == null)
@@ -596,6 +682,7 @@ public sealed class DataWriter
     /// </returns>
     /// <exception cref="NotSupportedException"></exception>
     /// <exception cref="Exception"></exception>
+    [MethodImpl((MethodImplOptions)256)]
     public int WriteString(string text, int byteCount = 0)
     {
         if (text is null) throw new ArgumentNullException(nameof(text));
@@ -664,8 +751,10 @@ public sealed class DataWriter
     /// <summary>Writes the specified <paramref name="text"/> zero terminated to the string.</summary>
     /// <param name="text">Text to write.</param>
     /// <returns>Returns the number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public int WriteZeroTerminated(string text)
     {
+        if (text is null) throw new ArgumentNullException(nameof(text));
         ZeroTerminationTest();
         return Write(text) + Write('\0');
     }
@@ -674,7 +763,13 @@ public sealed class DataWriter
     /// <remarks>This does not use the writers <see cref="StringEncoding"/>, instead the original <paramref name="text"/> unicode data is written.</remarks>
     /// <param name="text">Text to write.</param>
     /// <returns>Returns the number of bytes written.</returns>
-    public int WriteZeroTerminated(IUnicode text) => Write(text.Concat("\0"));
+    [MethodImpl((MethodImplOptions)256)]
+    public int WriteZeroTerminated(IUnicode text)
+    {
+        if (text is null) throw new ArgumentNullException(nameof(text));
+        ZeroTerminationTest();
+        return Write(text.Concat("\0"));
+    }
 
     #endregion Public Methods
 }
