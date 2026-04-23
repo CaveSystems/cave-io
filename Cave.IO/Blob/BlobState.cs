@@ -44,6 +44,7 @@ abstract class BlobState : IBlobState
             BlobPrimitiveType.String => typeof(string),
             BlobPrimitiveType.DateTime => typeof(DateTime),
             BlobPrimitiveType.TimeSpan => typeof(TimeSpan),
+            BlobPrimitiveType.DateTimeOffset => typeof(DateTimeOffset),
             BlobPrimitiveType.Decimal => typeof(decimal),
             BlobPrimitiveType.ByteArray => typeof(byte[]),
             _ => throw new NotSupportedException($"Unsupported primitive type code: {typeCode}")
@@ -73,6 +74,8 @@ abstract class BlobState : IBlobState
             Type t when t == typeof(string) => BlobPrimitiveType.String,
             Type t when t == typeof(DateTime) => BlobPrimitiveType.DateTime,
             Type t when t == typeof(TimeSpan) => BlobPrimitiveType.TimeSpan,
+            Type t when t == typeof(DateTimeOffset) => BlobPrimitiveType.DateTimeOffset,
+
             Type t when t == typeof(decimal) => BlobPrimitiveType.Decimal,
             Type t when t == typeof(byte[]) => BlobPrimitiveType.ByteArray,
 
@@ -82,9 +85,6 @@ abstract class BlobState : IBlobState
         };
         return (primitiveType != BlobPrimitiveType.Unsupported);
     }
-
-    /// <inheritdoc/>
-    public abstract void Close();
 
     #endregion Public Methods
 

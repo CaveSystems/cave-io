@@ -31,6 +31,9 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
     /// <summary>Gets the supported binary format version.</summary>
     internal int Version { get; } = 1;
 
+    /// <inheritdoc/>
+    public bool IsCompleted { get; private set; }
+
     #endregion Properties
 
     #region Public Constructors
@@ -44,23 +47,40 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
 
     #region Public Methods
 
-    /// <summary>Validates the stream footer.</summary>
-    /// <exception cref="InvalidDataException">Thrown if the end marker is invalid.</exception>
-    public override void Close()
+    /// <inheritdoc/>
+    public void Close() => Close(true);
+
+    /// <inheritdoc/>
+    public void Close(bool validateEndMark = true)
     {
-        var endMark = Reader.Read7BitEncodedUInt64();
-        if (endMark != ulong.MaxValue) throw new InvalidDataException("End mark not found!");
-        var end = Reader.ReadZeroTerminatedFixedLengthString(4);
-        if (end != "END") throw new InvalidDataException("Invalid binary format (missing END tag).");
+        if (validateEndMark)
+        {
+            if (!IsCompleted)
+            {
+                if (Read() != null)
+                {
+                    throw new InvalidOperationException("Stream was not read to end (got object instead of end marker)!");
+                }
+                IsCompleted = true;
+            }
+            var end = Reader.ReadZeroTerminatedFixedLengthString(4);
+            if (end != "END") throw new InvalidDataException("Invalid binary format (missing END tag).");
+        }
     }
 
     /// <summary>Reads the next object.</summary>
     /// <returns>The object, or <see langword="null"/>.</returns>
     public object? Read()
     {
-        var id = Reader.Read7BitEncodedUInt32();
+        if (IsCompleted) return null;
+        var id = Reader.Read7BitEncodedUInt64();
         if (id == 0) return null;
-        var bundle = ReadConverter(id);
+        if (id > uint.MaxValue)
+        {
+            IsCompleted = true;
+            return null;
+        }
+        var bundle = ReadConverter((uint)id);
         return bundle.Converter.ReadContent(this, bundle);
     }
 

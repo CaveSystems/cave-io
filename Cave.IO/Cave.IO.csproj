@@ -41,7 +41,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Cave.CleanCodeAnalyzer" Version="1.0.1" />
 		<PackageReference Include="Cave.Extensions" Version="4.0.9" />
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
 			<PrivateAssets>all</PrivateAssets>
@@ -51,9 +50,5 @@
 
 	<ItemGroup Condition="$(TargetFramework.StartsWith('netstandard1'))">
 		<PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.202" />
 	</ItemGroup>
 </Project>

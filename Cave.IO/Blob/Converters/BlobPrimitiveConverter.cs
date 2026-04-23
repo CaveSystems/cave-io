@@ -27,6 +27,7 @@ public sealed class BlobPrimitiveConverter : IBlobConverter
             || type == typeof(string)
             || type == typeof(DateTime)
             || type == typeof(TimeSpan)
+            || type == typeof(DateTimeOffset)
             || type == typeof(decimal)
             || type == typeof(byte[])
             || type.IsEnum;
@@ -62,6 +63,7 @@ public sealed class BlobPrimitiveConverter : IBlobConverter
             BlobPrimitiveType.DateTime => reader.ReadDateTime(),
             BlobPrimitiveType.TimeSpan => reader.ReadTimeSpan(),
             BlobPrimitiveType.ByteArray => reader.ReadBytes() ?? [],
+            BlobPrimitiveType.DateTimeOffset => new DateTimeOffset(reader.Read7BitEncodedInt64(), reader.ReadTimeSpan()),
 
             // enums (last allowed bucket)
             BlobPrimitiveType.Enum => EnumAsStrings ? Enum.Parse(bundle.Type, reader.ReadPrefixedString() ?? string.Empty) : Enum.ToObject(bundle.Type, reader.Read7BitEncodedUInt64()),
@@ -110,6 +112,13 @@ public sealed class BlobPrimitiveConverter : IBlobConverter
             case BlobPrimitiveType.DateTime: writer.Write((DateTime)instance); break;
             case BlobPrimitiveType.TimeSpan: writer.Write((TimeSpan)instance); break;
             case BlobPrimitiveType.ByteArray: writer.WritePrefixed((byte[])instance); break;
+            case BlobPrimitiveType.DateTimeOffset:
+            {
+                var dto = (DateTimeOffset)instance;
+                writer.Write7BitEncoded64(dto.Ticks);
+                writer.Write(dto.Offset);
+                break;
+            }
 
             // enums
             case BlobPrimitiveType.Enum:
@@ -138,8 +147,8 @@ public sealed class BlobPrimitiveConverter : IBlobConverter
         bundle.State = state.GetPrimitiveType(elementType, out var primitiveType) ? primitiveType : throw new InvalidOperationException($"Type '{bundle.Type}' is not a supported primitive type!");
     }
 
-    /// <summary>When true, enums are serialized and deserialized as their name strings. When false, enums are handled by their numeric value.</summary>
-    public bool EnumAsStrings { get; set; }
+    /// <summary>Gets or sets a value indicating whether enums are serialized and deserialized as their name strings. When false, enums are handled by their numeric value.</summary>
+    public static bool EnumAsStrings { get; set; }
 
     #endregion Public Methods
 }

@@ -11,6 +11,12 @@ public interface IBlobWriterState : IBlobState
 {
     #region Public Methods
 
+    /// <summary>Closes the resource and releases any associated resources.</summary>
+    /// <remarks>
+    /// Call this method when the resource is no longer needed to ensure proper cleanup. After calling this method, further operations on the resource may throw exceptions.
+    /// </remarks>
+    void Close();
+
     /// <summary>Writes the specified value to the binary stream.</summary>
     /// <param name="instance">The value to serialize, or <see langword="null"/> to write a null reference.</param>
     void Write(object? instance);

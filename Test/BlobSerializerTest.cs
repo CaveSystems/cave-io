@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using Cave;
@@ -108,9 +109,10 @@ public class BlobSerializerTest
             Assert.AreEqual(test3, result3);
             Assert.AreEqual(test4, result4);
             Assert.AreEqual(test5, result5);
+            Assert.AreEqual(false, reader.IsCompleted);
         }
-
         writer.Close();
+        reader.Read();
         reader.Close();
         sw.Stop();
 
@@ -153,6 +155,8 @@ public class BlobSerializerTest
                 var test = TestStruct.Create(i);
                 Assert.AreEqual(test, read);
             }
+            Assert.AreEqual(null, reader.Read());
+            Assert.AreEqual(true, reader.IsCompleted);
             reader.Close();
         }
     }
@@ -183,7 +187,7 @@ public class BlobSerializerTest
     }
 
     [Test]
-    public void TestClassFields()
+    public void TestSettingsClassFields()
     {
         var serializer = new BlobSerializer();
         for (var i = 0; i < 1000; i++)
@@ -204,7 +208,7 @@ public class BlobSerializerTest
     }
 
     [Test]
-    public void TestClassProperties()
+    public void TestSettingsClassProperties()
     {
         var serializer = new BlobSerializer();
         for (var i = 0; i < 1000; i++)
@@ -236,7 +240,7 @@ public class BlobSerializerTest
     }
 
     [Test]
-    public void TestStructFields()
+    public void TestSettingsStructFields()
     {
         for (var i = 0; i < 1000; i++)
         {
@@ -251,7 +255,7 @@ public class BlobSerializerTest
     }
 
     [Test]
-    public void TestStructProperties()
+    public void TestSettingsStructProperties()
     {
         for (var i = 0; i < 1000; i++)
         {
@@ -265,5 +269,55 @@ public class BlobSerializerTest
         }
     }
 
+    [Test]
+    public void TestStructFields()
+    {
+        for (var i = 0; i < 1000; i++)
+        {
+            var serializer = new BlobSerializer();
+            var stream = new MemoryStream();
+            var test = TestStruct.Create(i);
+            serializer.Serialize(stream, test);
+            stream.Position = 0;
+            serializer.Deserialize<TestStruct>(stream, out var roundtrip);
+            Assert.AreEqual(test, roundtrip);
+        }
+    }
+
+    [Test]
+    public void TestStructNullableFields()
+    {
+        for (var i = 0; i < 1000; i++)
+        {
+            var serializer = new BlobSerializer();
+            var stream = new MemoryStream();
+            var test = TestStructNullables.Create(i);
+            serializer.Serialize(stream, test);
+            stream.Position = 0;
+            serializer.Deserialize<TestStructNullables>(stream, out var roundtrip);
+            Assert.AreEqual(test, roundtrip);
+        }
+    }
+
+    [Test]
+    public void TestRecordReflection()
+    {
+        var stream = new FifoStream();
+        var serializer = new BlobSerializer();
+        var writer = serializer.StartWriting(stream);
+        var reader = serializer.StartReading(stream);
+        for (var i = 1000; i >= 0; i--)
+        {
+            var test = TestClass.Create(i);
+            writer.Write(test);
+            reader.Read<TestClass>(out var roundtrip);
+            Assert.AreEqual(0, stream.Available);
+            Assert.AreEqual(test, roundtrip);
+            Assert.AreEqual(false, reader.IsCompleted);
+        }
+        writer.Close();
+        reader.Close();
+        
+    }
     #endregion Public Methods
 }

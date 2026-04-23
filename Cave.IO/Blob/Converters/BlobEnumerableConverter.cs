@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using Cave.Collections;
 
@@ -18,8 +17,15 @@ public class BlobEnumerableConverter : IBlobConverter
     /// <param name="elementType">Detected element type.</param>
     /// <param name="constructor">Detected constructor.</param>
     /// <returns>True if a suitable constructor is found; otherwise, false.</returns>
-    static bool GetElementTypeAndConstructor(Type type, [MaybeNullWhen(false)] out Type elementType, [MaybeNullWhen(false)] out ConstructorInfo constructor)
+    static bool GetElementTypeAndConstructor(Type type, [MaybeNullWhen(false)] out Type elementType, out ConstructorInfo? constructor)
     {
+        if (type.IsArray)
+        {
+            elementType = type.GetElementType();
+            constructor = null;
+            if (elementType != null) return true;
+        }
+
         foreach (var ctor in type.GetConstructors())
         {
             var parameters = ctor.GetParameters();
@@ -37,17 +43,16 @@ public class BlobEnumerableConverter : IBlobConverter
                 return true;
             }
 
-            // IEnumerable<T> (or a type that implements it)
-            var enumerableInterface = paramType.GetInterfaces()
-                .FirstOrDefault(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-
-            if (enumerableInterface != null)
+            // IEnumerable<T> or IList<T>
+            if (paramType.IsGenericType)
             {
-                elementType = enumerableInterface.GetGenericArguments()[0] ?? throw new InvalidOperationException("Parameter of enumerable type has no element type.");
-                constructor = ctor;
-                return true;
+                var genericDef = paramType.GetGenericTypeDefinition();
+                if (genericDef == typeof(IEnumerable<>) || genericDef == typeof(IList<>))
+                {
+                    elementType = paramType.GetGenericArguments()[0];
+                    constructor = ctor;
+                    return true;
+                }
             }
         }
 
@@ -75,7 +80,7 @@ public class BlobEnumerableConverter : IBlobConverter
             var item = myState.ElementConverterBundle.Converter.ReadContent(state, myState.ElementConverterBundle);
             array.SetValue(item, i);
         }
-        return myState.AcceptArray ? array : myState.Constructor.Invoke([array]);
+        return myState.AcceptArray ? array : myState.Constructor?.Invoke([array]) ?? throw new InvalidOperationException($"Type {bundle.Type.ToShortName()} does not accept an array and does not have a suitable constructor for deserialization!");
     }
 
     /// <inheritdoc/>
@@ -86,7 +91,7 @@ public class BlobEnumerableConverter : IBlobConverter
             throw new InvalidOperationException($"Type {bundle.Type.FullName} does not have a suitable constructor for deserialization!");
         }
         var elementBundle = state.ReadConverter();
-        if (!elementTypePresent.IsAssignableFrom(elementBundle.Type)) throw new InvalidOperationException($"Element type in stream {elementBundle.Type.Name} is not compatible with the element type of the collection {elementTypePresent}.");
+        if (!elementTypePresent.IsAssignableFrom(elementBundle.Type)) throw new InvalidOperationException($"Element type in stream {elementBundle.Type.ToShortName()} is not compatible with the element type of the collection {elementTypePresent}.");
         bundle.State = new BlobEnumerableConverterState(bundle.Type, constructor, elementBundle);
     }
 

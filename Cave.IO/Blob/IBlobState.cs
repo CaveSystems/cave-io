@@ -45,13 +45,6 @@ public interface IBlobState
     /// </returns>
     bool GetPrimitiveType(Type type, out BlobPrimitiveType primitiveType);
 
-    /// <summary>
-    /// Closes the resource and releases any associated resources.
-    /// </summary>
-    /// <remarks>Call this method when the resource is no longer needed to ensure proper cleanup. After
-    /// calling this method, further operations on the resource may throw exceptions.</remarks>
-    void Close();
-
     #endregion Public Methods
 
     #region Properties

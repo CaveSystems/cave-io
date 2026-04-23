@@ -4,12 +4,8 @@ namespace Cave.IO.Blob;
 
 /// <summary>Represents read state for blob deserialization.</summary>
 /// <remarks>
-/// <para>
-/// <see cref="IBlobReaderState"/> extends <see cref="IBlobState"/> with reader-specific members used to deserialize values from a binary blob stream.
-/// </para>
-/// <para>
-/// Implementations are usually created by <see cref="BlobSerializer"/> and passed to <see cref="IBlobConverter"/> instances during deserialization.
-/// </para>
+/// <para><see cref="IBlobReaderState"/> extends <see cref="IBlobState"/> with reader-specific members used to deserialize values from a binary blob stream.</para>
+/// <para>Implementations are usually created by <see cref="BlobSerializer"/> and passed to <see cref="IBlobConverter"/> instances during deserialization.</para>
 /// </remarks>
 public interface IBlobReaderState : IBlobState
 {
@@ -30,17 +26,27 @@ public interface IBlobReaderState : IBlobState
     /// <exception cref="InvalidOperationException">Thrown if the encoded type cannot be resolved or generic type metadata is invalid.</exception>
     Type ReadTypeDefitition();
 
-    #endregion Public Methods
+    /// <summary>Closes the reader and validates the end marker.</summary>
+    void Close();
 
-    #region Properties
-
-    /// <summary>Gets the <see cref="DataReader"/> used for binary input.</summary>
-    DataReader Reader { get; }
-
-    #endregion Properties
+    /// <summary>Closes the reader and optionally validates the end marker.</summary>
+    /// <param name="validateEndMark">If <see langword="true"/>, validates the end marker.</param>
+    void Close(bool validateEndMark);
 
     /// <summary>Reads or resolves the next converter bundle from the binary stream.</summary>
     /// <param name="knownId">An optional converter identifier. If <see langword="null"/>, the identifier is read from the stream.</param>
     /// <returns>The resolved <see cref="BlobConverterBundle"/>.</returns>
     BlobConverterBundle ReadConverter(uint? knownId = null);
+
+    #endregion Public Methods
+
+    #region Properties
+
+    /// <summary>Gets a value indicating whether the end of the binary stream has been reached.</summary>
+    bool IsCompleted { get; }
+
+    /// <summary>Gets the <see cref="DataReader"/> used for binary input.</summary>
+    DataReader Reader { get; }
+
+    #endregion Properties
 }

@@ -200,7 +200,7 @@ public class BlobDictionaryConverter : IBlobConverter
             foreach (DictionaryEntry entry in dict)
             {
                 myState.KeyBundle.Converter.WriteContent(state, myState.KeyBundle, entry.Key);
-                if (!myState.ValueCanBeNull)
+                if (myState.ValueCanBeNull)
                 {
                     var isNull = entry.Value == null;
                     writer.Write(isNull);
@@ -219,7 +219,7 @@ public class BlobDictionaryConverter : IBlobConverter
                 var key = myState.KeyProperty.GetValue(entry);
                 var value = myState.ValueProperty.GetValue(entry);
                 myState.KeyBundle.Converter.WriteContent(state, myState.KeyBundle, key!);
-                if (!myState.ValueCanBeNull)
+                if (myState.ValueCanBeNull)
                 {
                     var isNull = value == null;
                     writer.Write(isNull);

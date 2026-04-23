@@ -1,5 +1,4 @@
-﻿
-namespace Cave.IO;
+﻿namespace Cave.IO;
 
 partial class RingBuffer<TValue>
 {

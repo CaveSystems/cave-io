@@ -48,22 +48,9 @@ public class BlobStringParseConverter : IBlobConverter
     public virtual object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
     {
         var reader = state.Reader;
-        var text = reader.ReadPrefixedString();
+        var text = reader.ReadPrefixedString() ?? throw new InvalidOperationException("Expected a prefixed string for parsing.");
         if (bundle.State is not BlobStringParseConverterState myState) throw new InvalidOperationException("Invalid state for string parse converter.");
-        var useCulture = myState.UseCulture;
-        if (myState.Constructor is not null)
-        {
-            return myState.Constructor.Invoke([text]) ?? throw new InvalidOperationException("Constructor returned null.");
-        }
-        if (myState.ParseMethod!.IsStatic)
-        {
-            return myState.ParseMethod.Invoke(null, useCulture ? [text, CultureInfo.InvariantCulture] : [text]) ?? throw new InvalidOperationException("Parse method returned null.");
-        }
-        else
-        {
-            var instance = Activator.CreateInstance(bundle.Type);
-            return myState.ParseMethod.Invoke(instance, useCulture ? [text, CultureInfo.InvariantCulture] : [text]) ?? throw new InvalidOperationException("Parse method returned null.");
-        }
+        return myState.Parse(text);
     }
 
     /// <inheritdoc/>
@@ -89,6 +76,16 @@ public class BlobStringParseConverter : IBlobConverter
             _ => instance.ToString(),
         };
         writer.WritePrefixed(text);
+
+        if (myState.RoundtripTest)
+        {
+            var roundtrip = myState.Parse(text!);
+            if (!Equals(roundtrip, instance))
+            {
+                throw new InvalidOperationException($"Roundtrip test failed. Original: {instance}, Roundtrip: {roundtrip}");
+            }
+            myState.RoundtripTest = false;
+        }
     }
 
     /// <inheritdoc/>

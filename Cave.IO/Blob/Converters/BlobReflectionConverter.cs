@@ -27,7 +27,14 @@ public class BlobReflectionConverter : IBlobConverter
     /// <summary>Checks if the converter can handle the given <paramref name="type"/>.</summary>
     /// <param name="type">Type to check.</param>
     /// <returns><c>true</c> if serializable members exist; otherwise <c>false</c>.</returns>
-    public virtual bool CanHandle(Type type) => type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any() || type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(p => p.CanRead && p.CanWrite);
+    public virtual bool CanHandle(Type type) =>
+        (
+        type.IsValueType ||
+        type.GetConstructor([]) != null
+        ) && (
+        type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any() ||
+        type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(p => p.CanRead && p.CanWrite)
+        );
 
     /// <inheritdoc/>
     /// <summary>Reads instance content from <paramref name="state"/> using <paramref name="bundle"/>.</summary>
@@ -159,18 +166,33 @@ public class BlobReflectionConverter : IBlobConverter
         var currentIndex = 0;
         foreach (var field in myState.Fields)
         {
-            writer.WritePrefixed(field.Name);
-            var fieldBundle = state.WriteConverter(field.FieldType);
-            myState.Members[currentIndex++] = new(field, field.SetValue, fieldBundle);
+            try
+            {
+                writer.WritePrefixed(field.Name);
+                var fieldBundle = state.WriteConverter(field.FieldType);
+                myState.Members[currentIndex++] = new(field, field.SetValue, fieldBundle);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error initialize {field.FieldType.ToShortName()} {field.Name} at type {bundle.Type.ToShortName()}.", ex);
+            }
         }
         foreach (var property in myState.Properties)
         {
-            writer.WritePrefixed(property.Name);
-            var propertyBundle = state.WriteConverter(property.PropertyType);
-            myState.Members[currentIndex++] = new(property, property.SetValue, propertyBundle);
+            try
+            {
+                writer.WritePrefixed(property.Name);
+                var propertyBundle = state.WriteConverter(property.PropertyType);
+                myState.Members[currentIndex++] = new(property, property.SetValue, propertyBundle);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error initialize {property.PropertyType.ToShortName()} {property.Name} at type {bundle.Type.ToShortName()}.", ex);
+            }
         }
         bundle.State = myState;
         state.Logger?.Debug($"BlobReflectionConverter {bundle} initialized with {myState.Fields.Length} fields and {myState.Properties.Length} properties.");
+        return;
     }
 
     #endregion Public Methods

@@ -65,4 +65,7 @@ public enum BlobPrimitiveType : uint
 
     /// <summary>Represents an enumeration value.</summary>
     Enum,
+
+    /// <summary>Represents a <see cref="DateTimeOffset"/> value, which includes both a <see cref="DateTime"/> and an associated offset from UTC.</summary>
+    DateTimeOffset,
 }
