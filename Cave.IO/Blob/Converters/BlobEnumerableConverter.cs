@@ -88,10 +88,10 @@ public class BlobEnumerableConverter : IBlobConverter
     {
         if (!GetElementTypeAndConstructor(bundle.Type, out var elementTypePresent, out var constructor))
         {
-            throw new InvalidOperationException($"Type {bundle.Type.FullName} does not have a suitable constructor for deserialization!");
+            throw new InvalidOperationException($"Type {bundle.Type.ToShortName()} does not have a suitable constructor for deserialization!");
         }
         var elementBundle = state.ReadConverter();
-        if (!elementTypePresent.IsAssignableFrom(elementBundle.Type)) throw new InvalidOperationException($"Element type in stream {elementBundle.Type.ToShortName()} is not compatible with the element type of the collection {elementTypePresent}.");
+        if (!elementTypePresent.IsAssignableFrom(elementBundle.Type)) throw new InvalidOperationException($"Element type in stream {elementBundle.Type.ToShortName()} is not compatible with the element type of the collection {elementTypePresent.ToShortName()}.");
         bundle.State = new BlobEnumerableConverterState(bundle.Type, constructor, elementBundle);
     }
 

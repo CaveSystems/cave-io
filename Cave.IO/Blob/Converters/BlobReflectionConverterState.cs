@@ -69,13 +69,11 @@ internal sealed class BlobReflectionConverterState
             Fields = type.GetFields(bindingFlags);
         }
         ElementTypes = Fields.Select(f => f.FieldType).Concat(Properties.Select(p => p.PropertyType)).Distinct().AsReadOnly();
-        if (ElementTypes.Count == 0) throw new InvalidOperationException($"Type {type.FullName} does not have any fields or properties to serialize!");
 
         if (count <= 0)
         {
             count = (Fields.Length + Properties.Length);
         }
-        if (count == 0) throw new InvalidOperationException($"Type {type} does not define any members of type {Flags}!");
         Members = new BlobReflectionConverterMember[count];
         MemberCount = (uint)count;
     }

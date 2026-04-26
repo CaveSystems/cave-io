@@ -471,10 +471,6 @@ public sealed class Arguments : IEquatable<Arguments>
         return [.. result];
     }
 
-    /// <summary>Gets a string containing the <see cref="Command"/>, <see cref="Parameters"/> and <see cref="Options"/>.</summary>
-    /// <returns>A string containing the <see cref="Arguments"/> in the form "Command [Parameter1 [Parameter2 ..]] [-Option1 [-Option2 ..]]".</returns>
-    public override string ToString() => ToString(true);
-
     /// <summary>Gets a string containing the <see cref="Command"/> (optional), <see cref="Parameters"/> and <see cref="Options"/>.</summary>
     /// <param name="includeCmd">Set to true to include the optional <see cref="Command"/> part.</param>
     /// <returns>Returns a string containing the <see cref="Arguments"/> in the form "Command [Parameter1 [Parameter2 ..]] [-Option1 [-Option2 ..]]".</returns>
@@ -520,6 +516,10 @@ public sealed class Arguments : IEquatable<Arguments>
 
         return result.ToString();
     }
+
+    /// <summary>Gets a string containing the <see cref="Command"/>, <see cref="Parameters"/> and <see cref="Options"/>.</summary>
+    /// <returns>A string containing the <see cref="Arguments"/> in the form "Command [Parameter1 [Parameter2 ..]] [-Option1 [-Option2 ..]]".</returns>
+    public override string ToString() => ToString(true);
 
     #endregion Public Methods
 }

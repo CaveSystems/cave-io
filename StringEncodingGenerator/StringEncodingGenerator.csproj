@@ -7,17 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cave.CleanCodeAnalyzer" Version="1.0.1" />
-    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
-    <PackageReference Include="System.Text.Encoding" Version="4.3.0" />
+    <PackageReference Include="Cave.CleanCodeAnalyzer" />
+    <PackageReference Include="System.Private.Uri" Condition="'$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="System.Text.Encoding" Condition="'$(TargetFramework)' == 'net48'" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Cave.IO\Cave.IO.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.202" />
   </ItemGroup>
 
 </Project>

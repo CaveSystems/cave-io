@@ -4,6 +4,6 @@ enum BlobDictionaryConverterMode
 {
     Undefined = 0,
     UseArray,
-    UseDictionary,
-    UseEnumerable,
+    UseIDictionary,
+    UseIEnumerable,
 }

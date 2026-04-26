@@ -1,0 +1,40 @@
+<Project>
+	<!-- All common packages -->
+	<ItemGroup>
+		<PackageVersion Include="Cave.Extensions" Version="4.0.10" />
+		<PackageVersion Include="Cave.CleanCodeAnalyzer" Version="1.0.1" />
+		<PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.203" />
+		<PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
+		<PackageVersion Include="System.ComponentModel.Primitives" Version="4.3.0" />
+		<PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageVersion>
+	</ItemGroup>
+
+	<!-- net20 + net35 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net20' OR '$(TargetFramework)' == 'net35'">
+		<PackageVersion Include="NUnit" Version="2.6.4" />
+		<PackageVersion Include="NUnitTestAdapter" Version="2.3.0" />
+	</ItemGroup>
+
+	<!-- net4x -->
+	<ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').StartsWith('net4'))">
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.3.3" />
+		<PackageVersion Include="NUnit" Version="3.14.0" />
+		<PackageVersion Include="NUnit3TestAdapter" Version="4.4.2" />
+		<PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.3.3" />
+		<PackageVersion Include="System.Private.Uri" Version="4.3.2" />
+		<PackageVersion Include="System.Text.Encoding" Version="4.3.0" />
+	</ItemGroup>
+
+	<!-- > net6.0 (net7, net8, net9, …) -->
+	<ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').StartsWith('net')) AND $([System.String]::Copy('$(TargetFramework)').EndsWith('.0'))">
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+		<PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.10.0" />
+		<PackageVersion Include="NUnit" Version="3.14.0" />
+		<PackageVersion Include="NUnit3TestAdapter" Version="4.5.0" />
+		<PackageVersion Include="System.Text.Encoding.CodePages" Version="10.0.7" />
+	</ItemGroup>
+
+</Project>

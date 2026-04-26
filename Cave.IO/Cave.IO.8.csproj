@@ -32,17 +32,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup Condition="$(TargetFramework.StartsWith('netstandard1'))">
-		<PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\..\cave-extensions\Cave.Extensions\Cave.Extensions.8.csproj" />
 	</ItemGroup>
 </Project>

@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel.Design;
 using Cave.Logging;
 
 namespace Cave.IO.Blob;

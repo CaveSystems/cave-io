@@ -8,13 +8,13 @@ sealed class BlobDictionaryConverterState
 {
     #region Fields
 
-    readonly internal ConstructorInfo Constructor;
+    internal readonly ConstructorInfo Constructor;
     internal readonly BlobConverterBundle KeyBundle;
-    readonly internal PropertyInfo KeyProperty;
-    readonly internal Type KeyValuePairType;
-    readonly internal BlobDictionaryConverterMode Mode;
+    internal readonly PropertyInfo KeyProperty;
+    internal readonly Type KeyValuePairType;
+    internal readonly BlobDictionaryConverterMode Mode;
     internal readonly BlobConverterBundle ValueBundle;
-    readonly internal PropertyInfo ValueProperty;
+    internal readonly PropertyInfo ValueProperty;
     internal MethodInfo? DictionaryAddMethod;
     internal Type? DictionaryType;
     internal bool ValueCanBeNull;
@@ -33,7 +33,7 @@ sealed class BlobDictionaryConverterState
         KeyValuePairType = typeof(KeyValuePair<,>).MakeGenericType(KeyBundle.Type, ValueBundle.Type);
         KeyProperty = KeyValuePairType.GetProperty("Key")!;
         ValueProperty = KeyValuePairType.GetProperty("Value")!;
-        ValueCanBeNull = !valueBundle.Type.IsValueType || Nullable.GetUnderlyingType(valueBundle.Type) != null;
+        ValueCanBeNull = !valueBundle.Type.IsValueType;
     }
 
     #endregion Public Constructors

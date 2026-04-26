@@ -1,35 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFrameworks>net20;net35</TargetFrameworks>
-        <IsPackable>false</IsPackable>
-        <ApplicationIcon />
-        <OutputType>Exe</OutputType>
-        <StartupObject>Test.Program</StartupObject>
-        <RootNamespace>Test</RootNamespace>
-        <AssemblyName>Test</AssemblyName>
-        <WarningLevel>0</WarningLevel>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net20;net35</TargetFrameworks>
+		<IsPackable>false</IsPackable>
+		<ApplicationIcon />
+		<OutputType>Exe</OutputType>
+		<StartupObject>Test.Program</StartupObject>
+		<RootNamespace>Test</RootNamespace>
+		<AssemblyName>Test</AssemblyName>
+		<WarningLevel>0</WarningLevel>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Cave.CleanCodeAnalyzer" Version="1.0.1" />
-        <PackageReference Include="NUnit" Version="2.6.4" />
-        <PackageReference Include="NUnitTestAdapter" Version="2.3.0" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Cave.IO\Cave.IO.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Cave.IO\Cave.IO.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Update="Microsoft.SourceLink.GitHub" Version="10.0.202" />
-    </ItemGroup>
-
+	<ItemGroup>
+		<PackageReference Include="Cave.CleanCodeAnalyzer" />
+		<PackageReference Include="Cave.Extensions" />
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" >
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnitTestAdapter" />
+	</ItemGroup>
 </Project>

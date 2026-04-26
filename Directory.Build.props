@@ -11,6 +11,9 @@
 		<DelaySign>false</DelaySign>
 		<SignAssembly>true</SignAssembly>
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<CheckEolTargetFramework>false</CheckEolTargetFramework>
+		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
 
 		<!-- Nullable -->
 		<nullable>enable</nullable>
@@ -53,27 +56,10 @@
 		<DebugSymbols>true</DebugSymbols>
 		<IncludeSymbols>true</IncludeSymbols>
 
-		<!-- Settings -->
-		<CheckEolTargetFramework>false</CheckEolTargetFramework>
-		<TargetLatestRuntimePatch>false</TargetLatestRuntimePatch>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<MSBuildProjectExtensionsPath>$(MSBuildProjectDirectory)/obj/$(MSBuildProjectName)</MSBuildProjectExtensionsPath>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Cave.CleanCodeAnalyzer" Version="1.0.1" >
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.203">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
 </Project>

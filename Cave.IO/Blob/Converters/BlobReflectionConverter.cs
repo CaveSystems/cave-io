@@ -24,9 +24,6 @@ public class BlobReflectionConverter : IBlobConverter
     #region Public Methods
 
     /// <inheritdoc/>
-    /// <summary>Checks if the converter can handle the given <paramref name="type"/>.</summary>
-    /// <param name="type">Type to check.</param>
-    /// <returns><c>true</c> if serializable members exist; otherwise <c>false</c>.</returns>
     public virtual bool CanHandle(Type type) =>
         (
         type.IsValueType ||
@@ -37,12 +34,6 @@ public class BlobReflectionConverter : IBlobConverter
         );
 
     /// <inheritdoc/>
-    /// <summary>Reads instance content from <paramref name="state"/> using <paramref name="bundle"/>.</summary>
-    /// <param name="state">Reader state.</param>
-    /// <param name="bundle">Converter bundle.</param>
-    /// <returns>Populated instance of the target type.</returns>
-    /// <exception cref="InvalidOperationException">Invalid bundle state or instance creation failure.</exception>
-    /// <exception cref="InvalidDataException">Malformed binary data.</exception>
     public virtual object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
     {
         var type = bundle.Type;

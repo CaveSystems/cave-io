@@ -41,14 +41,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Cave.Extensions" Version="4.0.9" />
-		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+		<PackageReference Include="Cave.Extensions"  />
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" >
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
 
-	<ItemGroup Condition="$(TargetFramework.StartsWith('netstandard1'))">
-		<PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0" />
-	</ItemGroup>
 </Project>

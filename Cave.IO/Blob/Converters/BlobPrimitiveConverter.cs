@@ -12,10 +12,6 @@ public sealed class BlobPrimitiveConverter : IBlobConverter
     #region Public Methods
 
     /// <inheritdoc/>
-    /// <param name="type">The type to check for handling capability.</param>
-    /// <returns>
-    /// True if the type is a primitive, string, DateTime, TimeSpan, decimal, byte array, or enum; otherwise false. Nullable types are unwrapped before checking.
-    /// </returns>
     public bool CanHandle(Type type)
     {
         if (Nullable.GetUnderlyingType(type) is Type underlying)
