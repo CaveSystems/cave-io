@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Cave.IO.Blob;
 
@@ -93,7 +95,7 @@ sealed class BlobWriterState : BlobState, IBlobWriterState
     /// <inheritdoc/>
     public void WriteTypeDefition(Type type)
     {
-        if (GetPrimitiveType(type, out var primitiveType))
+        if (BlobSerializer.GetPrimitiveType(type, out var primitiveType))
         {
             Writer.Write7BitEncoded32((uint)primitiveType);
             if (primitiveType == BlobPrimitiveType.Enum)
@@ -104,13 +106,7 @@ sealed class BlobWriterState : BlobState, IBlobWriterState
         }
         Logger?.Debug($"Write type definition for type {type.ToShortName()}");
         Writer.Write((byte)0);
-        Writer.WritePrefixed($"{type.Namespace}.{type.Name}");
-        var genericArgs = type.GetGenericArguments();
-        Writer.Write7BitEncoded32(genericArgs.Length);
-        foreach (var arg in genericArgs)
-        {
-            WriteTypeDefition(arg);
-        }
+        Writer.WritePrefixed(type.GetPortableTypeName());
     }
 
     #endregion Public Methods

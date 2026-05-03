@@ -7,15 +7,18 @@ using Cave;
 
 namespace Cave.IO.Blob.Converters;
 
-/// <summary>Holds the per-operation state for a single type handled by <see cref="BlobReflectionConverter"/>.</summary>
+/// <summary>Holds the per-type data for a single type handled by <see cref="BlobReflectionConverter"/>.</summary>
 /// <remarks>
-/// This state caches the reflected fields and properties, the converter flags used to select members, the element types encountered and the per-member
+/// This instance caches the reflected fields and properties, the converter flags used to select members, the element types encountered and the per-member
 /// converter bundles required for (de)serialization.
 /// </remarks>
 [DebuggerDisplay("{MemberCount} members")]
-internal sealed class BlobReflectionConverterState
+internal record BlobReflectionConverterData : BaseRecord
 {
     #region Fields
+
+    /// <summary>Read-only list of distinct element types used by this type.</summary>
+    internal readonly IList<Type> ElementTypes;
 
     /// <summary>Reflected fields for serialization/deserialization.</summary>
     internal readonly FieldInfo[] Fields = [];
@@ -23,23 +26,20 @@ internal sealed class BlobReflectionConverterState
     /// <summary>Effective <see cref="BlobConverterFlags"/> for member selection.</summary>
     internal readonly BlobConverterFlags Flags;
 
-    /// <summary>Total number of members (fields + properties).</summary>
-    internal readonly uint MemberCount;
-
-    /// <summary>Ordered list of per-member metadata.</summary>
-    internal readonly IList<BlobReflectionConverterMember> Members = [];
+    /// <summary>Total number of members used (fields + properties).</summary>
+    internal uint MemberCount;
 
     /// <summary>Reflected properties for serialization/deserialization.</summary>
     internal readonly PropertyInfo[] Properties = [];
+
+    /// <summary>Ordered list of per-member metadata.</summary>
+    internal IList<BlobReflectionConverterMember> Members = [];
 
     #endregion Fields
 
     #region Public Constructors
 
-    /// <summary>Read-only list of distinct element types used by this type.</summary>
-    internal readonly IList<Type> ElementTypes;
-
-    /// <summary>Initializes a new <see cref="BlobReflectionConverterState"/> for the given <paramref name="type"/>.</summary>
+    /// <summary>Initializes a new <see cref="BlobReflectionConverterData"/> for the given <paramref name="type"/>.</summary>
     /// <param name="type">CLR type for this state.</param>
     /// <param name="count">
     /// Optional expected member count. If zero, derived from fields/properties. Passing a specific count can be used to reserve a different number of member slots.
@@ -47,7 +47,7 @@ internal sealed class BlobReflectionConverterState
     /// <exception cref="InvalidOperationException">
     /// Thrown when the type defines no serializable fields or properties according to the resolved flags, or when the resolved element type list is empty.
     /// </exception>
-    public BlobReflectionConverterState(Type type, int count = 0)
+    public BlobReflectionConverterData(Type type, int count = 0)
     {
         var flags = Flags;
         type.GetCustomAttributes(true).OfType<BlobConverterAttribute>().ForEach(a => flags |= a.Source);
@@ -74,7 +74,6 @@ internal sealed class BlobReflectionConverterState
         {
             count = (Fields.Length + Properties.Length);
         }
-        Members = new BlobReflectionConverterMember[count];
         MemberCount = (uint)count;
     }
 

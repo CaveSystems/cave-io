@@ -4,113 +4,31 @@ namespace Cave.IO;
 
 /// <summary>Provides an alternate <see cref="BitConverter"/> class providing additional functionality.</summary>
 /// <remarks>Use <see cref="LittleEndian.Converter"/> for an instance.</remarks>
+[Obsolete("Use LittleEndian or BigEndian static classes (performance)")]
 public class BitConverterLE : BitConverterBase
 {
     #region Public Methods
 
-    /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
-    /// <param name="value">The value.</param>
-    /// <returns>The value as encoded byte array.</returns>
-    public override byte[] GetBytes(ushort value) => [(byte)(value & 0xFF), (byte)(value >> 8)];
+    /// <inheritdoc/>
+    public override byte[] GetBytes(ushort value) => LittleEndian.GetBytes(value);
 
-    /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
-    /// <param name="value">The value.</param>
-    /// <returns>The value as encoded byte array.</returns>
-    public override byte[] GetBytes(uint value)
-    {
-        var result = new byte[4];
-        for (var i = 0; i < 4; i++)
-        {
-            result[i] = (byte)(value & 0xFF);
-            value >>= 8;
-        }
+    /// <inheritdoc/>
+    public override byte[] GetBytes(uint value) => LittleEndian.GetBytes(value);
 
-        return result;
-    }
+    /// <inheritdoc/>
+    public override byte[] GetBytes(ulong value) => LittleEndian.GetBytes(value);
 
-    /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
-    /// <param name="value">The value.</param>
-    /// <returns>The value as encoded byte array.</returns>
-    public override byte[] GetBytes(ulong value)
-    {
-        var result = new byte[8];
-        for (var i = 0; i < 8; i++)
-        {
-            result[i] = (byte)(value & 0xFF);
-            value >>= 8;
-        }
+    /// <inheritdoc/>
+    public override byte[] GetBytes(decimal value) => LittleEndian.GetBytes(value);   
 
-        return result;
-    }
+    /// <inheritdoc/>
+    public override ushort ToUInt16(byte[] data, int index) => LittleEndian.ToUInt16(data, index);
 
-    /// <summary>Returns a value converted from the specified data at a specified index.</summary>
-    /// <param name="data">The data as byte array.</param>
-    /// <param name="index">The index.</param>
-    /// <returns>The converted value.</returns>
-    /// <exception cref="ArgumentNullException">data is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">out of range.</exception>
-    public override ushort ToUInt16(byte[] data, int index)
-    {
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
+    /// <inheritdoc/>
+    public override uint ToUInt32(byte[] data, int index) => LittleEndian.ToUInt32(data, index);
 
-        if ((index < 0) || (index >= (data.Length - 1)))
-        {
-            throw new ArgumentOutOfRangeException(nameof(index));
-        }
-
-        return unchecked((ushort)(data[index] + (data[index + 1] * 256)));
-    }
-
-    /// <summary>Returns a value converted from the specified data at a specified index.</summary>
-    /// <param name="data">The data as byte array.</param>
-    /// <param name="index">The index.</param>
-    /// <returns>The converted value.</returns>
-    /// <exception cref="ArgumentNullException">data is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">out of range.</exception>
-    public override uint ToUInt32(byte[] data, int index)
-    {
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
-
-        uint result = data[index];
-        uint multiplier = 1;
-        for (var i = 1; i < 4; i++)
-        {
-            multiplier *= 256;
-            result += data[index + i] * multiplier;
-        }
-
-        return result;
-    }
-
-    /// <summary>Returns a value converted from the specified data at a specified index.</summary>
-    /// <param name="data">The data as byte array.</param>
-    /// <param name="index">The index.</param>
-    /// <returns>The converted value.</returns>
-    /// <exception cref="ArgumentNullException">data is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">out of range.</exception>
-    public override ulong ToUInt64(byte[] data, int index)
-    {
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
-
-        ulong result = data[index];
-        ulong multiplier = 1;
-        for (var i = 1; i < 8; i++)
-        {
-            multiplier *= 256;
-            result += data[index + i] * multiplier;
-        }
-
-        return result;
-    }
+    /// <inheritdoc/>
+    public override ulong ToUInt64(byte[] data, int index) => LittleEndian.ToUInt64(data, index);
 
     #endregion Public Methods
 }

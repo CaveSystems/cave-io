@@ -2,8 +2,6 @@
 #define ALTERNATE_CODE
 #endif
 
-using NUnit.Framework;
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -11,6 +9,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text;
+using Cave.IO;
+using Cave.IO.Blob.Converters;
+using NUnit.Framework;
 using Tests.Cave.IO;
 using Tests.Cave.IO.IniFile;
 

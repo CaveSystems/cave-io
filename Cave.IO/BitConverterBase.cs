@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Cave.IO;
 
 /// <summary>Provides a base class for bit converters.</summary>
 /// <seealso cref="IBitConverter"/>
+[Obsolete("Use LittleEndian or BigEndian static classes (performance)")]
 public abstract class BitConverterBase : IBitConverter
 {
     #region Public Methods
@@ -14,24 +14,16 @@ public abstract class BitConverterBase : IBitConverter
     /// <returns>The value as encoded byte array.</returns>
     public byte[] Get7BitEncodedBytes(ulong value)
     {
+        var buffer = new byte[10];
         var index = 0;
-        var result = new byte[10];
-        var b = (byte)(value % 128);
-        do
+        while (value >= 0x80)
         {
-            value /= 128;
-            if (value != 0)
-            {
-                b |= 0x80;
-            }
-
-            result[index++] = b;
-            b = (byte)(value % 128);
+            buffer[index++] = (byte)((value & 0x7F) | 0x80);
+            value >>= 7;
         }
-        while (value != 0);
 
-        Array.Resize(ref result, index);
-        return result;
+        buffer[index++] = (byte)value;
+        return buffer[..index];
     }
 
     /// <summary>Gets the bytes of a 7 bit encoded integer.</summary>
@@ -92,17 +84,7 @@ public abstract class BitConverterBase : IBitConverter
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value.</param>
     /// <returns>The value as encoded byte array.</returns>
-    public byte[] GetBytes(decimal value)
-    {
-        var array = decimal.GetBits(value);
-        var result = new List<byte>(16);
-        foreach (var i in array)
-        {
-            result.AddRange(GetBytes(i));
-        }
-
-        return [.. result];
-    }
+    public abstract byte[] GetBytes(decimal value);
 
     /// <summary>Retrieves the specified value as byte array with the specified endiantype.</summary>
     /// <param name="value">The value to convert.</param>
@@ -123,29 +105,13 @@ public abstract class BitConverterBase : IBitConverter
     /// <param name="data">The data as byte array.</param>
     /// <param name="index">The index.</param>
     /// <returns>The converted value.</returns>
-    public bool ToBoolean(byte[] data, int index)
-    {
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
-
-        return data[index] != 0;
-    }
+    public bool ToBoolean(byte[] data, int index) => data[index] != 0;
 
     /// <summary>Returns a value converted from the specified data at a specified index.</summary>
     /// <param name="data">The data as byte array.</param>
     /// <param name="index">The index.</param>
     /// <returns>The converted value.</returns>
-    public byte ToByte(byte[] data, int index)
-    {
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
-
-        return data[index];
-    }
+    public byte ToByte(byte[] data, int index) => data[index];
 
     /// <summary>Returns a value converted from the specified data at a specified index.</summary>
     /// <param name="data">The data as byte array.</param>
@@ -159,18 +125,14 @@ public abstract class BitConverterBase : IBitConverter
     /// <returns>The converted value.</returns>
     public decimal ToDecimal(byte[] data, int index)
     {
-        if (data == null)
+        unchecked
         {
-            throw new ArgumentNullException(nameof(data));
+            var lo = (int)ToUInt32(data, index);
+            var mid = (int)ToUInt32(data, index + 4);
+            var hi = (int)ToUInt32(data, index + 8);
+            var flags = (int)ToUInt32(data, index + 12);
+            return new decimal([lo, mid, hi, flags]);
         }
-
-        var array = new int[4];
-        for (var i = 0; i < 4; i++)
-        {
-            array[i] = ToInt32(data, index + (i * 4));
-        }
-
-        return new decimal(array);
     }
 
     /// <summary>Returns a value converted from the specified data at a specified index.</summary>
@@ -201,15 +163,7 @@ public abstract class BitConverterBase : IBitConverter
     /// <param name="data">The data as byte array.</param>
     /// <param name="index">The index.</param>
     /// <returns>The converted value.</returns>
-    public sbyte ToSByte(byte[] data, int index)
-    {
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
-
-        return unchecked((sbyte)data[index]);
-    }
+    public sbyte ToSByte(byte[] data, int index) => unchecked((sbyte)data[index]);
 
     /// <summary>Returns a value converted from the specified data at a specified index.</summary>
     /// <param name="data">The data as byte array.</param>

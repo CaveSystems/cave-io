@@ -5,22 +5,23 @@ using System.Reflection;
 
 namespace Cave.IO.Blob.Converters;
 
-sealed class BlobStringParseConverterState
+sealed record BlobStringParseConverterData : BaseRecord
 {
     #region Fields
 
-    internal readonly ConstructorInfo? Constructor;
-    internal readonly MethodInfo? ParseMethod;
+    internal readonly ConstructorCache? Constructor;
+    internal readonly MethodCache? ParseMethod;
     internal readonly Type Type;
     internal readonly bool UseCulture;
-    internal bool RoundtripTest = true;
     internal BlobStringParseConverterMode Mode;
+    internal bool RoundtripTest = true;
+    internal readonly bool IsValid;
 
     #endregion Fields
 
     #region Public Constructors
 
-    public BlobStringParseConverterState(Type type)
+    public BlobStringParseConverterData(Type type)
     {
         if (Nullable.GetUnderlyingType(type) is Type underlying)
         {
@@ -37,14 +38,14 @@ sealed class BlobStringParseConverterState
             if (parameters.Length == 2 && parameters[0].ParameterType == typeof(string) && parameters[1].ParameterType == typeof(IFormatProvider))
             {
                 //best variant, break instantly
-                ParseMethod = method;
+                ParseMethod = new(method);
                 UseCulture = true;
                 break;
             }
             if (parameters.Length == 1 && parameters[0].ParameterType == typeof(string))
             {
                 //second best variant, keep looking for culture-aware overloads but remember this one
-                ParseMethod = method;
+                ParseMethod = new(method);
                 UseCulture = false;
             }
         }
@@ -57,14 +58,11 @@ sealed class BlobStringParseConverterState
             if (parameters.Length != 1) continue;
             if (parameters[0].ParameterType == typeof(string))
             {
-                Constructor = constructor;
+                Constructor = new(constructor);
             }
         }
 
-        if (ParseMethod is null && Constructor is null)
-        {
-            throw new InvalidOperationException("Could not find matching parse function or constructor!");
-        }
+        IsValid = ParseMethod is not null || Constructor is not null;
     }
 
     #endregion Public Constructors
@@ -84,17 +82,17 @@ sealed class BlobStringParseConverterState
         var useCulture = UseCulture;
         if (Constructor is not null)
         {
-            return Constructor.Invoke([text]) ?? throw new InvalidOperationException("Constructor returned null.");
+            return Constructor.CreateFast([text]) ?? throw new InvalidOperationException("Constructor returned null.");
         }
-        if (ParseMethod!.IsStatic)
+        if (ParseMethod!.Method.IsStatic)
         {
-            return ParseMethod.Invoke(null, useCulture ? [text, CultureInfo.InvariantCulture] : [text]) ??
+            return ParseMethod.InvokeFast(null, useCulture ? [text, CultureInfo.InvariantCulture] : [text]) ??
                 throw new InvalidOperationException("Parse method returned null.");
         }
         else
         {
-            var instance = Activator.CreateInstance(Type);
-            return ParseMethod.Invoke(instance, useCulture ? [text, CultureInfo.InvariantCulture] : [text]) ??
+            var instance = TypeActivator.CreateFast(Type);
+            return ParseMethod.InvokeFast(instance, useCulture ? [text, CultureInfo.InvariantCulture] : [text]) ??
                 throw new InvalidOperationException("Parse method returned null.");
         }
     }

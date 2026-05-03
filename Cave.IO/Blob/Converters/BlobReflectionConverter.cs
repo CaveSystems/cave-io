@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,8 +11,22 @@ namespace Cave.IO.Blob.Converters;
 /// Member inclusion is controlled by <see cref="BlobConverterFlags"/>. Default: value types use fields, reference types use properties; both public and
 /// non-public members are included. Each member gets a stable numeric ID in the binary stream, supporting fuzzy name matching for minor renames.
 /// </remarks>
-public class BlobReflectionConverter : IBlobConverter
+public class BlobReflectionConverter : BlobConverterBase
 {
+    #region Protected Methods
+
+    /// <inheritdoc/>
+    protected override object? GetCanHandleCache(Type type) =>
+    (
+        type.IsValueType ||
+        type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).Any(c => c.GetParameters().Length == 0)
+    ) && (
+        type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any() ||
+        type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(p => p.CanRead && p.CanWrite)
+    ) ? new BlobReflectionConverterData(type) : null;
+
+    #endregion Protected Methods
+
     #region Private Methods
 
     /// <summary>Normalizes a member name for fuzzy comparisons (letters/digits, lower-case).</summary>
@@ -24,22 +39,21 @@ public class BlobReflectionConverter : IBlobConverter
     #region Public Methods
 
     /// <inheritdoc/>
-    public virtual bool CanHandle(Type type) =>
-        (
-        type.IsValueType ||
-        type.GetConstructor([]) != null
-        ) && (
-        type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any() ||
-        type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(p => p.CanRead && p.CanWrite)
-        );
+    public override IList<Type> GetContentTypes(Type type)
+    {
+        var contentTypes = new List<Type>();
+        foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) { contentTypes.Add(field.FieldType); }
+        foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(p => p.CanRead && p.CanWrite)) { contentTypes.Add(property.PropertyType); }
+        return contentTypes;
+    }
 
     /// <inheritdoc/>
-    public virtual object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
+    public override object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
     {
         var type = bundle.Type;
         state.Logger?.Debug($"Read content of {type.Name}");
-        if (bundle.State is not BlobReflectionConverterState myState) throw new InvalidOperationException("Invalid state for reflection converter.");
-        var result = Activator.CreateInstance(type) ?? throw new InvalidOperationException($"Could not create instance of type {type.Name}.");
+        if (bundle.State is not BlobReflectionConverterData myState) throw new InvalidOperationException("Invalid state for reflection converter.");
+        var result = TypeActivator.CreateFast(type) ?? throw new InvalidOperationException($"Could not create instance of type {type.Name}.");
         var reader = state.Reader;
         for (var index = 0; index < myState.MemberCount;)
         {
@@ -53,7 +67,7 @@ public class BlobReflectionConverter : IBlobConverter
             var converter = member.Bundle.Converter;
             var content = converter.ReadContent(state, member.Bundle) ?? throw new InvalidDataException($"Invalid binary format (member with id {index} has null value).");
             state.Logger?.Verbose($"Set Value {member.Member.Name} = {content}");
-            member.Setter.Invoke(result, content);
+            member.Setter(result, content);
         }
         return result;
     }
@@ -63,11 +77,12 @@ public class BlobReflectionConverter : IBlobConverter
     /// <param name="state">Reader state.</param>
     /// <param name="bundle">Converter bundle to populate.</param>
     /// <exception cref="InvalidOperationException">No matching field or property found.</exception>
-    public virtual void ReadInitialization(IBlobReaderState state, BlobConverterBundle bundle)
+    public override void ReadInitialization(IBlobReaderState state, BlobConverterBundle bundle)
     {
         var reader = state.Reader;
         var count = (int)reader.Read7BitEncodedUInt32();
-        var myState = new BlobReflectionConverterState(bundle.Type, count);
+        GetHandlingData(bundle.Type, out BlobReflectionConverterData data);
+        var myState = data with { Members = new BlobReflectionConverterMember[count], MemberCount = (uint)count };
 
         for (var memberIndex = 0; memberIndex < myState.MemberCount; memberIndex++)
         {
@@ -112,9 +127,9 @@ public class BlobReflectionConverter : IBlobConverter
     /// <param name="bundle">Converter bundle with cached state.</param>
     /// <param name="instance">Instance to serialize.</param>
     /// <exception cref="InvalidOperationException">Invalid bundle state or missing initialization.</exception>
-    public virtual void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
+    public override void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
     {
-        if (bundle.State is not BlobReflectionConverterState myState) throw new InvalidOperationException("Invalid state for reflection converter.");
+        if (bundle.State is not BlobReflectionConverterData myState) throw new InvalidOperationException("Invalid state for reflection converter.");
         if (myState.MemberCount == 0) throw new InvalidOperationException("Initialization has not been written yet.");
         var writer = state.Writer;
         var index = 0;
@@ -149,9 +164,10 @@ public class BlobReflectionConverter : IBlobConverter
     /// <summary>Writes initialization metadata and registers converters for each member type.</summary>
     /// <param name="state">Writer state.</param>
     /// <param name="bundle">Converter bundle to populate.</param>
-    public virtual void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle)
+    public override void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle)
     {
-        var myState = new BlobReflectionConverterState(bundle.Type);
+        GetHandlingData(bundle.Type, out BlobReflectionConverterData data);
+        var myState = data with { Members = new BlobReflectionConverterMember[data.MemberCount] };
         var writer = state.Writer;
         writer.Write7BitEncoded32(myState.MemberCount);
         var currentIndex = 0;

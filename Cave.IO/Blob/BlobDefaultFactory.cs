@@ -40,20 +40,30 @@ public class BlobDefaultFactory : IBlobConverterFactory
     /// <inheritdoc/>
     public virtual bool TryCreateConverter(BlobSerializer serializer, Type type, [MaybeNullWhen(false)] out IBlobConverter converter)
     {
-        if (Converters.FirstOrDefault(Converters => Converters.CanHandle(type)) is IBlobConverter c)
+        if (serializer.KnownConverters.TryGetValue(type, out converter))
         {
-            Logger?.Debug($"Selecting converter {c.GetType().Name} for type {type.ToShortName()}");
-            converter = c;
+            Logger?.Verbose($"FastPath: Selecting known converter {converter.GetType().Name} for type {type.ToShortName()}");
             return true;
         }
-        if (FallbackConverter.CanHandle(type))
+
+        if (Converters.FirstOrDefault(Converters => Converters.CanHandle(type)) is IBlobConverter result)
         {
-            Logger?.Debug($"Selecting {FallbackConverter.GetType().ToShortName()} for type {type.ToShortName()}");
+            converter = result;
+        }
+        else if (FallbackConverter.CanHandle(type))
+        {
             converter = FallbackConverter;
-            return true;
         }
-        converter = default;
-        return false;
+        else
+        {
+            Logger?.Warning($"No converter found for type {type.ToShortName()}");
+            return false;
+        }
+
+        Logger?.Debug($"Selecting converter {converter.GetType().Name} for type {type.ToShortName()}");
+        serializer.KnownTypes.Add(type.GetPortableTypeName(), type);
+        serializer.KnownConverters.Add(type, converter);
+        return true;
     }
 
     #endregion Public Methods

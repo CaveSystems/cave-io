@@ -31,6 +31,10 @@
 		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="System.Reflection.Emit.Lightweight"/>
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\cave-extensions\Cave.Extensions\Cave.Extensions.8.csproj" />
 	</ItemGroup>

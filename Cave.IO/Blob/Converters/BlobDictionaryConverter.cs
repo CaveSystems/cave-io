@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
 namespace Cave.IO.Blob.Converters;
 
 /// <summary>Provides a converter for dictionary-like types for blob serialization and deserialization.</summary>
-public class BlobDictionaryConverter : IBlobConverter
+public class BlobDictionaryConverter : BlobConverterBase
 {
     #region Private Methods
 
     /// <summary>Gets key and value types, suitable constructor, and mode for a dictionary-like type.</summary>
     /// <param name="type">Type to inspect.</param>
-    /// <param name="keyType">Detected key type.</param>
-    /// <param name="valueType">Detected value type.</param>
-    /// <param name="constructor">Detected constructor.</param>
-    /// <param name="mode">Detected converter mode.</param>
+    /// <param name="data">Detected converter data.</param>
     /// <returns>True if suitable constructor and types found, otherwise false.</returns>
-    static bool GetElementTypesAndConstructor(Type type, [MaybeNullWhen(false)] out Type keyType, [MaybeNullWhen(false)] out Type valueType, [MaybeNullWhen(false)] out ConstructorInfo constructor, out BlobDictionaryConverterMode mode)
+    static bool GetElementTypesAndConstructor(Type type, out BlobDictionaryConverterData? data)
     {
         //test if is IDictionary and has empty constructor
         {
@@ -31,15 +27,12 @@ public class BlobDictionaryConverter : IBlobConverter
                 if (dictInterface != null)
                 {
                     var args = dictInterface.GetGenericArguments();
-                    keyType = args[0];
-                    valueType = args[1];
-                    constructor = null;
-                    mode = BlobDictionaryConverterMode.UseIDictionary;
+                    data = new BlobDictionaryConverterData(null, args[0], args[1], BlobDictionaryConverterMode.UseIDictionary);
                     return true;
                 }
             }
         }
-        foreach (var ctor in type.GetConstructors())
+        foreach (var ctor in type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
             var parameters = ctor.GetParameters();
             if (parameters.Length != 1) continue;
@@ -53,10 +46,7 @@ public class BlobDictionaryConverter : IBlobConverter
                 if (elemType?.IsGenericType == true && elemType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
                     var args = elemType.GetGenericArguments();
-                    keyType = args[0];
-                    valueType = args[1];
-                    constructor = ctor;
-                    mode = BlobDictionaryConverterMode.UseArray;
+                    data = new BlobDictionaryConverterData(ctor, args[0], args[1], BlobDictionaryConverterMode.UseArray);
                     return true;
                 }
             }
@@ -67,10 +57,7 @@ public class BlobDictionaryConverter : IBlobConverter
                 if (dictInterface != null)
                 {
                     var args = dictInterface.GetGenericArguments();
-                    keyType = args[0];
-                    valueType = args[1];
-                    constructor = ctor;
-                    mode = BlobDictionaryConverterMode.UseIDictionary;
+                    data = new BlobDictionaryConverterData(ctor, args[0], args[1], BlobDictionaryConverterMode.UseIDictionary);
                     return true;
                 }
             }
@@ -81,19 +68,13 @@ public class BlobDictionaryConverter : IBlobConverter
                 if (elemType != null && elemType.IsGenericType && elemType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
                     var args = elemType.GetGenericArguments();
-                    keyType = args[0];
-                    valueType = args[1];
-                    constructor = ctor;
-                    mode = BlobDictionaryConverterMode.UseIEnumerable;
+                    data = new BlobDictionaryConverterData(ctor, args[0], args[1], BlobDictionaryConverterMode.UseIEnumerable);
                     return true;
                 }
             }
         }
 
-        mode = default;
-        keyType = null;
-        valueType = null;
-        constructor = null;
+        data = null;
         return false;
     }
 
@@ -120,10 +101,8 @@ public class BlobDictionaryConverter : IBlobConverter
 
     #endregion Private Methods
 
-    #region Public Methods
-
     /// <inheritdoc/>
-    public virtual bool CanHandle(Type type)
+    protected override object? GetCanHandleCache(Type type)
     {
         var isDictionaryLike =
             typeof(IDictionary).IsAssignableFrom(type) ||
@@ -135,11 +114,22 @@ public class BlobDictionaryConverter : IBlobConverter
 #endif
                 i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
 
-        return isDictionaryLike && GetElementTypesAndConstructor(type, out _, out _, out _, out _);
+        if (isDictionaryLike && GetElementTypesAndConstructor(type, out var data))
+        {
+            return data;
+        }
+        return null;
     }
 
     /// <inheritdoc/>
-    public virtual object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
+    public override IList<Type> GetContentTypes(Type type)
+    {
+        GetHandlingData(type, out BlobDictionaryConverterData data);
+        return [data.KeyType, data.ValueType];
+    }
+
+    /// <inheritdoc/>
+    public override object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
     {
         if (bundle.State is not BlobDictionaryConverterState myState) throw new InvalidOperationException("Invalid state for dictionary converter.");
         var reader = state.Reader;
@@ -155,54 +145,50 @@ public class BlobDictionaryConverter : IBlobConverter
                     var key = myState.KeyBundle.Converter.ReadContent(state, myState.KeyBundle);
                     var isNull = myState.ValueCanBeNull && reader.ReadBool();
                     var value = isNull ? null : myState.ValueBundle.Converter.ReadContent(state, myState.ValueBundle);
-                    var keyValuePair = Activator.CreateInstance(myState.KeyValuePairType, key, value)!;
+                    var keyValuePair = myState.KeyValuePairConstructor.CreateFast([key, value])!;
                     array.SetValue(keyValuePair, i);
                 }
-                return myState.Constructor.Invoke([array]);
+                return myState.Constructor is null ? array : myState.Constructor.CreateFast([array]);
             }
             case BlobDictionaryConverterMode.UseIDictionary:
             {
-                myState.DictionaryType ??= 
-                    myState.Constructor is null ? bundle.Type :
-                    typeof(Dictionary<,>).MakeGenericType(myState.KeyBundle.Type, myState.ValueBundle.Type);
-                var addMethod = myState.DictionaryAddMethod ??= myState.DictionaryType.GetMethod("Add") ?? throw new InvalidOperationException($"Dictionary type {myState.DictionaryType.ToShortName()} does not have an Add method.");
-                var dictionary = Activator.CreateInstance(myState.DictionaryType)!;
+                myState.DictionaryType ??= myState.Constructor is null ? bundle.Type : typeof(Dictionary<,>).MakeGenericType(myState.KeyBundle.Type, myState.ValueBundle.Type);
+                myState.DictionaryAddMethod ??= new MethodCache(myState.DictionaryType.GetMethod("Add") ??
+                    throw new InvalidOperationException($"Dictionary type {myState.DictionaryType.ToShortName()} does not have an Add method."));
+                var dictionary = TypeActivator.CreateFast(myState.DictionaryType)!;
                 for (var i = 0; i < count; i++)
                 {
                     var key = myState.KeyBundle.Converter.ReadContent(state, myState.KeyBundle);
                     var isNull = myState.ValueCanBeNull && reader.ReadBool();
                     var value = isNull ? null : myState.ValueBundle.Converter.ReadContent(state, myState.ValueBundle);
-                    addMethod.Invoke(dictionary, [key, value]);
+                    myState.DictionaryAddMethod.InvokeFast(dictionary, [key, value]);
                 }
-                return myState.Constructor is null ? dictionary : myState.Constructor.Invoke([dictionary]);
+                return myState.Constructor is null ? dictionary : myState.Constructor.CreateFast([dictionary]);
             }
             default: throw new NotImplementedException($"Mode {myState.Mode} is not implemented.");
         }
     }
 
     /// <inheritdoc/>
-    public virtual void ReadInitialization(IBlobReaderState readerState, BlobConverterBundle bundle)
+    public override void ReadInitialization(IBlobReaderState readerState, BlobConverterBundle bundle)
     {
         var reader = readerState.Reader;
-        if (!GetElementTypesAndConstructor(bundle.Type, out var keyTypePresent, out var valueTypePresent, out var cctor, out var mode))
-        {
-            throw new InvalidOperationException($"Type {bundle.Type.ToShortName()} does not have a suitable constructor for deserialization!");
-        }
+        GetHandlingData(bundle.Type, out BlobDictionaryConverterData dictData);
         var keyBundle = readerState.ReadConverter();
         var valueBundle = readerState.ReadConverter();
-        if (!keyTypePresent.IsAssignableFrom(keyBundle.Type))
+        if (!dictData.KeyType.IsAssignableFrom(keyBundle.Type))
         {
-            throw new InvalidOperationException($"Key type in stream {keyBundle.Type.ToShortName()} is not compatible with expected type {keyTypePresent.ToShortName()}.");
+            throw new InvalidOperationException($"Key type in stream {keyBundle.Type.ToShortName()} is not compatible with expected type {dictData.KeyType.ToShortName()}.");
         }
-        if (!valueTypePresent.IsAssignableFrom(valueBundle.Type))
+        if (!dictData.ValueType.IsAssignableFrom(valueBundle.Type))
         {
-            throw new InvalidOperationException($"Value type in stream {valueBundle.Type.ToShortName()} is not compatible with expected type {valueTypePresent.ToShortName()}.");
+            throw new InvalidOperationException($"Value type in stream {valueBundle.Type.ToShortName()} is not compatible with expected type {dictData.ValueType.ToShortName()}.");
         }
-        bundle.State = new BlobDictionaryConverterState(cctor, keyBundle, valueBundle, mode);
+        bundle.State = new BlobDictionaryConverterState(dictData.Constructor, keyBundle, valueBundle, dictData.Mode);
     }
 
     /// <inheritdoc/>
-    public virtual void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
+    public override void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
     {
         if (bundle.State is not BlobDictionaryConverterState myState) throw new InvalidOperationException("Invalid state for dictionary converter.");
         var writer = state.Writer;
@@ -272,17 +258,11 @@ public class BlobDictionaryConverter : IBlobConverter
     }
 
     /// <inheritdoc/>
-    public virtual void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle)
+    public override void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle)
     {
-        if (!GetElementTypesAndConstructor(bundle.Type, out var keyType, out var valueType, out var cctor, out var mode))
-        {
-            throw new InvalidOperationException($"Type {bundle.Type.ToShortName()} does not have a suitable constructor for deserialization!");
-        }
-
-        var keyBundle = state.WriteConverter(keyType);
-        var valueBundle = state.WriteConverter(valueType);
-        bundle.State = new BlobDictionaryConverterState(cctor, keyBundle, valueBundle, mode);
+        GetHandlingData(bundle.Type, out BlobDictionaryConverterData data);
+        var keyBundle = state.WriteConverter(data.KeyType);
+        var valueBundle = state.WriteConverter(data.ValueType);
+        bundle.State = new BlobDictionaryConverterState(data.Constructor, keyBundle, valueBundle, data.Mode);
     }
-
-    #endregion Public Methods
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Cave.IO.Blob;
 
@@ -11,6 +12,12 @@ public interface IBlobConverter
     /// <param name="type">The type to check.</param>
     /// <returns>True if the converter can handle the type; otherwise, false.</returns>
     bool CanHandle(Type type);
+
+    /// <summary>Retrieves a collection of content types needed to be serialized or deserialized by this converter.</summary>
+    /// <remarks>This method can be used to get a list of types that the converter needs to handle during serialization or deserialization.</remarks>
+    /// <param name="type">The type to check. This has to be checked against <see cref="CanHandle(Type)"/> first!</param>
+    /// <returns>A list of <see cref="Type"/> objects representing the content types needed by this converter.</returns>
+    IList<Type> GetContentTypes(Type type);
 
     /// <summary>Reads the content of the specified type from the binary format using the provided BlobReaderState.</summary>
     /// <param name="state">The BlobReaderState to use for reading.</param>

@@ -12,7 +12,7 @@ sealed class BlobEnumerableConverterState
     internal readonly bool AcceptArray;
 
     /// <summary>Gets the constructor for the target type.</summary>
-    internal readonly ConstructorInfo? Constructor;
+    internal readonly ConstructorCache? Constructor;
 
     /// <summary>Gets the converter bundle for the element type.</summary>
     internal readonly BlobConverterBundle ElementConverterBundle;
@@ -28,7 +28,7 @@ sealed class BlobEnumerableConverterState
     public BlobEnumerableConverterState(Type type, ConstructorInfo? constructor, BlobConverterBundle elementConverterBundle)
     {
         ElementConverterBundle = elementConverterBundle;
-        Constructor = constructor;
+        Constructor = constructor is null ? null : new(constructor);
         AcceptArray = type.IsAssignableFrom(elementConverterBundle.Type.MakeArrayType());
         if (!AcceptArray && Constructor is null) throw new InvalidOperationException($"Type {type.FullName} does not accept an array and does not have a suitable constructor for deserialization!");
     }

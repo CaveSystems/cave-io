@@ -8,24 +8,25 @@ sealed class BlobDictionaryConverterState
 {
     #region Fields
 
-    internal readonly ConstructorInfo Constructor;
+    internal readonly ConstructorCache? Constructor;
     internal readonly BlobConverterBundle KeyBundle;
     internal readonly PropertyInfo KeyProperty;
     internal readonly Type KeyValuePairType;
     internal readonly BlobDictionaryConverterMode Mode;
     internal readonly BlobConverterBundle ValueBundle;
     internal readonly PropertyInfo ValueProperty;
-    internal MethodInfo? DictionaryAddMethod;
+    internal MethodCache? DictionaryAddMethod;
     internal Type? DictionaryType;
     internal bool ValueCanBeNull;
+    internal ConstructorCache KeyValuePairConstructor;
 
     #endregion Fields
 
     #region Public Constructors
 
-    public BlobDictionaryConverterState(ConstructorInfo cctor, BlobConverterBundle keyBundle, BlobConverterBundle valueBundle, BlobDictionaryConverterMode mode)
+    public BlobDictionaryConverterState(ConstructorInfo? cctor, BlobConverterBundle keyBundle, BlobConverterBundle valueBundle, BlobDictionaryConverterMode mode)
     {
-        Constructor = cctor;
+        Constructor = cctor is null ? null : new ConstructorCache(cctor);
         KeyBundle = keyBundle;
         ValueBundle = valueBundle;
         Mode = mode;
@@ -34,6 +35,7 @@ sealed class BlobDictionaryConverterState
         KeyProperty = KeyValuePairType.GetProperty("Key")!;
         ValueProperty = KeyValuePairType.GetProperty("Value")!;
         ValueCanBeNull = !valueBundle.Type.IsValueType;
+        KeyValuePairConstructor = new ConstructorCache(KeyValuePairType.GetConstructor([KeyBundle.Type, ValueBundle.Type]) ?? throw new InvalidOperationException($"Could not create {KeyValuePairType.ToShortName()}!"));
     }
 
     #endregion Public Constructors

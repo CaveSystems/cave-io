@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Cave.IO.Blob.Converters;
 
@@ -7,34 +8,30 @@ namespace Cave.IO.Blob.Converters;
 /// Supports nullable underlying types. When <see cref="EnumAsStrings"/> is true, enums are (de)serialized using their name strings; otherwise their numeric
 /// values are used.
 /// </remarks>
-public sealed class BlobPrimitiveConverter : IBlobConverter
+public sealed class BlobPrimitiveConverter : BlobConverterBase
 {
-    #region Public Methods
+    #region Protected Methods
 
     /// <inheritdoc/>
-    public bool CanHandle(Type type)
+    protected override object? GetCanHandleCache(Type type)
     {
         if (Nullable.GetUnderlyingType(type) is Type underlying)
         {
             type = underlying;
         }
 
-        return type.IsPrimitive
-            || type == typeof(string)
-            || type == typeof(DateTime)
-            || type == typeof(TimeSpan)
-            || type == typeof(DateTimeOffset)
-            || type == typeof(decimal)
-            || type == typeof(byte[])
-            || type.IsEnum;
+        return BlobSerializer.GetPrimitiveType(type, out var primitiveType) ? primitiveType : null;
     }
 
+    #endregion Protected Methods
+
+    #region Public Methods
+
     /// <inheritdoc/>
-    /// <param name="state">The reader state providing the underlying reader.</param>
-    /// <param name="bundle">Converter bundle containing the target <see cref="Type"/>.</param>
-    /// <returns>The deserialized value as an object.</returns>
-    /// <exception cref="NotSupportedException">Thrown when the target type is not supported by this converter.</exception>
-    public object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
+    public override IList<Type> GetContentTypes(Type type) => [];
+
+    /// <inheritdoc/>
+    public override object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
     {
         var reader = state.Reader;
         var value = bundle.State switch
@@ -70,13 +67,10 @@ public sealed class BlobPrimitiveConverter : IBlobConverter
     }
 
     /// <inheritdoc/>
-    /// <param name="state">The reader state.</param>
-    /// <param name="bundle">The converter bundle for the type to initialize.</param>
-    /// <remarks>This converter does not require initialization; method is provided to satisfy the interface.</remarks>
-    public void ReadInitialization(IBlobReaderState state, BlobConverterBundle bundle)
+    public override void ReadInitialization(IBlobReaderState state, BlobConverterBundle bundle)
     {
-        var elementType = Nullable.GetUnderlyingType(bundle.Type) is Type underlying ? underlying : bundle.Type;
-        bundle.State = state.GetPrimitiveType(elementType, out var primitiveType) ? primitiveType : throw new InvalidOperationException($"Type '{bundle.Type}' is not a supported primitive type!");
+        GetHandlingData(bundle.Type, out BlobPrimitiveType primitiveType);
+        bundle.State = primitiveType;
     }
 
     /// <inheritdoc/>
@@ -84,7 +78,7 @@ public sealed class BlobPrimitiveConverter : IBlobConverter
     /// <param name="bundle">Converter bundle containing the target <see cref="Type"/>.</param>
     /// <param name="instance">The value to serialize.</param>
     /// <exception cref="NotSupportedException">Thrown when the target type is not supported by this converter.</exception>
-    public void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
+    public override void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
     {
         var writer = state.Writer;
         switch (bundle.State)
@@ -134,16 +128,15 @@ public sealed class BlobPrimitiveConverter : IBlobConverter
     }
 
     /// <inheritdoc/>
-    /// <param name="state">The writer state.</param>
-    /// <param name="bundle">The converter bundle for the type to initialize.</param>
-    /// <remarks>This converter does not require initialization; method is provided to satisfy the interface.</remarks>
-    public void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle)
+    public override void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle)
     {
-        var elementType = Nullable.GetUnderlyingType(bundle.Type) is Type underlying ? underlying : bundle.Type;
-        bundle.State = state.GetPrimitiveType(elementType, out var primitiveType) ? primitiveType : throw new InvalidOperationException($"Type '{bundle.Type}' is not a supported primitive type!");
+        GetHandlingData(bundle.Type, out BlobPrimitiveType primitiveType);
+        bundle.State = primitiveType;
     }
 
-    /// <summary>Gets or sets a value indicating whether enums are serialized and deserialized as their name strings. When false, enums are handled by their numeric value.</summary>
+    /// <summary>
+    /// Gets or sets a value indicating whether enums are serialized and deserialized as their name strings. When false, enums are handled by their numeric value.
+    /// </summary>
     public static bool EnumAsStrings { get; set; }
 
     #endregion Public Methods

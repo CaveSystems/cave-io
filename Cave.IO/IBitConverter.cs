@@ -3,6 +3,7 @@
 namespace Cave.IO;
 
 /// <summary>Provides an interface for bit converter implementations.</summary>
+[Obsolete("Use LittleEndian or BigEndian static classes (performance)")]
 public interface IBitConverter
 {
     #region Public Methods
@@ -200,4 +201,10 @@ public interface IBitConverter
     ulong ToUInt64(byte[] data, int index);
 
     #endregion Public Methods
+}
+
+
+public static class EndianTypeExtensions
+{
+    
 }

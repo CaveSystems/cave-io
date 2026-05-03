@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Cave.IO.Blob;
+using Cave.IO.Blob.Converters;
 
 namespace Cave.IO;
 
@@ -413,7 +414,7 @@ public class BinarySerializer
             return parse.Invoke(str);
         }
 
-        var result = Activator.CreateInstance(type);
+        var result = TypeActivator.CreateFast(type);
         if (StructFlags.HasFlag(SerializerFlags.Fields))
         {
             var fields = type.GetFields(GetBindingFlags(StructFlags));
@@ -437,7 +438,7 @@ public class BinarySerializer
 
     object? ReadClass(Type type, TypeCode typeCode, DataReader reader, object? prototype)
     {
-        var result = prototype ?? Activator.CreateInstance(type);
+        var result = prototype ?? TypeActivator.CreateFast(type);
         if (ClassFlags.HasFlag(SerializerFlags.Fields))
         {
             var fields = type.GetFields(GetBindingFlags(StructFlags));

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Cave.IO.Blob.Converters;
 
 namespace Cave.IO;
 
@@ -702,7 +703,7 @@ public class IniReader
             if (field.HasAttribute<IniSectionAttribute>())
             {
                 var sectionAttribute = field.GetAttribute<IniSectionAttribute>()!;
-                var fieldObject = Activator.CreateInstance(field.FieldType) ?? throw new InvalidOperationException($"Could not create instance of field {field}!");
+                var fieldObject = TypeActivator.CreateFast(field.FieldType) ?? throw new InvalidOperationException($"Could not create instance of field {field}!");
                 switch (sectionAttribute.SettingsType)
                 {
                     case IniSettingsType.Fields: ReadObjectFields(sectionAttribute.Name ?? field.Name, fieldObject); break;
@@ -805,7 +806,7 @@ public class IniReader
             if (property.HasAttribute<IniSectionAttribute>())
             {
                 var sectionAttribute = property.GetAttribute<IniSectionAttribute>()!;
-                var propertyObject = Activator.CreateInstance(property.PropertyType) ?? throw new InvalidOperationException($"Could not create instance of property {property}!");
+                var propertyObject = TypeActivator.CreateFast(property.PropertyType) ?? throw new InvalidOperationException($"Could not create instance of property {property}!");
                 switch (sectionAttribute.SettingsType)
                 {
                     case IniSettingsType.Fields: ReadObjectFields(sectionAttribute.Name ?? property.Name, propertyObject); break;

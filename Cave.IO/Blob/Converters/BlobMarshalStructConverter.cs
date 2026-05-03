@@ -1,22 +1,30 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Cave.IO.Blob.Converters;
 
 /// <summary>Handles serialization of marshal-compatible structures using <see cref="MarshalStruct"/>.</summary>
-public class BlobMarshalStructConverter : IBlobConverter
+public class BlobMarshalStructConverter : BlobConverterBase
 {
+    #region Protected Methods
+
+    /// <inheritdoc/>
+    protected override object? GetCanHandleCache(Type type) => MarshalStruct.IsBlittable(type) ? MarshalStruct.SizeOf(type) : null;
+
+    #endregion Protected Methods
+
     #region Public Methods
 
     /// <inheritdoc/>
-    public virtual bool CanHandle(Type type) => MarshalStruct.IsBlittable(type);
+    public override IList<Type> GetContentTypes(Type type) => [];
 
     /// <inheritdoc/>
-    public virtual object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
+    public override object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
     {
+        GetHandlingData(bundle.Type, out int realSize);
         var type = bundle.Type;
         var binSize = state.Reader.Read7BitEncodedInt32();
         if (binSize == 0) return null!;
-        var realSize = MarshalStruct.SizeOf(type);
         var buffer = state.Reader.ReadBytes(binSize);
         if (realSize > buffer.Length)
         {
@@ -28,10 +36,10 @@ public class BlobMarshalStructConverter : IBlobConverter
     }
 
     /// <inheritdoc/>
-    public virtual void ReadInitialization(IBlobReaderState state, BlobConverterBundle bundle) { }
+    public override void ReadInitialization(IBlobReaderState state, BlobConverterBundle bundle) { }
 
     /// <inheritdoc/>
-    public virtual void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
+    public override void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
     {
         var writer = state.Writer;
         if (instance is null)
@@ -44,7 +52,7 @@ public class BlobMarshalStructConverter : IBlobConverter
     }
 
     /// <inheritdoc/>
-    public virtual void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle) { }
+    public override void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle) { }
 
     #endregion Public Methods
 }

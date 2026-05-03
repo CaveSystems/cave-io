@@ -1,29 +1,29 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using Cave.Collections;
 
 namespace Cave.IO.Blob.Converters;
 
 /// <summary>Converter for enumerable types supporting serialization and deserialization of collections.</summary>
-public class BlobEnumerableConverter : IBlobConverter
+public class BlobEnumerableConverter : BlobConverterBase
 {
     #region Private Methods
 
     /// <summary>Gets the element type and suitable constructor for a collection type.</summary>
     /// <param name="type">Collection type.</param>
-    /// <param name="elementType">Detected element type.</param>
-    /// <param name="constructor">Detected constructor.</param>
+    /// <param name="data">Output data containing element type and constructor info if found.</param>
     /// <returns>True if a suitable constructor is found; otherwise, false.</returns>
-    static bool GetElementTypeAndConstructor(Type type, [MaybeNullWhen(false)] out Type elementType, out ConstructorInfo? constructor)
+    static bool GetElementTypeAndConstructor(Type type, out BlobEnumerableConverterData? data)
     {
         if (type.IsArray)
         {
-            elementType = type.GetElementType();
-            constructor = null;
-            if (elementType != null) return true;
+            var elementType = type.GetElementType() ?? throw new InvalidOperationException($"Array {type.ToShortName()} has no element type.");
+            if (elementType != null && elementType != typeof(object))
+            {
+                data = new BlobEnumerableConverterData(elementType, null);
+                return true;
+            }
         }
 
         foreach (var ctor in type.GetConstructors())
@@ -34,12 +34,11 @@ public class BlobEnumerableConverter : IBlobConverter
 
             var param = parameters[0];
             var paramType = param.ParameterType;
-
             // params T[] (or regular T[])
             if (paramType.IsArray)
             {
-                elementType = paramType.GetElementType() ?? throw new InvalidOperationException("Parameter of array type has no element type.");
-                constructor = ctor;
+                var elementType = paramType.GetElementType() ?? throw new InvalidOperationException($"Array {type.ToShortName()} has no element type.");
+                data = new BlobEnumerableConverterData(elementType, ctor);
                 return true;
             }
 
@@ -49,27 +48,38 @@ public class BlobEnumerableConverter : IBlobConverter
                 var genericDef = paramType.GetGenericTypeDefinition();
                 if (genericDef == typeof(IEnumerable<>) || genericDef == typeof(IList<>))
                 {
-                    elementType = paramType.GetGenericArguments()[0];
-                    constructor = ctor;
+                    var elementType = paramType.GetGenericArguments()[0];
+                    data = new BlobEnumerableConverterData(elementType, ctor);
                     return true;
                 }
             }
         }
 
-        elementType = null;
-        constructor = null;
+        data = null;
         return false;
     }
 
     #endregion Private Methods
 
+    #region Protected Methods
+
+    /// <inheritdoc/>
+    protected override object? GetCanHandleCache(Type type) =>
+        (typeof(IEnumerable).IsAssignableFrom(type) && GetElementTypeAndConstructor(type, out var data)) ? data : null;
+
+    #endregion Protected Methods
+
     #region Public Methods
 
     /// <inheritdoc/>
-    public virtual bool CanHandle(Type type) => typeof(IEnumerable).IsAssignableFrom(type) && GetElementTypeAndConstructor(type, out _, out _);
+    public override IList<Type> GetContentTypes(Type type)
+    {
+        GetHandlingData(type, out BlobEnumerableConverterData data);
+        return [data.ElementType];
+    }
 
     /// <inheritdoc/>
-    public virtual object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
+    public override object ReadContent(IBlobReaderState state, BlobConverterBundle bundle)
     {
         if (bundle.State is not BlobEnumerableConverterState myState) throw new InvalidOperationException("Invalid state for enumerable converter.");
         var reader = state.Reader;
@@ -80,23 +90,20 @@ public class BlobEnumerableConverter : IBlobConverter
             var item = myState.ElementConverterBundle.Converter.ReadContent(state, myState.ElementConverterBundle);
             array.SetValue(item, i);
         }
-        return myState.AcceptArray ? array : myState.Constructor?.Invoke([array]) ?? throw new InvalidOperationException($"Type {bundle.Type.ToShortName()} does not accept an array and does not have a suitable constructor for deserialization!");
+        return myState.AcceptArray ? array : myState.Constructor?.CreateFast([array]) ?? throw new InvalidOperationException($"Type {bundle.Type.ToShortName()} does not accept an array and does not have a suitable constructor for deserialization!");
     }
 
     /// <inheritdoc/>
-    public virtual void ReadInitialization(IBlobReaderState state, BlobConverterBundle bundle)
+    public override void ReadInitialization(IBlobReaderState state, BlobConverterBundle bundle)
     {
-        if (!GetElementTypeAndConstructor(bundle.Type, out var elementTypePresent, out var constructor))
-        {
-            throw new InvalidOperationException($"Type {bundle.Type.ToShortName()} does not have a suitable constructor for deserialization!");
-        }
+        GetHandlingData(bundle.Type, out BlobEnumerableConverterData data);
         var elementBundle = state.ReadConverter();
-        if (!elementTypePresent.IsAssignableFrom(elementBundle.Type)) throw new InvalidOperationException($"Element type in stream {elementBundle.Type.ToShortName()} is not compatible with the element type of the collection {elementTypePresent.ToShortName()}.");
-        bundle.State = new BlobEnumerableConverterState(bundle.Type, constructor, elementBundle);
+        if (!data.ElementType.IsAssignableFrom(elementBundle.Type)) throw new InvalidOperationException($"Element type in stream {elementBundle.Type.ToShortName()} is not compatible with the element type of the collection {data.ElementType.ToShortName()}.");
+        bundle.State = new BlobEnumerableConverterState(bundle.Type, data.Constructor, elementBundle);
     }
 
     /// <inheritdoc/>
-    public virtual void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
+    public override void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
     {
         if (bundle.State is not BlobEnumerableConverterState myState) throw new InvalidOperationException("Invalid state for enumerable converter.");
         var writer = state.Writer;
@@ -130,15 +137,12 @@ public class BlobEnumerableConverter : IBlobConverter
     }
 
     /// <inheritdoc/>
-    public virtual void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle)
+    public override void WriteInitialization(IBlobWriterState state, BlobConverterBundle bundle)
     {
-        if (!GetElementTypeAndConstructor(bundle.Type, out var elementType, out var constructor))
-        {
-            throw new InvalidOperationException($"Type {bundle.Type.FullName} does not have a suitable constructor for deserialization!");
-        }
+        GetHandlingData(bundle.Type, out BlobEnumerableConverterData data);
         //enforce element type converter to be written before writing the collection itself, so that it can be cached and reused for all items in the collection
-        var elementBundle = state.WriteConverter(elementType);
-        bundle.State = new BlobEnumerableConverterState(bundle.Type, constructor, elementBundle);
+        var elementBundle = state.WriteConverter(data.ElementType);
+        bundle.State = new BlobEnumerableConverterState(bundle.Type, data.Constructor, elementBundle);
     }
 
     #endregion Public Methods

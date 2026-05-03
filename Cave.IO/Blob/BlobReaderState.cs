@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace Cave.IO.Blob;
 
@@ -47,6 +48,8 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
 
     #region Public Methods
 
+    LinkedList<Assembly> assemblies = new();
+
     /// <inheritdoc/>
     public void Close() => Close(true);
 
@@ -84,12 +87,11 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
         return bundle.Converter.ReadContent(this, bundle);
     }
 
-    /// <summary>
-    /// Reads content from the specified blob reader state and outputs an instance of the requested type.
-    /// </summary>
+    /// <summary>Reads content from the specified blob reader state and outputs an instance of the requested type.</summary>
     /// <typeparam name="TContent">The type of content to read from the blob.</typeparam>
-    /// <param name="instance">When this method returns, contains the content read from the blob if it is of the specified type; otherwise, the
-    /// default value for the type.</param>
+    /// <param name="instance">
+    /// When this method returns, contains the content read from the blob if it is of the specified type; otherwise, the default value for the type.
+    /// </param>
     /// <exception cref="InvalidDataException">Thrown if the content read from the blob is not of the expected type and is not null.</exception>
     public void Read<TContent>(out TContent? instance)
     {
@@ -138,25 +140,34 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
         var typeCode = (BlobPrimitiveType)Reader.Read7BitEncodedUInt32();
         if (typeCode != 0 && typeCode != BlobPrimitiveType.Enum)
         {
-            return GetPrimitiveType(typeCode);
+            return BlobSerializer.GetPrimitiveType(typeCode);
         }
         var typeName = Reader.ReadPrefixedString() ?? throw new InvalidDataException("Invalid binary format (missing type name).");
-        var type = AppDom.FindType(typeName) ?? throw new InvalidOperationException($"Unknown type {typeName}.");
-        if (typeCode != BlobPrimitiveType.Enum)
+        if (Serializer.KnownTypes.TryGetValue(typeName, out var knownType))
         {
-            var argumentCount = Reader.Read7BitEncodedInt32();
-            if (argumentCount > 0)
+            Logger?.Debug($"FastPath: Taking type {typeName} from known types.");
+            return knownType;
+        }
+
+        Logger?.Debug($"Resolving type {typeName} via assembly scan...");
+        if (assemblies.Count == 0)
+        {
+            assemblies = new LinkedList<Assembly>(AppDomain.CurrentDomain.GetAssemblies());
+        }
+        for (var node = assemblies.First; node != null; node = node.Next)
+        {
+            var assembly = node.Value;
+            var type = assembly.GetType(typeName, false);
+            if (type != null)
             {
-                if (!type.IsGenericTypeDefinition) throw new InvalidOperationException($"Type {type} is not a generic type definition");
-                var genericArgs = new Type[argumentCount];
-                for (var i = 0; i < argumentCount; i++)
-                {
-                    genericArgs[i] = ReadTypeDefitition();
-                }
-                return type.MakeGenericType(genericArgs);
+                //move to first position for faster access next time
+                assemblies.Remove(node);
+                assemblies.AddFirst(node);
+                return type;
             }
         }
-        return type;
+
+        throw new InvalidOperationException($"Could not resolve type {typeName}. Ensure the type is loaded or use the BlobSerializer.Prepare() function!");
     }
 
     #endregion Public Methods
