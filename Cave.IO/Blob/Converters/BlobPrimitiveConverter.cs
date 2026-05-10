@@ -42,10 +42,10 @@ public sealed class BlobPrimitiveConverter : BlobConverterBase
             BlobPrimitiveType.Int8 => reader.ReadInt8(),
             BlobPrimitiveType.Int16 => reader.ReadInt16(),
             BlobPrimitiveType.UInt16 => reader.ReadUInt16(),
-            BlobPrimitiveType.Int32 => reader.Read7BitEncodedInt32(),
-            BlobPrimitiveType.UInt32 => reader.Read7BitEncodedUInt32(),
-            BlobPrimitiveType.Int64 => reader.Read7BitEncodedInt64(),
-            BlobPrimitiveType.UInt64 => reader.Read7BitEncodedUInt64(),
+            BlobPrimitiveType.Int32 => reader.ReadInt32(),
+            BlobPrimitiveType.UInt32 => reader.ReadUInt32(),
+            BlobPrimitiveType.Int64 => reader.ReadInt64(),
+            BlobPrimitiveType.UInt64 => reader.ReadUInt64(),
             BlobPrimitiveType.Float32 => reader.ReadSingle(),
             BlobPrimitiveType.Float64 => reader.ReadDouble(),
             BlobPrimitiveType.Char => reader.ReadChar(),
@@ -55,8 +55,18 @@ public sealed class BlobPrimitiveConverter : BlobConverterBase
             BlobPrimitiveType.Decimal => reader.ReadDecimal(),
             BlobPrimitiveType.DateTime => reader.ReadDateTime(),
             BlobPrimitiveType.TimeSpan => reader.ReadTimeSpan(),
-            BlobPrimitiveType.ByteArray => reader.ReadBytes() ?? [],
             BlobPrimitiveType.DateTimeOffset => new DateTimeOffset(reader.Read7BitEncodedInt64(), reader.ReadTimeSpan()),
+
+            //array types
+            BlobPrimitiveType.ByteArray => reader.ReadBytes() ?? [],
+            BlobPrimitiveType.FloatArray => reader.ReadFloatArray() ?? [],
+            BlobPrimitiveType.DoubleArray => reader.ReadDoubleArray() ?? [],
+            BlobPrimitiveType.Int16Array => reader.ReadInt16Array() ?? [],
+            BlobPrimitiveType.UInt16Array => reader.ReadUInt16Array() ?? [],
+            BlobPrimitiveType.Int32Array => reader.ReadInt32Array() ?? [],
+            BlobPrimitiveType.UInt32Array => reader.ReadUInt32Array() ?? [],
+            BlobPrimitiveType.Int64Array => reader.ReadInt64Array() ?? [],
+            BlobPrimitiveType.UInt64Array => reader.ReadUInt64Array() ?? [],
 
             // enums (last allowed bucket)
             BlobPrimitiveType.Enum => EnumAsStrings ? Enum.Parse(bundle.Type, reader.ReadPrefixedString() ?? string.Empty) : Enum.ToObject(bundle.Type, reader.Read7BitEncodedUInt64()),
@@ -89,10 +99,10 @@ public sealed class BlobPrimitiveConverter : BlobConverterBase
             case BlobPrimitiveType.Int8: writer.Write((sbyte)instance); break;
             case BlobPrimitiveType.Int16: writer.Write((short)instance); break;
             case BlobPrimitiveType.UInt16: writer.Write((ushort)instance); break;
-            case BlobPrimitiveType.Int32: writer.Write7BitEncoded32((int)instance); break;
-            case BlobPrimitiveType.UInt32: writer.Write7BitEncoded32((uint)instance); break;
-            case BlobPrimitiveType.Int64: writer.Write7BitEncoded64((long)instance); break;
-            case BlobPrimitiveType.UInt64: writer.Write7BitEncoded64((ulong)instance); break;
+            case BlobPrimitiveType.Int32: writer.Write((int)instance); break;
+            case BlobPrimitiveType.UInt32: writer.Write((uint)instance); break;
+            case BlobPrimitiveType.Int64: writer.Write((long)instance); break;
+            case BlobPrimitiveType.UInt64: writer.Write((ulong)instance); break;
             case BlobPrimitiveType.Float32: writer.Write((float)instance); break;
             case BlobPrimitiveType.Float64: writer.Write((double)instance); break;
             case BlobPrimitiveType.Char: writer.Write((char)instance); break;
@@ -102,6 +112,15 @@ public sealed class BlobPrimitiveConverter : BlobConverterBase
             case BlobPrimitiveType.DateTime: writer.Write((DateTime)instance); break;
             case BlobPrimitiveType.TimeSpan: writer.Write((TimeSpan)instance); break;
             case BlobPrimitiveType.ByteArray: writer.WritePrefixed((byte[])instance); break;
+            case BlobPrimitiveType.FloatArray: writer.WritePrefixed((float[])instance); break;
+            case BlobPrimitiveType.DoubleArray: writer.WritePrefixed((double[])instance); break;
+            case BlobPrimitiveType.Int16Array: writer.WritePrefixed((short[])instance); break;
+            case BlobPrimitiveType.UInt16Array: writer.WritePrefixed((ushort[])instance); break;
+            case BlobPrimitiveType.Int32Array: writer.WritePrefixed((int[])instance); break;
+            case BlobPrimitiveType.UInt32Array: writer.WritePrefixed((uint[])instance); break;
+            case BlobPrimitiveType.Int64Array: writer.WritePrefixed((long[])instance); break;
+            case BlobPrimitiveType.UInt64Array: writer.WritePrefixed((ulong[])instance); break;
+
             case BlobPrimitiveType.DateTimeOffset:
             {
                 var dto = (DateTimeOffset)instance;

@@ -7,7 +7,7 @@ using System;
 using System.Globalization;
 using Test;
 
-namespace Tests.Cave.IO.IniFile;
+namespace Tests.Cave.IO;
 
 [TestFixture]
 public class NestedInifile

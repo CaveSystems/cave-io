@@ -67,4 +67,28 @@ public enum BlobPrimitiveType : uint
 
     /// <summary>Represents a <see cref="DateTimeOffset"/> value, which includes both a <see cref="DateTime"/> and an associated offset from UTC.</summary>
     DateTimeOffset,
+
+    /// <summary>Represents a length-prefixed array of 32-bit IEEE 754 single-precision floating-point numbers ( <see cref="float"/>[]).</summary>
+    FloatArray,
+
+    /// <summary>Represents a length-prefixed array of 64-bit IEEE 754 double-precision floating-point numbers ( <see cref="double"/>[]).</summary>
+    DoubleArray,
+
+    /// <summary>Represents a length-prefixed array of signed 16-bit integers ( <see cref="short"/>[]).</summary>
+    Int16Array,
+
+    /// <summary>Represents a length-prefixed array of unsigned 16-bit integers ( <see cref="ushort"/>[]).</summary>
+    UInt16Array,
+
+    /// <summary>Represents a length-prefixed array of signed 32-bit integers ( <see cref="int"/>[]).</summary>
+    Int32Array,
+
+    /// <summary>Represents a length-prefixed array of unsigned 32-bit integers ( <see cref="uint"/>[]).</summary>
+    UInt32Array,
+
+    /// <summary>Represents a length-prefixed array of signed 64-bit integers ( <see cref="long"/>[]).</summary>
+    Int64Array,
+
+    /// <summary>Represents a length-prefixed array of unsigned 64-bit integers ( <see cref="ulong"/>[]).</summary>
+    UInt64Array
 }

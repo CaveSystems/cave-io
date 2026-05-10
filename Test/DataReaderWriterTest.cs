@@ -694,6 +694,14 @@ public class DataReaderWriterTest
         writer.WritePrefixed(ulong.MaxValue);
         writer.WritePrefixed((ulong?)null);
         writer.WritePrefixed((ulong?)0);
+        writer.WritePrefixed(float.MinValue);
+        writer.WritePrefixed(float.MaxValue);
+        writer.WritePrefixed((float?)null);
+        writer.WritePrefixed((float?)0);
+        writer.WritePrefixed(double.MinValue);
+        writer.WritePrefixed(double.MaxValue);
+        writer.WritePrefixed((double?)null);
+        writer.WritePrefixed((double?)0);
         writer.WritePrefixed(decimal.MinValue);
         writer.WritePrefixed(decimal.MaxValue);
         writer.WritePrefixed((decimal?)null);
@@ -712,6 +720,11 @@ public class DataReaderWriterTest
         writer.WritePrefixed((string)null);
         writer.WritePrefixed(string.Empty);
         writer.WritePrefixed(AceOfSpades);
+        writer.WritePrefixed((UTF8)AceOfSpades);
+        writer.WritePrefixed((UTF16LE)AceOfSpades);
+        writer.WritePrefixed((UTF16BE)AceOfSpades);
+        writer.WritePrefixed((UTF32LE)AceOfSpades);
+        writer.WritePrefixed((UTF32BE)AceOfSpades);
         writer.Flush();
 
         Assert.AreEqual(true, reader.ReadNullableBool());
@@ -749,6 +762,14 @@ public class DataReaderWriterTest
         Assert.AreEqual(ulong.MaxValue, reader.ReadPrefixedUInt64());
         Assert.AreEqual(null, reader.ReadPrefixedUInt64());
         Assert.AreEqual((ulong?)0, reader.ReadPrefixedUInt64());
+        Assert.AreEqual(float.MinValue, reader.ReadPrefixedSingle());
+        Assert.AreEqual(float.MaxValue, reader.ReadPrefixedSingle());
+        Assert.AreEqual(null, reader.ReadPrefixedSingle());
+        Assert.AreEqual((float?)0, reader.ReadPrefixedSingle());
+        Assert.AreEqual(double.MinValue, reader.ReadPrefixedDouble());
+        Assert.AreEqual(double.MaxValue, reader.ReadPrefixedDouble());
+        Assert.AreEqual(null, reader.ReadPrefixedDouble());
+        Assert.AreEqual((double?)0, reader.ReadPrefixedDouble());
         Assert.AreEqual(decimal.MinValue, reader.ReadPrefixedDecimal());
         Assert.AreEqual(decimal.MaxValue, reader.ReadPrefixedDecimal());
         Assert.AreEqual(null, reader.ReadPrefixedDecimal());
@@ -767,9 +788,158 @@ public class DataReaderWriterTest
         Assert.AreEqual(null, reader.ReadPrefixedString());
         Assert.AreEqual(string.Empty, reader.ReadPrefixedString());
         Assert.AreEqual(AceOfSpades, reader.ReadPrefixedString());
+        Assert.AreEqual(AceOfSpades, new UTF8(reader.ReadBytes()).ToString());
+        Assert.AreEqual(AceOfSpades, new UTF16LE(reader.ReadBytes()).ToString());
+        Assert.AreEqual(AceOfSpades, new UTF16BE(reader.ReadBytes()).ToString());
+        Assert.AreEqual(AceOfSpades, new UTF32LE(reader.ReadBytes()).ToString());
+        Assert.AreEqual(AceOfSpades, new UTF32BE(reader.ReadBytes()).ToString());
         reader.Flush();
 
         Assert.AreEqual(0, stream.Available);
+
+        //close can be called multiple times without throwing
+        reader.Close();
+        writer.Close();
+        reader.Close();
+        writer.Close();
+
+        //writing or reading will throw
+        Assert.Throws<ObjectDisposedException>(() => writer.Write(true));
+        Assert.Throws<ObjectDisposedException>(() => reader.ReadBool());
+    }
+
+    [Test]
+    public void TestPrimitiveArraysLittleEndian()
+    {
+        var stream = new FifoStream();
+        var writer = new DataWriter(stream);
+        var reader = new DataReader(stream);
+
+        writer.WritePrefixed(new sbyte[] { sbyte.MinValue, 0, sbyte.MaxValue });
+        writer.WritePrefixed(new byte[] { byte.MinValue, 0, byte.MaxValue });
+        writer.WritePrefixed(new short[] { short.MinValue, 0, short.MaxValue });
+        writer.WritePrefixed(new ushort[] { ushort.MinValue, 0, ushort.MaxValue });
+        writer.WritePrefixed(new int[] { int.MinValue, 0, int.MaxValue });
+        writer.WritePrefixed(new uint[] { uint.MinValue, 0, uint.MaxValue });
+        writer.WritePrefixed(new long[] { long.MinValue, 0, long.MaxValue });
+        writer.WritePrefixed(new ulong[] { ulong.MinValue, 0, ulong.MaxValue });
+        writer.WritePrefixed(new float[] { float.MinValue, 0, float.MaxValue });
+        writer.WritePrefixed(new double[] { double.MinValue, 0, double.MaxValue });
+
+        if (Endian.MachineType == EndianType.LittleEndian)
+        {
+            Assert.That(BigEndian.IsNative, Is.False);
+            Assert.That(LittleEndian.IsNative, Is.True);
+            Assert.That(reader.ReadArray<sbyte>(), Is.EqualTo(new sbyte[] { sbyte.MinValue, 0, sbyte.MaxValue }));
+            Assert.That(reader.ReadArray<byte>(), Is.EqualTo(new byte[] { byte.MinValue, 0, byte.MaxValue }));
+            Assert.That(reader.ReadArray<short>(), Is.EqualTo(new short[] { short.MinValue, 0, short.MaxValue }));
+            Assert.That(reader.ReadArray<ushort>(), Is.EqualTo(new ushort[] { ushort.MinValue, 0, ushort.MaxValue }));
+            Assert.That(reader.ReadArray<int>(), Is.EqualTo(new int[] { int.MinValue, 0, int.MaxValue }));
+            Assert.That(reader.ReadArray<uint>(), Is.EqualTo(new uint[] { uint.MinValue, 0, uint.MaxValue }));
+            Assert.That(reader.ReadArray<long>(), Is.EqualTo(new long[] { long.MinValue, 0, long.MaxValue }));
+            Assert.That(reader.ReadArray<ulong>(), Is.EqualTo(new ulong[] { ulong.MinValue, 0, ulong.MaxValue }));
+            Assert.That(reader.ReadArray<float>(), Is.EqualTo(new float[] { float.MinValue, 0, float.MaxValue }));
+            Assert.That(reader.ReadArray<double>(), Is.EqualTo(new double[] { double.MinValue, 0, double.MaxValue }));
+            stream.Position = 0;
+        }
+        else
+        {
+            Assert.That(BigEndian.IsNative, Is.True);
+            Assert.That(LittleEndian.IsNative, Is.False);
+        }
+
+        Assert.That(reader.ReadInt8Array(), Is.EqualTo(new sbyte[] { sbyte.MinValue, 0, sbyte.MaxValue }));
+        Assert.That(reader.ReadUInt8Array(), Is.EqualTo(new byte[] { byte.MinValue, 0, byte.MaxValue }));
+        Assert.That(reader.ReadInt16Array(), Is.EqualTo(new short[] { short.MinValue, 0, short.MaxValue }));
+        Assert.That(reader.ReadUInt16Array(), Is.EqualTo(new ushort[] { ushort.MinValue, 0, ushort.MaxValue }));
+        Assert.That(reader.ReadInt32Array(), Is.EqualTo(new int[] { int.MinValue, 0, int.MaxValue }));
+        Assert.That(reader.ReadUInt32Array(), Is.EqualTo(new uint[] { uint.MinValue, 0, uint.MaxValue }));
+        Assert.That(reader.ReadInt64Array(), Is.EqualTo(new long[] { long.MinValue, 0, long.MaxValue }));
+        Assert.That(reader.ReadUInt64Array(), Is.EqualTo(new ulong[] { ulong.MinValue, 0, ulong.MaxValue }));
+        Assert.That(reader.ReadFloatArray(), Is.EqualTo(new float[] { float.MinValue, 0, float.MaxValue }));
+        Assert.That(reader.ReadDoubleArray(), Is.EqualTo(new double[] { double.MinValue, 0, double.MaxValue }));
+    }
+
+    [Test]
+    public void TestPrimitiveArraysBigEndian()
+    {
+        var stream = new FifoStream();
+        var writer = new DataWriter(stream, endian: EndianType.BigEndian);
+        var reader = new DataReader(stream, endian: EndianType.BigEndian);
+
+        writer.WritePrefixed(new sbyte[] { sbyte.MinValue, 0, sbyte.MaxValue });
+        writer.WritePrefixed(new byte[] { byte.MinValue, 0, byte.MaxValue });
+        writer.WritePrefixed(new short[] { short.MinValue, 0, short.MaxValue });
+        writer.WritePrefixed(new ushort[] { ushort.MinValue, 0, ushort.MaxValue });
+        writer.WritePrefixed(new int[] { int.MinValue, 0, int.MaxValue });
+        writer.WritePrefixed(new uint[] { uint.MinValue, 0, uint.MaxValue });
+        writer.WritePrefixed(new long[] { long.MinValue, 0, long.MaxValue });
+        writer.WritePrefixed(new ulong[] { ulong.MinValue, 0, ulong.MaxValue });
+        writer.WritePrefixed(new float[] { float.MinValue, 0, float.MaxValue });
+        writer.WritePrefixed(new double[] { double.MinValue, 0, double.MaxValue });
+
+        if (Endian.MachineType == EndianType.BigEndian)
+        {
+            Assert.That(BigEndian.IsNative, Is.True);
+            Assert.That(LittleEndian.IsNative, Is.False);
+            Assert.That(reader.ReadArray<sbyte>(), Is.EqualTo(new sbyte[] { sbyte.MinValue, 0, sbyte.MaxValue }));
+            Assert.That(reader.ReadArray<byte>(), Is.EqualTo(new byte[] { byte.MinValue, 0, byte.MaxValue }));
+            Assert.That(reader.ReadArray<short>(), Is.EqualTo(new short[] { short.MinValue, 0, short.MaxValue }));
+            Assert.That(reader.ReadArray<ushort>(), Is.EqualTo(new ushort[] { ushort.MinValue, 0, ushort.MaxValue }));
+            Assert.That(reader.ReadArray<int>(), Is.EqualTo(new int[] { int.MinValue, 0, int.MaxValue }));
+            Assert.That(reader.ReadArray<uint>(), Is.EqualTo(new uint[] { uint.MinValue, 0, uint.MaxValue }));
+            Assert.That(reader.ReadArray<long>(), Is.EqualTo(new long[] { long.MinValue, 0, long.MaxValue }));
+            Assert.That(reader.ReadArray<ulong>(), Is.EqualTo(new ulong[] { ulong.MinValue, 0, ulong.MaxValue }));
+            Assert.That(reader.ReadArray<float>(), Is.EqualTo(new float[] { float.MinValue, 0, float.MaxValue }));
+            Assert.That(reader.ReadArray<double>(), Is.EqualTo(new double[] { double.MinValue, 0, double.MaxValue }));
+            stream.Position = 0;
+        }
+        else
+        {
+            Assert.That(BigEndian.IsNative, Is.False);
+            Assert.That(LittleEndian.IsNative, Is.True);
+        }
+
+        Assert.That(reader.ReadInt8Array(), Is.EqualTo(new sbyte[] { sbyte.MinValue, 0, sbyte.MaxValue }));
+        Assert.That(reader.ReadUInt8Array(), Is.EqualTo(new byte[] { byte.MinValue, 0, byte.MaxValue }));
+        Assert.That(reader.ReadInt16Array(), Is.EqualTo(new short[] { short.MinValue, 0, short.MaxValue }));
+        Assert.That(reader.ReadUInt16Array(), Is.EqualTo(new ushort[] { ushort.MinValue, 0, ushort.MaxValue }));
+        Assert.That(reader.ReadInt32Array(), Is.EqualTo(new int[] { int.MinValue, 0, int.MaxValue }));
+        Assert.That(reader.ReadUInt32Array(), Is.EqualTo(new uint[] { uint.MinValue, 0, uint.MaxValue }));
+        Assert.That(reader.ReadInt64Array(), Is.EqualTo(new long[] { long.MinValue, 0, long.MaxValue }));
+        Assert.That(reader.ReadUInt64Array(), Is.EqualTo(new ulong[] { ulong.MinValue, 0, ulong.MaxValue }));
+        Assert.That(reader.ReadFloatArray(), Is.EqualTo(new float[] { float.MinValue, 0, float.MaxValue }));
+        Assert.That(reader.ReadDoubleArray(), Is.EqualTo(new double[] { double.MinValue, 0, double.MaxValue }));
+    }
+
+    [Test]
+    public void TestPrimitiveArraysNative()
+    {
+        var stream = new FifoStream();
+        var writer = new DataWriter(stream, endian: EndianType.LittleEndian);
+        var reader = new DataReader(stream, endian: EndianType.BigEndian);
+
+        writer.WriteArray(new sbyte[] { sbyte.MinValue, 0, sbyte.MaxValue });
+        writer.WriteArray(new byte[] { byte.MinValue, 0, byte.MaxValue });
+        writer.WriteArray(new short[] { short.MinValue, 0, short.MaxValue });
+        writer.WriteArray(new ushort[] { ushort.MinValue, 0, ushort.MaxValue });
+        writer.WriteArray(new int[] { int.MinValue, 0, int.MaxValue });
+        writer.WriteArray(new uint[] { uint.MinValue, 0, uint.MaxValue });
+        writer.WriteArray(new long[] { long.MinValue, 0, long.MaxValue });
+        writer.WriteArray(new ulong[] { ulong.MinValue, 0, ulong.MaxValue });
+        writer.WriteArray(new float[] { float.MinValue, 0, float.MaxValue });
+        writer.WriteArray(new double[] { double.MinValue, 0, double.MaxValue });
+
+        Assert.That(reader.ReadArray<sbyte>(), Is.EqualTo(new sbyte[] { sbyte.MinValue, 0, sbyte.MaxValue }));
+        Assert.That(reader.ReadArray<byte>(), Is.EqualTo(new byte[] { byte.MinValue, 0, byte.MaxValue }));
+        Assert.That(reader.ReadArray<short>(), Is.EqualTo(new short[] { short.MinValue, 0, short.MaxValue }));
+        Assert.That(reader.ReadArray<ushort>(), Is.EqualTo(new ushort[] { ushort.MinValue, 0, ushort.MaxValue }));
+        Assert.That(reader.ReadArray<int>(), Is.EqualTo(new int[] { int.MinValue, 0, int.MaxValue }));
+        Assert.That(reader.ReadArray<uint>(), Is.EqualTo(new uint[] { uint.MinValue, 0, uint.MaxValue }));
+        Assert.That(reader.ReadArray<long>(), Is.EqualTo(new long[] { long.MinValue, 0, long.MaxValue }));
+        Assert.That(reader.ReadArray<ulong>(), Is.EqualTo(new ulong[] { ulong.MinValue, 0, ulong.MaxValue }));
+        Assert.That(reader.ReadArray<float>(), Is.EqualTo(new float[] { float.MinValue, 0, float.MaxValue }));
+        Assert.That(reader.ReadArray<double>(), Is.EqualTo(new double[] { double.MinValue, 0, double.MaxValue }));
     }
     #endregion Public Methods
 }

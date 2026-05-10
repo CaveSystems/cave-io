@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Cave;
+using Cave.Collections;
 using Cave.IO;
 using Cave.IO.Blob;
+using Cave.IO.Blob.Converters;
 using NUnit.Framework;
 
 namespace Tests.Cave.IO;
@@ -67,10 +70,18 @@ public class BlobSerializerTest
         // large data
         List<double> Doubles,
         List<float> Floats,
-        Dictionary<int, double> Map
+        Dictionary<int, double> Map,
+        float[] FloatArray,
+        double[] DoubleArray,
+        int[] IntArray,
+        long[] LongArray,
+        uint[] UIntArray,
+        ulong[] ULongArray,
+        short[] ShortArray,
+        ushort[] UShortArray
     ) : BaseRecord
     {
-        Level5Payload() : this(false, 0, 0, 0, 0, 0, 0, 0, 0, '\0', 0f, 0.0, 0m, default, default, null, null, null, null) { }
+        Level5Payload() : this(false, 0, 0, 0, 0, 0, 0, 0, 0, '\0', 0f, 0.0, 0m, default, default, null, null, null, null, null, null, null, null, null, null, null, null) { }
 
         public bool Equals(Level5Payload other)
         {
@@ -96,12 +107,19 @@ public class BlobSerializerTest
                 Text == other.Text &&
                 DeepEquals.ListEqual(Doubles, other.Doubles) &&
                 DeepEquals.ListEqual(Floats, other.Floats) &&
-                DeepEquals.DictionaryEqual(Map, other.Map);
+                DeepEquals.DictionaryEqual(Map, other.Map) &&
+                DeepEquals.ListEqual(FloatArray, other.FloatArray) &&
+                DeepEquals.ListEqual(DoubleArray, other.DoubleArray) &&
+                DeepEquals.ListEqual(IntArray, other.IntArray) &&
+                DeepEquals.ListEqual(LongArray, other.LongArray) &&
+                DeepEquals.ListEqual(UIntArray, other.UIntArray) &&
+                DeepEquals.ListEqual(ULongArray, other.ULongArray) &&
+                DeepEquals.ListEqual(ShortArray, other.ShortArray) &&
+                DeepEquals.ListEqual(UShortArray, other.UShortArray);
         }
 
         public override int GetHashCode()
         {
-            // stabil & schnell – reicht für Tests vollkommen
             unchecked
             {
                 int hash = 17;
@@ -110,6 +128,14 @@ public class BlobSerializerTest
                 hash = hash * 31 + Doubles.Count;
                 hash = hash * 31 + Floats.Count;
                 hash = hash * 31 + Map.Count;
+                hash = hash * 31 + FloatArray.Length;
+                hash = hash * 31 + DoubleArray.Length;
+                hash = hash * 31 + IntArray.Length;
+                hash = hash * 31 + LongArray.Length;
+                hash = hash * 31 + UIntArray.Length;
+                hash = hash * 31 + ULongArray.Length;
+                hash = hash * 31 + ShortArray.Length;
+                hash = hash * 31 + UShortArray.Length;
                 return hash;
             }
         }
@@ -151,17 +177,14 @@ public class BlobSerializerTest
         {
             var rnd = new Random(seed);
 
-            var doubles = new List<double>(80_000);
-            for (int i = 0; i < doubles.Capacity; i++)
-                doubles.Add((rnd.NextDouble() - 0.5) * 1e6);
+            var doubles = new List<double>(10_000);
+            for (int i = 0; i < doubles.Capacity; i++) doubles.Add((rnd.NextDouble() - 0.5) * 1e6);
 
-            var floats = new List<float>(60_000);
-            for (int i = 0; i < floats.Capacity; i++)
-                floats.Add((float)((rnd.NextDouble() - 0.5) * 1e4));
+            var floats = new List<float>(20_000);
+            for (int i = 0; i < floats.Capacity; i++) floats.Add((float)((rnd.NextDouble() - 0.5) * 1e4));
 
-            var map = new Dictionary<int, double>(20_000);
-            for (int i = 0; i < 20_000; i++)
-                map[i] = rnd.NextDouble();
+            var map = new Dictionary<int, double>(5_000);
+            for (int i = 0; i < 5_000; i++) map[i] = rnd.NextDouble();
 
             var payload = new Level5Payload(
                 Bool: true,
@@ -182,7 +205,15 @@ public class BlobSerializerTest
                 Text: "serializer-test",
                 Doubles: doubles,
                 Floats: floats,
-                Map: map
+                Map: map,
+                FloatArray: floats.ToArray(),
+                DoubleArray: doubles.ToArray(),
+                IntArray: new Counter(-100, 200).ToArray(),
+                LongArray: new Counter(-100, 200).Select(i => i * (long)int.MaxValue).ToArray(),
+                UIntArray: new Counter(0, 200).Select(i => (uint)i).ToArray(),
+                ULongArray: new Counter(0, 200).Select(i => (ulong)i * (ulong)int.MaxValue).ToArray(),
+                ShortArray: new Counter(-100, 200).Select(i => (short)i).ToArray(),
+                UShortArray: new Counter(0, 200).Select(i => (ushort)i).ToArray()
             );
 
             var l4 = new Level4Node(Guid.NewGuid(), payload, -1.0, 1.0);
@@ -203,11 +234,8 @@ public class BlobSerializerTest
         public override bool CanRead => false;
         public override bool CanSeek => false;
         public override bool CanWrite => true;
-
         public override long Length => length;
-
         public override long Position { get => length; set => throw new NotSupportedException(); }
-
         public override void Flush() { }
         public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
@@ -230,6 +258,49 @@ public class BlobSerializerTest
         reader.Read(out RootRecord roundtrip);
         reader.Close();
         Assert.AreEqual(test, roundtrip);
+    }
+
+    [Test]
+    public void TestEnumerableClassWithProperties()
+    {
+        var obj1 = new EnumerableClassWithProperties();
+        var obj2 = new EnumerableClassWithProperties();
+        var fifo = new FifoStream();
+        var serializer = new BlobSerializer();
+        //test serialization with defining the converter explicitly
+        //this allows usage without access to the source code of the class
+        serializer.Register(
+            typeof(EnumerableClassWithProperties), 
+            new BlobReflectionConverter(typeof(EnumerableClassWithProperties), BlobConverterFlags.Private | BlobConverterFlags.Public | BlobConverterFlags.Fields | BlobConverterFlags.Properties));
+        serializer.Serialize(fifo, obj1);
+        serializer.Serialize(fifo, obj2);
+        serializer.Deserialize<EnumerableClassWithProperties>(fifo, out var rt1);
+        serializer.Deserialize<EnumerableClassWithProperties>(fifo, out var rt2);
+        Assert.AreEqual(obj1.SomeObject, rt1.SomeObject);
+        Assert.AreEqual(obj1.SomeValue, rt1.SomeValue);
+        Assert.That(obj1.SequenceEqual(rt1));
+        Assert.AreEqual(obj2.SomeObject, rt2.SomeObject);
+        Assert.AreEqual(obj2.SomeValue, rt2.SomeValue); 
+        Assert.That(obj2.SequenceEqual(rt2));
+    }
+
+    [Test]
+    public void TestEnumerableClassWithPropertiesAndAttribute()
+    {
+        var obj1 = new EnumerableClassWithPropertiesAndAttribute();
+        var obj2 = new EnumerableClassWithPropertiesAndAttribute();
+        var fifo = new FifoStream();
+        var serializer = new BlobSerializer();
+        serializer.Serialize(fifo, obj1);
+        serializer.Serialize(fifo, obj2);
+        serializer.Deserialize<EnumerableClassWithPropertiesAndAttribute>(fifo, out var rt1);
+        serializer.Deserialize<EnumerableClassWithPropertiesAndAttribute>(fifo, out var rt2);
+        Assert.AreEqual(obj1.SomeObject, rt1.SomeObject);
+        Assert.AreEqual(obj1.SomeValue, rt1.SomeValue);
+        Assert.That(obj1.SequenceEqual(rt1));
+        Assert.AreEqual(obj2.SomeObject, rt2.SomeObject);
+        Assert.AreEqual(obj2.SomeValue, rt2.SomeValue);
+        Assert.That(obj2.SequenceEqual(rt2));
     }
 
     [Test]
@@ -269,9 +340,10 @@ public class BlobSerializerTest
         Console.WriteLine($"Bytes:      {ms.Length:N0}");
         Console.WriteLine($"Size/s:     {(ms.Length / seconds).FormatBinarySize()}");
         Console.WriteLine($"Objects/s:  {objectsPerSecond:N0}");
+        Console.WriteLine($"Time/obj:   {(seconds / totalObjects).FormatSeconds()}");
         Console.WriteLine($"bytes/obj: ~{(ms.Length / totalObjects):N0}");
         Console.WriteLine("----------------------------");
-        Console.WriteLine("Small object single thread");
+        Console.WriteLine("Big record single thread");
     }
 
     [Test]
@@ -335,9 +407,10 @@ public class BlobSerializerTest
         Console.WriteLine($"Bytes:      {bytesRead:N0}");
         Console.WriteLine($"Size/s:     {(bytesRead / seconds).FormatBinarySize()}");
         Console.WriteLine($"Objects/s:  {objectsPerSecond:N0}");
+        Console.WriteLine($"Time/obj:   {(seconds / totalObjects).FormatSeconds()}");
         Console.WriteLine($"bytes/obj: ~{(bytesRead / totalObjects):N0}");
         Console.WriteLine("----------------------------");
-        Console.WriteLine("Small object single thread");
+        Console.WriteLine("Big record single thread");
     }
 
     [Test]
@@ -392,9 +465,10 @@ public class BlobSerializerTest
         Console.WriteLine($"Bytes:      {size:N0}");
         Console.WriteLine($"Size/s:     {(size / seconds).FormatBinarySize()}");
         Console.WriteLine($"Objects/s:  {objectsPerSecond:N0}");
+        Console.WriteLine($"Time/obj:   {(seconds / totalObjects).FormatSeconds()}");
         Console.WriteLine($"bytes/obj: ~{(size / totalObjects):N0}");
         Console.WriteLine("--------------------------------");
-        Console.WriteLine("Small object single thread with ");
+        Console.WriteLine("Big record single thread with ");
         Console.WriteLine("sequential write,read,equals.");
     }
 
@@ -435,6 +509,7 @@ public class BlobSerializerTest
         Console.WriteLine($"Bytes:      {ms.Length:N0}");
         Console.WriteLine($"Size/s:     {(ms.Length / seconds).FormatBinarySize()}");
         Console.WriteLine($"Objects/s:  {objectsPerSecond:N0}");
+        Console.WriteLine($"Time/obj:   {(seconds / totalObjects).FormatSeconds()}");
         Console.WriteLine($"bytes/obj: ~{(ms.Length / totalObjects):N0}");
         Console.WriteLine("----------------------------");
         Console.WriteLine("Small object single thread");
@@ -491,6 +566,7 @@ public class BlobSerializerTest
         Console.WriteLine($"Bytes:      {size:N0}");
         Console.WriteLine($"Size/s:     {(size / seconds).FormatBinarySize()}");
         Console.WriteLine($"Objects/s:  {objectsPerSecond:N0}");
+        Console.WriteLine($"Time/obj:   {(seconds / totalObjects).FormatSeconds()}");
         Console.WriteLine($"bytes/obj: ~{(size / totalObjects):N0}");
         Console.WriteLine("--------------------------------");
         Console.WriteLine("Small object single thread with ");

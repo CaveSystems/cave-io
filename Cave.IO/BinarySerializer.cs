@@ -441,7 +441,7 @@ public class BinarySerializer
         var result = prototype ?? TypeActivator.CreateFast(type);
         if (ClassFlags.HasFlag(SerializerFlags.Fields))
         {
-            var fields = type.GetFields(GetBindingFlags(StructFlags));
+            var fields = type.GetFields(GetBindingFlags(ClassFlags));
             foreach (var field in fields)
             {
                 var value = Deserialize(field.FieldType, reader);
@@ -450,7 +450,7 @@ public class BinarySerializer
         }
         if (ClassFlags.HasFlag(SerializerFlags.Properties))
         {
-            var properties = type.GetProperties(GetBindingFlags(StructFlags)).Where(CanWrite);
+            var properties = type.GetProperties(GetBindingFlags(ClassFlags)).Where(CanWrite);
             foreach (var property in properties)
             {
                 var value = Deserialize(property.PropertyType, reader);
@@ -536,6 +536,7 @@ public class BinarySerializer
                     {
                         typeLookup[className] = itemType = AppDom.FindType(className, AppDom.LoadFlags.None) ?? throw new InvalidOperationException($"Could not deserialize type {className}!");
                     }
+                    type = itemType;
                 }
 
                 var parse = GetParse(type);

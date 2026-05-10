@@ -20,6 +20,13 @@
 					<CollectDumpOnTestSessionHang TestTimeout="10min" HangDumpType="Full" />
 				</Configuration>
 			</DataCollector>
+			<DataCollector friendlyName="XPlat Code Coverage">
+				<Configuration>
+					<Exclude>
+						<ModulePath>.*Test.*\.(exe|dll)</ModulePath>
+					</Exclude>
+				</Configuration>
+			</DataCollector>
 		</DataCollectors>
 	</DataCollectionRunSettings>
 </RunSettings>

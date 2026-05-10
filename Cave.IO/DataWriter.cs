@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace Cave.IO;
@@ -17,8 +18,6 @@ public sealed class DataWriter
     #region Private Fields
 
     bool closed;
-    IBitConverter endianEncoder;
-    EndianType endianType;
     NewLineData? newLineData;
     NewLineMode newLineMode = NewLineMode.LF;
     StringEncoding stringEncoding;
@@ -62,8 +61,7 @@ public sealed class DataWriter
         BaseStream = output ?? throw new ArgumentNullException(nameof(output));
         NewLineMode = newLineMode;
         stringEncoding = encoding != StringEncoding.Undefined ? encoding : throw new ArgumentOutOfRangeException(nameof(encoding));
-        endianType = endian;
-        endianEncoder = endian.GetBitConverter();
+        EndianType = endian;
         if (!BaseStream.CanWrite)
         {
             throw new ArgumentException("Stream does not support writing or is already closed.", nameof(output));
@@ -86,15 +84,7 @@ public sealed class DataWriter
     /// <summary>Gets or sets the endian encoder type.</summary>
     /// <remarks>This can be used between all write calls.</remarks>
     /// <value>The endian encoder type.</value>
-    public EndianType EndianType
-    {
-        get => endianType;
-        set
-        {
-            endianType = value;
-            endianEncoder = endianType.GetBitConverter();
-        }
-    }
+    public EndianType EndianType { get; set; }
 
     /// <summary>Gets or sets the new line mode used.</summary>
     /// <remarks>This can be used between all write calls.</remarks>
@@ -154,30 +144,14 @@ public sealed class DataWriter
     /// <summary>Writes the specified buffer directly to the stream.</summary>
     /// <param name="buffer">The buffer to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(byte[] buffer)
-    {
-        if (buffer == null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-
-        BaseStream.Write(buffer, 0, buffer.Length);
-    }
+    public void Write(byte[] buffer) => BaseStream.Write(buffer, 0, buffer.Length);
 
     /// <summary>Writes a part of the specified buffer directly to the stream.</summary>
     /// <param name="buffer">The buffer to write.</param>
     /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
     /// <param name="count">The number of bytes to be written to the current stream.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(byte[] buffer, int offset, int count)
-    {
-        if (buffer == null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-
-        BaseStream.Write(buffer, offset, count);
-    }
+    public void Write(byte[] buffer, int offset, int count) => BaseStream.Write(buffer, offset, count);
 
     /// <summary>Writes the specified character directly to the stream.</summary>
     /// <param name="c">The character to write.</param>
@@ -189,14 +163,7 @@ public sealed class DataWriter
     /// <param name="chars">Array of characters to write.</param>
     /// <returns>The number of bytes written.</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public int Write(char[] chars)
-    {
-        if (chars == null)
-        {
-            throw new ArgumentNullException(nameof(chars));
-        }
-        return Write(new string(chars));
-    }
+    public int Write(char[] chars) => Write(new string(chars));
 
     /// <summary>Writes a part of the specified character array directly to the stream.</summary>
     /// <param name="chars">Array of characters to write.</param>
@@ -206,11 +173,6 @@ public sealed class DataWriter
     [MethodImpl((MethodImplOptions)256)]
     public int Write(char[] chars, int offset, int count)
     {
-        if (chars == null)
-        {
-            throw new ArgumentNullException(nameof(chars));
-        }
-
         var text = new string(chars, offset, count);
         var data = EncodeString(text);
         Write(data);
@@ -231,22 +193,22 @@ public sealed class DataWriter
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(double value) => Write(endianEncoder.GetBytes(value));
+    public void Write(double value) => Write(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(value) : LittleEndian.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(short value) => Write(endianEncoder.GetBytes(value));
+    public void Write(short value) => Write(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(value) : LittleEndian.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(int value) => Write(endianEncoder.GetBytes(value));
+    public void Write(int value) => Write(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(value) : LittleEndian.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(long value) => Write(endianEncoder.GetBytes(value));
+    public void Write(long value) => Write(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(value) : LittleEndian.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
@@ -256,7 +218,7 @@ public sealed class DataWriter
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(float value) => Write(endianEncoder.GetBytes(value));
+    public void Write(float value) => Write(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(value) : LittleEndian.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
@@ -306,17 +268,17 @@ public sealed class DataWriter
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(ushort value) => Write(endianEncoder.GetBytes(value));
+    public void Write(ushort value) => Write(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(value) : LittleEndian.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(uint value) => Write(endianEncoder.GetBytes(value));
+    public void Write(uint value) => Write(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(value) : LittleEndian.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(ulong value) => Write(endianEncoder.GetBytes(value));
+    public void Write(ulong value) => Write(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(value) : LittleEndian.GetBytes(value));
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
@@ -357,6 +319,7 @@ public sealed class DataWriter
     public int Write7BitEncoded64(ulong value) => BitCoder64.Write7BitEncoded(this, value);
 
     /// <summary>Writes an array of the specified struct type to the stream using the default marshaller prefixed by array length.</summary>
+    /// <remarks>This function ignores <see cref="EndianType"/> and uses native marshalling!</remarks>
     /// <typeparam name="T">Type of each element.</typeparam>
     /// <param name="array">Array of elements.</param>
     /// <returns>Number of bytes written.</returns>
@@ -365,29 +328,27 @@ public sealed class DataWriter
     {
         if (array == null)
         {
-            throw new ArgumentNullException(nameof(array));
+            return Write7BitEncoded32(-1);
         }
 
         if (array.Length == 0)
         {
-            Write7BitEncoded32(0);
-            return 1;
+            return Write7BitEncoded32(0);
         }
 
-        Write7BitEncoded32(array.Length);
-        if (array is byte[] bytes)
-        {
-            if (bytes is null) throw new PlatformNotSupportedException("Byte array conversion bug! Please update your mono framework!");
-        }
-        else
-        {
-            bytes = new byte[array.Length * Marshal.SizeOf(array[0])];
-            Buffer.BlockCopy(array, 0, bytes, 0, bytes.Length);
-        }
-
-        var headerSize = Write7BitEncoded32(bytes.Length);
-        Write(bytes);
-        return headerSize + bytes.Length;
+#if NET5_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        ReadOnlySpan<byte> byteBuffer = MemoryMarshal.AsBytes(array.AsSpan());
+        var headerLength = Write7BitEncoded32(byteBuffer.Length);
+        BaseStream.Write(byteBuffer);
+#else
+        var size = Marshal.SizeOf(typeof(T));
+        var byteCount = array.Length * size;
+        var byteBuffer = new byte[byteCount];
+        Buffer.BlockCopy(array, 0, byteBuffer, 0, byteCount);
+        var headerLength = Write7BitEncoded32(byteBuffer.Length);
+        BaseStream.Write(byteBuffer, 0, byteBuffer.Length);
+#endif
+        return headerLength + byteBuffer.Length;
     }
 
     /// <summary>Writes a 32bit linux epoch value (localtime).</summary>
@@ -457,6 +418,143 @@ public sealed class DataWriter
         }
     }
 
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(sbyte[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            var bytes = new byte[buffer.Length];
+            Buffer.BlockCopy(buffer, 0, bytes, 0, buffer.Length);
+            WritePrefixed(bytes);
+        }
+    }
+
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(float[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(buffer) : LittleEndian.GetBytes(buffer));
+        }
+    }
+
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(double[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(buffer) : LittleEndian.GetBytes(buffer));
+        }
+    }
+
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(ulong[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(buffer) : LittleEndian.GetBytes(buffer));
+        }
+    }
+
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(long[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(buffer) : LittleEndian.GetBytes(buffer));
+        }
+    }
+
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(uint[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(buffer) : LittleEndian.GetBytes(buffer));
+        }
+    }
+
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(int[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(buffer) : LittleEndian.GetBytes(buffer));
+        }
+    }
+
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(short[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(buffer) : LittleEndian.GetBytes(buffer));
+        }
+    }
+
+    /// <summary>Writes the specified buffer to the stream with length prefix.</summary>
+    /// <param name="buffer">The buffer to write.</param>
+    [MethodImpl((MethodImplOptions)256)]
+    public void WritePrefixed(ushort[]? buffer)
+    {
+        if (buffer == null)
+        {
+            Write7BitEncoded32(-1);
+        }
+        else
+        {
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(buffer) : LittleEndian.GetBytes(buffer));
+        }
+    }
+
     /// <summary>
     /// Writes the specified value with length prefix and little endian encoding to the stream. This uses 1..9 bytes and allows to write a null value.
     /// </summary>
@@ -470,8 +568,7 @@ public sealed class DataWriter
         }
         else
         {
-            var bytes = endianEncoder.GetBytes(data);
-            WritePrefixed(bytes);
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(data) : LittleEndian.GetBytes(data));
         }
     }
 
@@ -488,8 +585,7 @@ public sealed class DataWriter
         }
         else
         {
-            var bytes = endianEncoder.GetBytes(data);
-            WritePrefixed(bytes);
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(data) : LittleEndian.GetBytes(data));
         }
     }
 
@@ -506,8 +602,7 @@ public sealed class DataWriter
         }
         else
         {
-            var bytes = endianEncoder.GetBytes(data);
-            WritePrefixed(bytes);
+            WritePrefixed(EndianType == EndianType.BigEndian ? BigEndian.GetBytes(data) : LittleEndian.GetBytes(data));
         }
     }
 
@@ -627,11 +722,6 @@ public sealed class DataWriter
     [MethodImpl((MethodImplOptions)256)]
     public void WritePrefixed(byte[] buffer, int offset, int count)
     {
-        if (buffer == null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-
         Write7BitEncoded32(count);
         BaseStream.Write(buffer, offset, count);
     }

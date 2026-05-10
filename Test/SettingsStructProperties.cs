@@ -5,7 +5,7 @@ using Cave.IO.Blob;
 
 namespace Tests.Cave.IO;
 
-[BlobConverter(Source = BlobConverterFlags.Fields)]
+[BlobReflectionConverter(Source = BlobConverterFlags.Fields)]
 public struct SettingsStructProperties : IEquatable<SettingsStructProperties>
 {
     #region Public Properties

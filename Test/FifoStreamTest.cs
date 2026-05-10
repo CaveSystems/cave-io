@@ -1,10 +1,10 @@
 ﻿
-
-using NUnit.Framework;
-
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Cave;
 using Cave.IO;
+using NUnit.Framework;
 
 namespace Tests.Cave.IO;
 
@@ -63,6 +63,99 @@ public class FifoStreamTest
             Assert.AreEqual(255, fifo[fifo.Available - 1]);
             Assert.AreEqual(i, fifo.ReadByte());
         }
+    }
+
+    [Test]
+    public void TestAppend()
+    {
+        var fifo = new FifoStream();
+        var writer = new DataWriter(fifo);
+        var reader = new DataReader(fifo);
+        writer.WriteZeroTerminated("Hello World.");
+        writer.WriteZeroTerminated("We will now perform some tests.");
+        writer.WriteZeroTerminated("This is the end of the testdata.");
+        writer.WriteZeroTerminated("Bye!");
+
+        var buf = fifo.ToArray();
+        fifo.AppendStream(new MemoryStream(buf));
+        fifo.AppendBuffer(buf, 0, buf.Length);
+        fifo.AppendBuffer(ASCII.GetBytes("12345"), 1, 3);
+        fifo.PutBuffer(ASCII.GetBytes("678"));
+        writer.Write((byte)0);
+        for (int i = 0; i < 3; i++)
+        {
+            Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("Hello World."));
+            Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("We will now perform some tests."));
+            Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("This is the end of the testdata."));
+            Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("Bye!"));
+        }
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("234678"));
+    }
+
+    [Test]
+    public void TestSeekAndIndexOf()
+    {
+        var fifo = new FifoStream();
+        var writer = new DataWriter(fifo);
+        writer.WriteZeroTerminated("Hello World.");
+        writer.WriteZeroTerminated("We will now perform some tests.");
+        writer.WriteZeroTerminated("This is the end of the testdata.");
+        writer.WriteZeroTerminated("Bye!");
+
+        var reader = new DataReader(fifo);
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("Hello World."));
+        reader.Seek(-5, SeekOrigin.End);
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("Bye!"));
+        reader.Seek(-5, SeekOrigin.Current);
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("Bye!"));
+        reader.Seek(0, SeekOrigin.Begin);
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("Hello World."));
+
+        var nextNull = fifo.IndexOf((byte)0);
+        Assert.That(nextNull, Is.GreaterThan(0));
+        reader.Seek(nextNull, SeekOrigin.Current);
+        var pos = fifo.Position;
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo(""));
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("This is the end of the testdata."));
+
+        fifo.Position = 0;
+        var space = fifo.IndexOf((byte)' ');
+        reader.Seek(space, SeekOrigin.Current);
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo(" World."));
+
+        fifo.Position = 0;
+        var search = ASCII.GetBytes("We will now ");
+        var index = fifo.IndexOf(search);
+        fifo.Position = index;
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("We will now perform some tests."));
+
+        //now we allow the fifo to throw away buffers after reading..
+        fifo.Position = 0;
+        Assert.That(fifo.Position, Is.EqualTo(0));
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("Hello World."));
+        fifo.FreeBuffers();
+        Assert.That(fifo.Position, Is.EqualTo(0));
+        Assert.That(fifo.Length, Is.EqualTo(70));
+        Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("We will now perform some tests."));
+        Assert.That(fifo.Position, Is.EqualTo(32));
+        Assert.That(fifo.Length, Is.EqualTo(70));
+        fifo.FreeBuffers();
+        Assert.That(fifo.Position, Is.EqualTo(0));
+        Assert.That(fifo.Length, Is.EqualTo(38));
+
+        fifo.Clear();
+        Assert.That(fifo.Position, Is.EqualTo(0));
+        Assert.That(fifo.Length, Is.EqualTo(0));
+
+        fifo.Clear();
+        fifo.PutBuffer(ASCII.GetBytes("12345"));
+        Assert.That(fifo.Position, Is.EqualTo(0));
+        Assert.That(fifo.Length, Is.EqualTo(5));
+        Assert.That(fifo.Available, Is.EqualTo(5));
+        reader.ReadBytes(5);
+        Assert.That(fifo.Position, Is.EqualTo(5));
+        Assert.That(fifo.Length, Is.EqualTo(5));
+        Assert.That(fifo.Available, Is.EqualTo(0));
     }
 
     #endregion Public Methods

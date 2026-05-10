@@ -168,7 +168,7 @@ public class TestInifile
     }
 
     [Test]
-    public void Test()
+    public void TestStructFields()
     {
         var writer = new IniWriter();
         for (var i = 0; i < 100; i++)
@@ -199,5 +199,63 @@ public class TestInifile
         Assert.AreEqual(fileName, ini.ReadSetting("Service", "Path2"));
     }
 
+    [Test]
+    public void TestReaderCommentsAndBlankLines()
+    {
+        var test =
+            "; comment before section\r\n" +
+            "# another comment\r\n" +
+            "\r\n" +
+            "[Service]\r\n" +
+            "; comment before key\r\n" +
+            "Path = c:\\\\temp\\\\file.exe\r\n" +
+            "\r\n" +
+            "[Other]\r\n" +
+            "Value = 123\r\n";
+
+        var ini = IniReader.Parse("ini", test);
+        Assert.AreEqual(@"c:\temp\file.exe", ini.ReadSetting("Service", "Path"));
+        Assert.AreEqual("123", ini.ReadSetting("Other", "Value"));
+    }
+
+    [Test]
+    public void TestReaderValuesContainingEquals()
+    {
+        var test =
+            "[Service]\r\n" +
+            "CommandLine = install=true /target=c:\\temp\\app.exe\r\n" +
+            "Connection = Server=localhost;Database=test;User=sa\r\n";
+
+        var ini = IniReader.Parse("ini", test);
+        Assert.AreEqual("install=true /target=c:\\temp\\app.exe", ini.ReadSetting("Service", "CommandLine"));
+        Assert.AreEqual("Server=localhost;Database=test;User=sa", ini.ReadSetting("Service", "Connection"));
+    }
+
+    [Test]
+    public void TestReaderEmptyValues()
+    {
+        var test =
+            "[Service]\r\n" +
+            "Empty =\r\n" +
+            "AlsoEmpty = \r\n";
+
+        var ini = IniReader.Parse("ini", test);
+        Assert.AreEqual(string.Empty, ini.ReadSetting("Service", "Empty"));
+        Assert.AreEqual(string.Empty, ini.ReadSetting("Service", "AlsoEmpty"));
+    }
+
+    [Test]
+    public void TestWriterReaderMultipleSections()
+    {
+        var writer = new IniWriter();
+        writer.WriteSetting("Service", "Path", "c:\\temp\\service.exe");
+        writer.WriteSetting("Service", "Arguments", "-a=b -c=d");
+        writer.WriteSetting("Other", "Enabled", "true");
+
+        var reader = writer.ToReader();
+        Assert.AreEqual("c:\\temp\\service.exe", reader.ReadSetting("Service", "Path"));
+        Assert.AreEqual("-a=b -c=d", reader.ReadSetting("Service", "Arguments"));
+        Assert.AreEqual("true", reader.ReadSetting("Other", "Enabled"));
+    }
     #endregion Public Methods
 }

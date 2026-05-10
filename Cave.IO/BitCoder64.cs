@@ -12,6 +12,7 @@ public static class BitCoder64
     /// <summary>Gets the data of a 7 bit encoded value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>The encoded value as byte array.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static byte[] Get7BitEncoded(ulong value)
     {
         var buffer = new byte[10];
@@ -41,6 +42,7 @@ public static class BitCoder64
     /// <summary>Gets the data of a 8 bit shifted value (using little endian encoding).</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>The encoded value as byte array.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static byte[] Get8BitShifted(ulong value)
     {
         unchecked
@@ -60,11 +62,13 @@ public static class BitCoder64
     /// <summary>Gets the data of a 8 bit shifted value (using little endian encoding).</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>The encoded value as byte array.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static byte[] Get8BitShifted(long value) => Get8BitShifted(unchecked((ulong)value));
 
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>number of bytes needed.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static int GetByteCount7BitEncoded(ulong value)
     {
         unchecked
@@ -90,6 +94,7 @@ public static class BitCoder64
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>number of bytes needed.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static int GetByteCount8BitEncoded(ulong value)
     {
         unchecked
@@ -115,6 +120,7 @@ public static class BitCoder64
     /// <summary>Gets the number of bytes needed for the specified value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>number of bytes needed.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static int GetByteCount8BitShifted(ulong value)
     {
         unchecked
@@ -146,6 +152,7 @@ public static class BitCoder64
     /// <summary>Reads a 7 bit encoded value from the specified Stream.</summary>
     /// <param name="stream">The <see cref="Stream"/> to read from.</param>
     /// <returns>Returns the read value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static ulong Read7BitEncodedUInt64(Stream stream)
     {
         unchecked
@@ -177,6 +184,7 @@ public static class BitCoder64
     /// <summary>Reads a 8 bit prefixed and shifted value from the specified Stream.</summary>
     /// <param name="stream">The <see cref="Stream"/> to read from.</param>
     /// <returns>Returns the read value.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static ulong? Read8BitPrefixedUInt64(Stream stream)
     {
         var count = stream.ReadByte();
@@ -200,6 +208,7 @@ public static class BitCoder64
     /// <param name="stream">The <see cref="Stream"/> to write to.</param>
     /// <param name="value">The value to write.</param>
     /// <returns>Returns the number of bytes written.</returns>
+    [MethodImpl((MethodImplOptions)256)]
     public static int Write7BitEncoded(Stream stream, ulong value)
     {
         unchecked

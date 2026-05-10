@@ -27,6 +27,7 @@ public static class EndianTypeExtension
     /// <returns>Returns the <see cref="IBitConverter"/> instance.</returns>
     /// <exception cref="NotImplementedException">EndianType {endianType} not implemented!</exception>
     [MethodImpl(256)]
+    [Obsolete("Use BigEndian or LittleEndian.")]
     public static IBitConverter GetBitConverter(this EndianType endianType) =>
         endianType switch
         {
@@ -144,6 +145,7 @@ public static class EndianTypeExtension
     public static bool ToBoolean(this EndianType type, byte[] data, int index) => type == EndianType.BigEndian ? BigEndian.ToBoolean(data, index) : LittleEndian.ToBoolean(data, index);
 
     /// <summary>Returns a value converted from the specified data at a specified index.</summary>
+    /// <param name="type">The endian type.</param>
     /// <param name="data">The data as byte array.</param>
     /// <param name="index">The index.</param>
     /// <returns>The converted value.</returns>

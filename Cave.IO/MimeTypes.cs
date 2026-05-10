@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 
 namespace Cave.IO;
 
 /// <summary>Provides a list of mime types</summary>
+[ExcludeFromCodeCoverage]
 public static class MimeTypes
 {
     #region Private Fields
@@ -574,24 +577,101 @@ public static class MimeTypes
         { ".xwd", "image/x-xwindowdump"},
         { ".z", "application/x-compress"},
         { ".zip", "application/x-zip-compressed"},
+
+        { ".avif", "image/avif"},
+        { ".cjs", "text/javascript"},
+        { ".epub", "application/epub+zip"},
+        { ".flac", "audio/flac"},
+        { ".heic", "image/heic"},
+        { ".heif", "image/heif"},
+        { ".md", "text/markdown"},
+        { ".mjs", "text/javascript"},
+        { ".oga", "audio/ogg"},
+        { ".ogg", "audio/ogg"},
+        { ".ogv", "video/ogg"},
+        { ".opus", "audio/opus"},
+        { ".otf", "font/otf"},
+        { ".wasm", "application/wasm"},
+        { ".webm", "video/webm"},
+        { ".webmanifest", "application/manifest+json"},
+        { ".webp", "image/webp"},
+        { ".yaml", "application/yaml"},
+        { ".yml", "application/yaml"},
     };
 
     #endregion Private Fields
 
     #region Public Methods
 
-    /// <summary>Retrieves a mimetype from the specified extension.</summary>
+    /// <summary>Checks whether an extension is known.</summary>
     /// <param name="extension">The extension.</param>
-    /// <returns></returns>
+    /// <returns>Returns true if the extension is known.</returns>
+    public static bool ContainsExtension(string extension)
+    {
+        if (string.IsNullOrEmpty(extension))
+        {
+            return false;
+        }
+
+        if (extension[0] != '.')
+        {
+            extension = "." + extension;
+        }
+
+        return items.ContainsKey(extension);
+    }
+
+    /// <summary>Retrieves a mime type from the specified extension.</summary>
+    /// <param name="extension">The extension.</param>
+    /// <returns>Returns the mime type or the default type.</returns>
     public static string FromExtension(string extension)
     {
-        if (!items.TryGetValue(extension, out var result))
+        if (TryFromExtension(extension, out var result))
         {
-            result = "application/octet-stream";
-            Debug.WriteLine(string.Format("Could not find MimeType for extension: {0}; using default: {1}!", extension, result));
+            return result;
         }
+
+        result = DefaultMimeType;
+        Debug.WriteLine(string.Format("Could not find MimeType for extension: {0}; using default: {1}!", extension, result));
         return result;
     }
 
+    /// <summary>Retrieves a mime type from the specified file name.</summary>
+    /// <param name="fileName">The file name.</param>
+    /// <returns>Returns the mime type or the default type.</returns>
+    public static string FromFileName(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+        {
+            return DefaultMimeType;
+        }
+
+        return FromExtension(Path.GetExtension(fileName));
+    }
+
+    /// <summary>Tries to retrieve a mime type from the specified extension.</summary>
+    /// <param name="extension">The extension.</param>
+    /// <param name="mimeType">The mime type.</param>
+    /// <returns>Returns true on success.</returns>
+    public static bool TryFromExtension(string extension, out string mimeType)
+    {
+        if (!string.IsNullOrEmpty(extension))
+        {
+            if (extension[0] != '.')
+            {
+                extension = "." + extension;
+            }
+            if (items.TryGetValue(extension, out mimeType!))
+            {
+                return true;
+            }
+        }
+        mimeType = DefaultMimeType;
+        return false;
+    }
+
     #endregion Public Methods
+
+    /// <summary>Default mime type.</summary>
+    public const string DefaultMimeType = "application/octet-stream";
 }

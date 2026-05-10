@@ -15,7 +15,9 @@ sealed class BlobEnumerableConverterState
     internal readonly ConstructorCache? Constructor;
 
     /// <summary>Gets the converter bundle for the element type.</summary>
-    internal readonly BlobConverterBundle ElementConverterBundle;
+    internal readonly BlobConverterBundle? ElementConverterBundle;
+
+    internal readonly BlobEnumerableConverterData Data;
 
     #endregion Fields
 
@@ -23,14 +25,16 @@ sealed class BlobEnumerableConverterState
 
     /// <summary>Initializes a new instance with the specified type, constructor, and element converter bundle.</summary>
     /// <param name="type">Target enumerable type.</param>
-    /// <param name="constructor">Constructor for the target type.</param>
     /// <param name="elementConverterBundle">Converter bundle for elements.</param>
-    public BlobEnumerableConverterState(Type type, ConstructorInfo? constructor, BlobConverterBundle elementConverterBundle)
+    /// <param name="data">Converter data for the enumerable type.</param>
+    public BlobEnumerableConverterState(Type type, BlobConverterBundle? elementConverterBundle, BlobEnumerableConverterData data)
     {
+        Data = data;
         ElementConverterBundle = elementConverterBundle;
-        Constructor = constructor is null ? null : new(constructor);
-        AcceptArray = type.IsAssignableFrom(elementConverterBundle.Type.MakeArrayType());
+        Constructor = data.Constructor is null ? null : new(data.Constructor);
+        AcceptArray = type.IsAssignableFrom(data.ArrayType);
         if (!AcceptArray && Constructor is null) throw new InvalidOperationException($"Type {type.FullName} does not accept an array and does not have a suitable constructor for deserialization!");
+        if (data.PrimitiveType == default && ElementConverterBundle is null) throw new ArgumentNullException(nameof(elementConverterBundle), $"Type {type.ToShortName()} requires an {nameof(ElementConverterBundle)}!");
     }
 
     #endregion Public Constructors

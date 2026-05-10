@@ -30,4 +30,10 @@ public enum BlobConverterFlags
 
     /// <summary>Tells the <see cref="BlobReflectionConverter"/> to include private members for serialization. This is the default.</summary>
     Private = 1 << 3,
+
+    /// <summary>
+    /// Tells the <see cref="BlobReflectionConverter"/> to include all members for serialization. This is not the default because it is more likely to break
+    /// across versions of the same type.
+    /// </summary>
+    All = 0xFF,
 }

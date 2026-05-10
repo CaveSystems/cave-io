@@ -18,6 +18,16 @@ public abstract class BlobConverterBase : IBlobConverter
     #region Protected Methods
 
     /// <summary>
+    /// Associates the specified data with the given type in the supported types collection.
+    /// </summary>
+    /// <param name="type">The type to associate with the data. Cannot be null.</param>
+    /// <param name="data">The data to associate with the specified type. Can be null.</param>
+    protected void SetHandleData(Type type, object? data)
+    {
+        supportedTypes[type] = data;
+    }
+
+    /// <summary>
     /// Implemented in derived classes to perform the actual reflection-based checks to determine if the converter can handle the specified type. The result is
     /// stored in the <see cref="supportedTypes"/> cache for future reference.
     /// </summary>
@@ -32,12 +42,16 @@ public abstract class BlobConverterBase : IBlobConverter
     /// <returns><c>true</c> if the converter-specific data is found; otherwise, <c>false</c>.</returns>
     protected void GetHandlingData<TContent>(Type type, out TContent content)
     {
-        if (supportedTypes.TryGetValue(type, out var data) && data is TContent result)
+        if (!supportedTypes.TryGetValue(type, out var data))
         {
-            content = result;
-            return;
+            data = GetCanHandleCache(type);
+            SetHandleData(type, data);
         }
-        throw new InvalidOperationException($"The converter does not support the type '{type.FullName}'.");
+        if (data is null)
+        {
+            throw new InvalidOperationException($"The converter does not support the type '{type.GetPortableTypeName()}'.");
+        }
+        content = (TContent)data;
     }
 
     #endregion Protected Methods

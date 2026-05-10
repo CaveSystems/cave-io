@@ -41,16 +41,16 @@ internal record BlobReflectionConverterData : BaseRecord
 
     /// <summary>Initializes a new <see cref="BlobReflectionConverterData"/> for the given <paramref name="type"/>.</summary>
     /// <param name="type">CLR type for this state.</param>
+    /// <param name="flags">Flags controlling member selection and visibility.</param>
     /// <param name="count">
     /// Optional expected member count. If zero, derived from fields/properties. Passing a specific count can be used to reserve a different number of member slots.
     /// </param>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the type defines no serializable fields or properties according to the resolved flags, or when the resolved element type list is empty.
     /// </exception>
-    public BlobReflectionConverterData(Type type, int count = 0)
+    public BlobReflectionConverterData(Type type, BlobConverterFlags flags = default, int count = 0)
     {
-        var flags = Flags;
-        type.GetCustomAttributes(true).OfType<BlobConverterAttribute>().ForEach(a => flags |= a.Source);
+        type.GetCustomAttributes(true).OfType<BlobReflectionConverterAttribute>().ForEach(a => flags |= a.Source);
         if (flags == default)
         {
             Flags = flags = (type.IsValueType ? BlobConverterFlags.Fields : BlobConverterFlags.Properties) | BlobConverterFlags.Public | BlobConverterFlags.Private;

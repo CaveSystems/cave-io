@@ -24,6 +24,11 @@
 		<PackageVersion Include="Microsoft.TestPlatform.TestHost" Version="17.3.3" />
 		<PackageVersion Include="System.Private.Uri" Version="4.3.2" />
 		<PackageVersion Include="System.Text.Encoding" Version="4.3.0" />
+
+	</ItemGroup>
+	<!-- net47 & net48 -->
+	<ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').StartsWith('net47')) OR $([System.String]::Copy('$(TargetFramework)').StartsWith('net48'))">
+		<PackageVersion Include="System.Memory" Version="4.6.3" />
 	</ItemGroup>
 	<!-- > net6.0 (net7, net8, net9, …) -->
 	<ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').StartsWith('net')) AND $([System.String]::Copy('$(TargetFramework)').EndsWith('.0'))">
@@ -36,5 +41,6 @@
 	<!-- netstandard 2.0 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+		<PackageVersion Include="System.Memory" Version="4.6.3" />
 	</ItemGroup>
 </Project>

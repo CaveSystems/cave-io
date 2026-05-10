@@ -202,9 +202,3 @@ public interface IBitConverter
 
     #endregion Public Methods
 }
-
-
-public static class EndianTypeExtensions
-{
-    
-}

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
+using Cave.IO.Blob.Converters;
 using Cave.Logging;
 
 namespace Cave.IO.Blob;
@@ -17,7 +18,22 @@ namespace Cave.IO.Blob;
 /// </remarks>
 public sealed class BlobSerializer
 {
+    #region Public Constructors
+
+    /// <summary>Initializes a new instance of the <see cref="BlobSerializer"/> class.</summary>
+    public BlobSerializer()
+    {
+        KnownConverters = new(knownConverters);
+        KnownTypes = new(knownTypes);
+    }
+
+    #endregion Public Constructors
+
     #region Public Methods
+
+    readonly Dictionary<Type, IBlobConverter> knownConverters = new();
+
+    readonly Dictionary<string, Type> knownTypes = new();
 
     /// <summary>Resolves the CLR <see cref="Type"/> that corresponds to the specified <see cref="BlobPrimitiveType"/>.</summary>
     /// <param name="typeCode">The primitive type code to resolve.</param>
@@ -45,6 +61,8 @@ public sealed class BlobSerializer
             BlobPrimitiveType.DateTimeOffset => typeof(DateTimeOffset),
             BlobPrimitiveType.Decimal => typeof(decimal),
             BlobPrimitiveType.ByteArray => typeof(byte[]),
+            BlobPrimitiveType.FloatArray => typeof(float[]),
+            BlobPrimitiveType.DoubleArray => typeof(double[]),
             _ => throw new NotSupportedException($"Unsupported primitive type code: {typeCode}")
         };
     }
@@ -81,6 +99,8 @@ public sealed class BlobSerializer
 
             Type t when t == typeof(decimal) => BlobPrimitiveType.Decimal,
             Type t when t == typeof(byte[]) => BlobPrimitiveType.ByteArray,
+            Type t when t == typeof(float[]) => BlobPrimitiveType.FloatArray,
+            Type t when t == typeof(double[]) => BlobPrimitiveType.DoubleArray,
 
             Type t when t.IsEnum => BlobPrimitiveType.Enum,
 
@@ -116,14 +136,18 @@ public sealed class BlobSerializer
     /// <exception cref="InvalidOperationException">Thrown if no converter is found for the specified type.</exception>
     public void Prepare(Type type)
     {
-        if (!KnownConverters.TryGetValue(type, out var converter))
+        var converter = GetConverter(type);
+        foreach (var contentType in converter.GetContentTypes(type))
         {
-            if (!Factory.TryCreateConverter(this, type, out converter))
+            try
             {
-                throw new InvalidOperationException($"No converter found for type {type.ToShortName()}!");
+                Prepare(contentType);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to prepare content type {contentType.ToShortName()} for type {type.ToShortName()}.", ex);
             }
         }
-        converter.GetContentTypes(type).ForEach(Prepare);
     }
 
     /// <summary>
@@ -145,6 +169,23 @@ public sealed class BlobSerializer
     /// </remarks>
     /// <param name="types">The types to prepare the serializer for.</param>
     public void Prepare(IEnumerable<Type> types) => types.ForEach(Prepare);
+
+    /// <summary>Registers a custom <see cref="IBlobConverter"/> for a specific type, allowing it to be used during serialization and deserialization.</summary>
+    /// <remarks>
+    /// This can be used if classes or structs cannot be marked with attributes but the default factory converter does not work or no matching converter can be
+    /// found. In a classical use case, the converter to be used would require an override with a modified CanHandle implementation. The lookup via the internal
+    /// serializer dictionaries is much faster than the factory-based resolution. The deserializer does not need to register converters since the used converter
+    /// is part of the serialized data for the types it expects to read, but doing so will speed up the deserialization process by avoiding the need for
+    /// on-demand converter resolution.
+    /// </remarks>
+    /// <param name="type">The type for which the converter is being registered.</param>
+    /// <param name="converter">The converter instance to register.</param>
+    public void Register(Type type, IBlobConverter converter)
+    {
+        Logger?.Verbose($"Registering converter {converter.GetType().Name} for type {type.ToShortName()}");
+        knownTypes.Add(type.GetPortableTypeName(), type);
+        knownConverters.Add(type, converter);
+    }
 
     /// <summary>Serializes the specified object instance to a binary representation and writes it to the given stream.</summary>
     /// <remarks>To serialize more than one object do not call this multiple times, instead use the <see cref="IBlobWriterState"/> returned by <see cref="StartWriting"/>.</remarks>
@@ -180,19 +221,14 @@ public sealed class BlobSerializer
     }
 
     /// <summary>Gets the collection of known blob converters, keyed by their associated type.</summary>
-    public Dictionary<Type, IBlobConverter> KnownConverters { get; } = new();
+    public ReadOnlyDictionary<Type, IBlobConverter> KnownConverters { get; }
 
     /// <summary>Gets the collection of known type mappings used for serialization or deserialization.</summary>
-    public Dictionary<string, Type> KnownTypes { get; } = new();
+    public ReadOnlyDictionary<string, Type> KnownTypes { get; }
 
     #endregion Public Methods
 
     #region Properties
-
-    /// <summary>
-    /// Gets or sets the collection of explicitly registered <see cref="IBlobConverter"/> instances that are considered before the factory during converter resolution.
-    /// </summary>
-    public ICollection<IBlobConverter> Converters { get; } = new HashSet<IBlobConverter>();
 
     /// <summary>Gets or sets the factory responsible for creating <see cref="IBlobConverter"/> instances for specific types. Defaults to <see cref="BlobDefaultFactory"/>.</summary>
     public IBlobConverterFactory Factory { get; set; } = new BlobDefaultFactory();
@@ -204,4 +240,21 @@ public sealed class BlobSerializer
     public ILogger? Logger { get; set; }
 
     #endregion Properties
+
+    /// <summary>Resolves the appropriate <see cref="IBlobConverter"/> for the specified type, using registered converters and the factory as needed.</summary>
+    /// <param name="type">The type for which to retrieve a converter.</param>
+    /// <returns>The resolved <see cref="IBlobConverter"/> instance.</returns>
+    public IBlobConverter GetConverter(Type type)
+    {
+        if (knownConverters.TryGetValue(type, out var converter))
+        {
+            return converter;
+        }
+        if (Factory.TryCreateConverter(type, out converter))
+        {
+            Register(type, converter);
+            return converter;
+        }
+        throw new InvalidOperationException($"No converter found for type {type.ToShortName()}!");
+    }
 }

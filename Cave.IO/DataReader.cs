@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Cave.IO;
@@ -12,13 +13,15 @@ namespace Cave.IO;
 /// </summary>
 public sealed class DataReader
 {
+    #region Fields
+
     internal static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    #endregion Fields
 
     #region Private Fields
 
     bool closed;
-    IBitConverter endianDecoder;
-    EndianType endianType;
     NewLineData? newLineData;
     NewLineMode newLineMode;
     StringEncoding stringEncoding;
@@ -114,8 +117,7 @@ public sealed class DataReader
         BaseStream = input ?? throw new ArgumentNullException(nameof(input));
         newLineMode = newLine;
         stringEncoding = encoding != StringEncoding.Undefined ? encoding : throw new ArgumentOutOfRangeException(nameof(encoding));
-        endianType = endian;
-        endianDecoder = endian.GetBitConverter();
+        EndianType = endian;
         if (!BaseStream.CanRead)
         {
             throw new ArgumentException("Stream does not support reading or is already closed.", nameof(input));
@@ -135,15 +137,7 @@ public sealed class DataReader
     /// <summary>Gets or sets the endian encoder type.</summary>
     /// <remarks>This can be used between all read calls.</remarks>
     /// <value>The endian encoder type.</value>
-    public EndianType EndianType
-    {
-        get => endianType;
-        set
-        {
-            endianType = value;
-            endianDecoder = endianType.GetBitConverter();
-        }
-    }
+    public EndianType EndianType { get; set; }
 
     /// <summary>Gets or sets the new line mode used.</summary>
     /// <remarks>This can be used between all read calls.</remarks>
@@ -180,7 +174,7 @@ public sealed class DataReader
     }
 
     /// <summary>Flushes the stream.</summary>
-    [MethodImpl((MethodImplOptions)256)] 
+    [MethodImpl((MethodImplOptions)256)]
     public void Flush() => BaseStream.Flush();
 
     /// <summary>Reads a 7 bit encoded 32 bit value from the stream.</summary>
@@ -204,37 +198,29 @@ public sealed class DataReader
     public ulong Read7BitEncodedUInt64() => BitCoder64.Read7BitEncodedUInt64(BaseStream);
 
     /// <summary>Reads an array of the specified struct type from the stream using the default marshaller.</summary>
+    /// <remarks>This function ignores the endianness of the data.</remarks>
     /// <typeparam name="T">Type of each element.</typeparam>
     /// <returns>The struct array.</returns>
     public T[] ReadArray<T>()
         where T : struct
     {
-        var count = Read7BitEncodedInt32();
-        if (count < 0)
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
         {
-            throw new InvalidDataException("Invalid length prefix while reading array!");
+            if (length == 0) return [];
+            if (length == -1) return default!;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
         }
-
-        if (count == 0)
-        {
-            return [];
-        }
-
-        var byteCount = Read7BitEncodedInt32();
-        var bytes = ReadBytes(byteCount);
-        if (bytes is T[] result)
-        {
-            if (result == null)
-            {
-                throw new PlatformNotSupportedException("Byte array conversion bug! Please update your mono framework!");
-            }
-        }
-        else
-        {
-            result = new T[count];
-            Buffer.BlockCopy(bytes, 0, result, 0, byteCount);
-        }
-
+        var count = length / Marshal.SizeOf(typeof(T));
+        var result = new T[count];
+#if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+        var bytes = MemoryMarshal.AsBytes(result.AsSpan());
+        var read = BaseStream.Read(bytes);
+        if (read != length) throw new EndOfStreamException();
+#else
+        var buffer = ReadBytes(length);
+        Buffer.BlockCopy(buffer, 0, result, 0, length);
+#endif
         return result;
     }
 
@@ -441,7 +427,23 @@ public sealed class DataReader
     public double ReadDouble()
     {
         var bytes = ReadBytes(8);
-        return endianDecoder.ToDouble(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToDouble(bytes, 0) : LittleEndian.ToDouble(bytes, 0);
+    }
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <exception cref="InvalidDataException">Thrown if a invalid 7bit encoded value is found.</exception>
+    /// <returns>The value.</returns>
+    public double[]? ReadDoubleArray()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToDoubleArray(bytes) : LittleEndian.ToDoubleArray(bytes);
     }
 
     /// <summary>Reads a 32bit linux epoch value (localtime).</summary>
@@ -455,6 +457,22 @@ public sealed class DataReader
     /// <returns>The value.</returns>
     [MethodImpl((MethodImplOptions)256)]
     public DateTime ReadEpoch64() => UnixEpoch + TimeSpan.FromSeconds(ReadUInt64());
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <exception cref="InvalidDataException">Thrown if a invalid 7bit encoded value is found.</exception>
+    /// <returns>The value.</returns>
+    public float[]? ReadFloatArray()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToFloatArray(bytes) : LittleEndian.ToFloatArray(bytes);
+    }
 
     /// <summary>Reads a guid from the stream.</summary>
     /// <returns>The guid.</returns>
@@ -517,7 +535,23 @@ public sealed class DataReader
     public short ReadInt16()
     {
         var bytes = ReadBytes(2);
-        return endianDecoder.ToInt16(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToInt16(bytes, 0) : LittleEndian.ToInt16(bytes, 0);
+    }
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <exception cref="InvalidDataException">Thrown if a invalid 7bit encoded value is found.</exception>
+    /// <returns>The value.</returns>
+    public short[]? ReadInt16Array()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToInt16Array(bytes) : LittleEndian.ToInt16Array(bytes);
     }
 
     /// <summary>Reads a value directly from the stream.</summary>
@@ -526,7 +560,23 @@ public sealed class DataReader
     public int ReadInt32()
     {
         var bytes = ReadBytes(4);
-        return endianDecoder.ToInt32(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToInt32(bytes, 0) : LittleEndian.ToInt32(bytes, 0);
+    }
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <exception cref="InvalidDataException">Thrown if a invalid 7bit encoded value is found.</exception>
+    /// <returns>The value.</returns>
+    public int[]? ReadInt32Array()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToInt32Array(bytes) : LittleEndian.ToInt32Array(bytes);
     }
 
     /// <summary>Reads a value directly from the stream.</summary>
@@ -535,13 +585,46 @@ public sealed class DataReader
     public long ReadInt64()
     {
         var bytes = ReadBytes(8);
-        return endianDecoder.ToInt64(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToInt64(bytes, 0) : LittleEndian.ToInt64(bytes, 0);
+    }
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <exception cref="InvalidDataException">Thrown if a invalid 7bit encoded value is found.</exception>
+    /// <returns>The value.</returns>
+    public long[]? ReadInt64Array()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToInt64Array(bytes) : LittleEndian.ToInt64Array(bytes);
     }
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
     [MethodImpl((MethodImplOptions)256)]
     public sbyte ReadInt8() => unchecked((sbyte)ReadByte());
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <returns>The value.</returns>
+    public sbyte[]? ReadInt8Array()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        var result = new sbyte[bytes.Length];
+        Buffer.BlockCopy(bytes, 0, result, 0, bytes.Length);
+        return result;
+    }
 
     /// <summary>Reads an iso 2022 string</summary>
     /// <param name="codepoints">Number of codepoints to read</param>
@@ -677,7 +760,7 @@ public sealed class DataReader
     /// <summary>Reads a 64-bit integer value and returns it as a DateTime if available.</summary>
     /// <remarks>The method interprets the read 64-bit integer as the number of ticks for the DateTime constructor. Returns null if no value is available.</remarks>
     /// <returns>A DateTime representing the read value if successful; otherwise, null.</returns>
-    [MethodImpl((MethodImplOptions)256)] 
+    [MethodImpl((MethodImplOptions)256)]
     public DateTime? ReadPrefixedDateTime() => ReadPrefixedInt64() is long value ? new DateTime(value) : null;
 
     /// <summary>Reads a value from the stream.</summary>
@@ -712,7 +795,7 @@ public sealed class DataReader
             default: throw new InvalidDataException("Header byte for prefixed double does not match byte size!");
         }
         var bytes = ReadBytes(8);
-        return endianDecoder.ToDouble(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToDouble(bytes, 0) : LittleEndian.ToDouble(bytes, 0);
     }
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
@@ -756,7 +839,7 @@ public sealed class DataReader
             default: throw new InvalidDataException("Header byte for prefixed single does not match byte size!");
         }
         var bytes = ReadBytes(4);
-        return endianDecoder.ToSingle(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToSingle(bytes, 0) : LittleEndian.ToSingle(bytes, 0);
     }
 
     /// <summary>Reads a string with length prefix from the stream.</summary>
@@ -811,7 +894,7 @@ public sealed class DataReader
     public float ReadSingle()
     {
         var bytes = ReadBytes(4);
-        return endianDecoder.ToSingle(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToSingle(bytes, 0) : LittleEndian.ToSingle(bytes, 0);
     }
 
     /// <summary>Reads a string of the specified byte count from the stream.</summary>
@@ -859,7 +942,23 @@ public sealed class DataReader
     public ushort ReadUInt16()
     {
         var bytes = ReadBytes(2);
-        return endianDecoder.ToUInt16(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToUInt16(bytes, 0) : LittleEndian.ToUInt16(bytes, 0);
+    }
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <exception cref="InvalidDataException">Thrown if a invalid 7bit encoded value is found.</exception>
+    /// <returns>The value.</returns>
+    public ushort[]? ReadUInt16Array()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToUInt16Array(bytes) : LittleEndian.ToUInt16Array(bytes);
     }
 
     /// <summary>Reads a value directly from the stream.</summary>
@@ -868,7 +967,23 @@ public sealed class DataReader
     public uint ReadUInt32()
     {
         var bytes = ReadBytes(4);
-        return endianDecoder.ToUInt32(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToUInt32(bytes, 0) : LittleEndian.ToUInt32(bytes, 0);
+    }
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <exception cref="InvalidDataException">Thrown if a invalid 7bit encoded value is found.</exception>
+    /// <returns>The value.</returns>
+    public uint[]? ReadUInt32Array()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToUInt32Array(bytes) : LittleEndian.ToUInt32Array(bytes);
     }
 
     /// <summary>Reads a value directly from the stream.</summary>
@@ -877,13 +992,43 @@ public sealed class DataReader
     public ulong ReadUInt64()
     {
         var bytes = ReadBytes(8);
-        return endianDecoder.ToUInt64(bytes, 0);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToUInt64(bytes, 0) : LittleEndian.ToUInt64(bytes, 0);
+    }
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <exception cref="InvalidDataException">Thrown if a invalid 7bit encoded value is found.</exception>
+    /// <returns>The value.</returns>
+    public ulong[]? ReadUInt64Array()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        var bytes = ReadBytes(length);
+        return EndianType == EndianType.BigEndian ? BigEndian.ToUInt64Array(bytes) : LittleEndian.ToUInt64Array(bytes);
     }
 
     /// <summary>Reads a value directly from the stream.</summary>
     /// <returns>The value.</returns>
     [MethodImpl((MethodImplOptions)256)]
     public byte ReadUInt8() => ReadByte();
+
+    /// <summary>Reads a byte buffer with length prefix from the stream.</summary>
+    /// <returns>The value.</returns>
+    public byte[]? ReadUInt8Array()
+    {
+        var length = Read7BitEncodedInt32();
+        if (length <= 0)
+        {
+            if (length == 0) return [];
+            if (length == -1) return null;
+            throw new InvalidDataException("Invalid 7bit encoded value found!");
+        }
+        return ReadBytes(length);
+    }
 
     /// <summary>Reads bytes from the stream until one of the specified end markers are found or buffer length is reached.</summary>
     /// <param name="data">An array of bytes.</param>
@@ -1052,14 +1197,14 @@ public sealed class DataReader
     /// <param name="codepoints">Character count to read.</param>
     /// <returns>Returns the read text.</returns>
     /// <exception cref="InvalidDataException"></exception>
-    [MethodImpl((MethodImplOptions)256)] 
+    [MethodImpl((MethodImplOptions)256)]
     public string ReadUTF32BE(int codepoints) => new UTF32BE(ReadBytes(codepoints * 4)).ToString();
 
     /// <summary>Reads an utf32 text from string.</summary>
     /// <param name="codepoints">Number of unicode codepoints (not bytes) to read (one unicode codepoint may contain two csharp unicode characters).</param>
     /// <returns>Returns the read text.</returns>
     /// <exception cref="InvalidDataException"></exception>
-    [MethodImpl((MethodImplOptions)256)] 
+    [MethodImpl((MethodImplOptions)256)]
     public string ReadUTF32LE(int codepoints) => new UTF32LE(ReadBytes(codepoints * 4)).ToString();
 
     /// <summary>Reads an utf7 text from string.</summary>
@@ -1231,7 +1376,7 @@ public sealed class DataReader
     /// <param name="maximumBytes">The number of bytes to write at maximum.</param>
     /// <returns>The string.</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public string ReadZeroTerminatedString(int maximumBytes)
+    public string ReadZeroTerminatedString(int maximumBytes = 1024)
     {
         const string ZeroChars = "\0";
         if (StringEncoding is StringEncoding.UTF_7)

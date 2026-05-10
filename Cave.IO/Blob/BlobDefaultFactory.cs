@@ -38,15 +38,18 @@ public class BlobDefaultFactory : IBlobConverterFactory
     #region Public Methods
 
     /// <inheritdoc/>
-    public virtual bool TryCreateConverter(BlobSerializer serializer, Type type, [MaybeNullWhen(false)] out IBlobConverter converter)
+    public virtual bool TryCreateConverter(Type type, [MaybeNullWhen(false)] out IBlobConverter converter)
     {
-        if (serializer.KnownConverters.TryGetValue(type, out converter))
+        if (type.IsDefined(typeof(BlobEnumerableConverterAttribute), inherit: false))
         {
-            Logger?.Verbose($"FastPath: Selecting known converter {converter.GetType().Name} for type {type.ToShortName()}");
-            return true;
+            converter = new BlobEnumerableConverter();
+        }
+        else if (type.IsDefined(typeof(BlobReflectionConverterAttribute), inherit: true))
+        {
+            converter = new BlobReflectionConverter();
         }
 
-        if (Converters.FirstOrDefault(Converters => Converters.CanHandle(type)) is IBlobConverter result)
+        if (Converters.FirstOrDefault(c => c.CanHandle(type)) is IBlobConverter result)
         {
             converter = result;
         }
@@ -57,12 +60,11 @@ public class BlobDefaultFactory : IBlobConverterFactory
         else
         {
             Logger?.Warning($"No converter found for type {type.ToShortName()}");
+            converter = default!;
             return false;
         }
 
-        Logger?.Debug($"Selecting converter {converter.GetType().Name} for type {type.ToShortName()}");
-        serializer.KnownTypes.Add(type.GetPortableTypeName(), type);
-        serializer.KnownConverters.Add(type, converter);
+        Logger?.Verbose($"Selecting converter {converter.GetType().Name} for type {type.ToShortName()}");
         return true;
     }
 

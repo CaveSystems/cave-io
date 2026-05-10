@@ -120,11 +120,7 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
         }
         // No cached converter; read initialization for this type.
         var type = ReadTypeDefitition();
-        var converter = Serializer.Converters.FirstOrDefault(c => c.CanHandle(type));
-        if (converter is null && !Serializer.Factory.TryCreateConverter(Serializer, type, out converter))
-        {
-            throw new InvalidOperationException($"No converter found for type {type.Namespace}.{type.Name}.");
-        }
+        var converter = Serializer.GetConverter(type);
         var bundle = new BlobConverterBundle(id, type, converter);
         Converters.Add(bundle);
         converter.ReadInitialization(this, bundle);

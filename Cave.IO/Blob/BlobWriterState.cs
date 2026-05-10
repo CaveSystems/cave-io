@@ -77,11 +77,7 @@ sealed class BlobWriterState : BlobState, IBlobWriterState
             return bundle;
         }
         // new converter
-        if (!Serializer.Factory.TryCreateConverter(Serializer, type, out var converter))
-        {
-            throw new InvalidOperationException($"No converter found for type {type.ToShortName()}!");
-        }
-
+        var converter = Serializer.GetConverter(type);
         var id = Converters.RequestId();
         Writer.Write7BitEncoded32(id);
         WriteTypeDefition(type);

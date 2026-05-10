@@ -13,17 +13,34 @@ namespace Cave.IO.Blob.Converters;
 /// </remarks>
 public class BlobReflectionConverter : BlobConverterBase
 {
+    /// <summary>
+    /// Initializes a new instance of the BlobReflectionConverter class.
+    /// </summary>
+    public BlobReflectionConverter() { }
+
+    /// <summary>
+    /// Initializes a new instance of the BlobReflectionConverter class for the specified type and conversion flags.
+    /// </summary>
+    /// <param name="type">The type to be converted using reflection-based logic. Cannot be null.</param>
+    /// <param name="flags">The flags that control conversion behavior. Optional; defaults to no flags.</param>
+    public BlobReflectionConverter(Type type, BlobConverterFlags flags = default)
+    {
+        var data = new BlobReflectionConverterData(type, flags);
+        SetHandleData(type, data);
+    }
+
     #region Protected Methods
 
     /// <inheritdoc/>
-    protected override object? GetCanHandleCache(Type type) =>
-    (
-        type.IsValueType ||
-        type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).Any(c => c.GetParameters().Length == 0)
-    ) && (
-        type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any() ||
-        type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Any(p => p.CanRead && p.CanWrite)
-    ) ? new BlobReflectionConverterData(type) : null;
+    protected override object? GetCanHandleCache(Type type)
+    {
+        if (type.IsValueType || type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).Any(c => c.GetParameters().Length == 0))
+        {
+            var data = new BlobReflectionConverterData(type);
+            return (data.MemberCount == 0) ? null : data;
+        }
+        return null;
+    }
 
     #endregion Protected Methods
 
@@ -41,10 +58,8 @@ public class BlobReflectionConverter : BlobConverterBase
     /// <inheritdoc/>
     public override IList<Type> GetContentTypes(Type type)
     {
-        var contentTypes = new List<Type>();
-        foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) { contentTypes.Add(field.FieldType); }
-        foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(p => p.CanRead && p.CanWrite)) { contentTypes.Add(property.PropertyType); }
-        return contentTypes;
+        GetHandlingData(type, out BlobReflectionConverterData data);
+        return data.Members.Select(m => m.Bundle.Type).ToList();
     }
 
     /// <inheritdoc/>
