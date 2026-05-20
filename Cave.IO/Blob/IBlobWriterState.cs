@@ -28,7 +28,7 @@ public interface IBlobWriterState : IBlobState
 
     /// <summary>Writes a <see cref="Type"/> definition to the binary stream.</summary>
     /// <param name="type">The <see cref="Type"/> to write.</param>
-    void WriteTypeDefition(Type type);
+    void WriteTypeDefinition(Type type);
 
     #endregion Public Methods
 

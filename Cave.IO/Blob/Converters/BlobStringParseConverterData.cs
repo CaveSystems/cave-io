@@ -21,7 +21,7 @@ sealed record BlobStringParseConverterData : BaseRecord
 
     #region Public Constructors
 
-    public BlobStringParseConverterData(Type type)
+    public BlobStringParseConverterData(Type type, bool allowConstructor)
     {
         if (Nullable.GetUnderlyingType(type) is Type underlying)
         {
@@ -50,19 +50,42 @@ sealed record BlobStringParseConverterData : BaseRecord
             }
         }
 
-        // use constructor
-        var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-        foreach (var constructor in constructors)
+        if (ParseMethod is null && allowConstructor)
         {
-            var parameters = constructor.GetParameters();
-            if (parameters.Length != 1) continue;
-            if (parameters[0].ParameterType == typeof(string))
+            // use constructor
+            var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            foreach (var constructor in constructors)
             {
-                Constructor = new(constructor);
+                var parameters = constructor.GetParameters();
+                if (parameters.Length != 1) continue;
+                if (parameters[0].ParameterType == typeof(string))
+                {
+                    Constructor = new(constructor);
+                    break;
+                }
             }
         }
+        
+        IsValid = (ParseMethod is not null || Constructor is not null);
+    }
 
-        IsValid = ParseMethod is not null || Constructor is not null;
+    /// <summary>Performs a roundtrip check to ensure that the parsing and string conversion are consistent for the target type.</summary>
+    public void RoundtripCheck(object value, out string stringData)
+    {
+        object roundtrip;
+        try
+        {
+            stringData = GetString(value);
+            roundtrip = Parse(stringData);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Roundtrip test failed for value: {value}", ex);
+        }
+        if (!Equals(value, roundtrip))
+        {
+            throw new InvalidOperationException($"Roundtrip test failed. Original: {value} -> String: {stringData} -> Roundtrip: {roundtrip}");
+        }
     }
 
     #endregion Public Constructors
@@ -77,7 +100,7 @@ sealed record BlobStringParseConverterData : BaseRecord
     /// <param name="text">The text representation to parse into an object. Cannot be null.</param>
     /// <returns>An object created by parsing the specified text.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the constructor or parse method returns null.</exception>
-    internal object Parse(string text)
+    internal object Parse(string? text)
     {
         var useCulture = UseCulture;
         if (Constructor is not null)
@@ -95,6 +118,36 @@ sealed record BlobStringParseConverterData : BaseRecord
             return ParseMethod.InvokeFast(instance, useCulture ? [text, CultureInfo.InvariantCulture] : [text]) ??
                 throw new InvalidOperationException("Parse method returned null.");
         }
+    }
+
+    internal string GetString(object instance)
+    {
+        if (Mode == BlobStringParseConverterMode.Undefined) Mode = InitMode(instance);
+        var text = Mode switch
+        {
+            BlobStringParseConverterMode.FormattableRoundtripO => ((IFormattable)instance).ToString("O", CultureInfo.InvariantCulture),
+            BlobStringParseConverterMode.FormattableRoundtripR => ((IFormattable)instance).ToString("R", CultureInfo.InvariantCulture),
+            BlobStringParseConverterMode.Formattable => ((IFormattable)instance).ToString(null, CultureInfo.InvariantCulture),
+            BlobStringParseConverterMode.Convertible => ((IConvertible)instance).ToString(CultureInfo.InvariantCulture),
+            _ => instance.ToString(),
+        };
+        return text ?? throw new InvalidOperationException($"{instance.GetType().ToShortName()}.ToString returned null.");
+    }
+
+    /// <summary>Determines and sets the optimal serialization mode based on the instance's capabilities.</summary>
+    /// <param name="instance">The instance to analyze.</param>
+    /// <returns>The determined serialization mode.</returns>
+    BlobStringParseConverterMode InitMode(object instance)
+    {
+        try { if (instance is IFormattable formattable && formattable.ToString("O", CultureInfo.InvariantCulture) != null) return BlobStringParseConverterMode.FormattableRoundtripO; }
+        catch { }
+        try { if (instance is IFormattable formattable && formattable.ToString("R", CultureInfo.InvariantCulture) != null) return BlobStringParseConverterMode.FormattableRoundtripR; }
+        catch { }
+        try { if (instance is IFormattable formattable && formattable.ToString(null, CultureInfo.InvariantCulture) != null) return BlobStringParseConverterMode.Formattable; }
+        catch { }
+        try { if (instance is IConvertible convertible && convertible.ToString(CultureInfo.InvariantCulture) != null) return BlobStringParseConverterMode.Convertible; }
+        catch { }
+        return BlobStringParseConverterMode.Simple;
     }
 
     #endregion Internal Methods

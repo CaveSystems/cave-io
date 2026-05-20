@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using Cave.IO.Blob.Converters;
 using Cave.Logging;
 
 namespace Cave.IO.Blob;
@@ -18,6 +17,12 @@ namespace Cave.IO.Blob;
 /// </remarks>
 public sealed class BlobSerializer
 {
+    #region Properties
+
+    internal ArrayGetterCache ArrayGetterCache { get; } = new();
+
+    #endregion Properties
+
     #region Public Constructors
 
     /// <summary>Initializes a new instance of the <see cref="BlobSerializer"/> class.</summary>
@@ -61,6 +66,13 @@ public sealed class BlobSerializer
             BlobPrimitiveType.DateTimeOffset => typeof(DateTimeOffset),
             BlobPrimitiveType.Decimal => typeof(decimal),
             BlobPrimitiveType.ByteArray => typeof(byte[]),
+            BlobPrimitiveType.Int8Array => typeof(sbyte[]),
+            BlobPrimitiveType.Int16Array => typeof(short[]),
+            BlobPrimitiveType.UInt16Array => typeof(ushort[]),
+            BlobPrimitiveType.Int32Array => typeof(int[]),
+            BlobPrimitiveType.UInt32Array => typeof(uint[]),
+            BlobPrimitiveType.Int64Array => typeof(long[]),
+            BlobPrimitiveType.UInt64Array => typeof(ulong[]),
             BlobPrimitiveType.FloatArray => typeof(float[]),
             BlobPrimitiveType.DoubleArray => typeof(double[]),
             _ => throw new NotSupportedException($"Unsupported primitive type code: {typeCode}")
@@ -96,12 +108,21 @@ public sealed class BlobSerializer
             Type t when t == typeof(DateTime) => BlobPrimitiveType.DateTime,
             Type t when t == typeof(TimeSpan) => BlobPrimitiveType.TimeSpan,
             Type t when t == typeof(DateTimeOffset) => BlobPrimitiveType.DateTimeOffset,
-
             Type t when t == typeof(decimal) => BlobPrimitiveType.Decimal,
+
+            //array types
             Type t when t == typeof(byte[]) => BlobPrimitiveType.ByteArray,
+            Type t when t == typeof(sbyte[]) => BlobPrimitiveType.Int8Array,
+            Type t when t == typeof(short[]) => BlobPrimitiveType.Int16Array,
+            Type t when t == typeof(ushort[]) => BlobPrimitiveType.UInt16Array,
+            Type t when t == typeof(int[]) => BlobPrimitiveType.Int32Array,
+            Type t when t == typeof(uint[]) => BlobPrimitiveType.UInt32Array,
+            Type t when t == typeof(long[]) => BlobPrimitiveType.Int64Array,
+            Type t when t == typeof(ulong[]) => BlobPrimitiveType.UInt64Array,
             Type t when t == typeof(float[]) => BlobPrimitiveType.FloatArray,
             Type t when t == typeof(double[]) => BlobPrimitiveType.DoubleArray,
 
+            // last since it is more expensive to check
             Type t when t.IsEnum => BlobPrimitiveType.Enum,
 
             _ => BlobPrimitiveType.Unsupported

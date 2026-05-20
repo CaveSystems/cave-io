@@ -144,7 +144,9 @@ public class BlobDictionaryConverter : BlobConverterBase
                 var array = Array.CreateInstance(myState.KeyValuePairType, count);
                 for (var i = 0; i < count; i++)
                 {
-                    var keyValuePair = myState.KeyValuePairConstructor.CreateFast([keys.GetValue(i), values.GetValue(i)])!;
+                    var value = myState.ValueGetter!(values, i);
+                    var key = myState.KeyGetter!(keys, i);
+                    var keyValuePair = myState.KeyValuePairConstructor.CreateFast([key, value])!;
                     array.SetValue(keyValuePair, i);
                 }
                 return myState.Constructor is null ? array : myState.Constructor.CreateFast([array]);
@@ -158,7 +160,9 @@ public class BlobDictionaryConverter : BlobConverterBase
                 var count = keys.Length;
                 for (var i = 0; i < count; i++)
                 {
-                    myState.DictionaryAddMethod.InvokeFast(dictionary, [keys.GetValue(i), values.GetValue(i)]);
+                    var value = myState.ValueGetter!(values, i);
+                    var key = myState.KeyGetter!(keys, i);
+                    myState.DictionaryAddMethod.InvokeFast(dictionary, [key, value]);
                 }
                 return myState.Constructor is null ? dictionary : myState.Constructor.CreateFast([dictionary]);
             }
@@ -173,15 +177,21 @@ public class BlobDictionaryConverter : BlobConverterBase
         GetHandlingData(bundle.Type, out BlobDictionaryConverterData dictData);
         var keyArrayBundle = readerState.ReadConverter();
         var valueArrayBundle = readerState.ReadConverter();
-        if (!dictData.KeyType.IsAssignableFrom(keyArrayBundle.Type.GetElementType()!))
+        var keyElementType = keyArrayBundle.Type.GetElementType()!;
+        if (!dictData.KeyType.IsAssignableFrom(keyElementType))
         {
             throw new InvalidOperationException($"Key type in stream {keyArrayBundle.Type.ToShortName()} is not compatible with expected type {dictData.KeyType.ToShortName()}.");
         }
-        if (!dictData.ValueType.IsAssignableFrom(valueArrayBundle.Type.GetElementType()!))
+        var valueElementType = valueArrayBundle.Type.GetElementType()!;
+        if (!dictData.ValueType.IsAssignableFrom(valueElementType))
         {
             throw new InvalidOperationException($"Value type in stream {valueArrayBundle.Type.ToShortName()} is not compatible with expected type {dictData.ValueType.ToShortName()}.");
         }
-        bundle.State = new BlobDictionaryConverterState(dictData, keyArrayBundle, valueArrayBundle);
+        bundle.State = new BlobDictionaryConverterState(dictData, keyArrayBundle, valueArrayBundle)
+        {
+            KeyGetter = readerState.Serializer.ArrayGetterCache.Get(keyElementType),
+            ValueGetter = readerState.Serializer.ArrayGetterCache.Get(valueElementType),
+        };
     }
 
     /// <inheritdoc/>

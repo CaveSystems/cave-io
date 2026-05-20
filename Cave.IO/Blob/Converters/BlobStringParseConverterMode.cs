@@ -6,5 +6,6 @@ enum BlobStringParseConverterMode
     Simple,
     Convertible,
     Formattable,
-    FormattableRoundtrip,
+    FormattableRoundtripR,
+    FormattableRoundtripO,
 }

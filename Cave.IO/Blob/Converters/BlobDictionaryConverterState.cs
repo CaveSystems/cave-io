@@ -61,6 +61,8 @@ sealed class BlobDictionaryConverterState
     internal ConstructorCache KeyValuePairConstructor;
     internal readonly Delegate? ExplodeDelegate;
     internal readonly Type ListType;
+    internal ArrayGetter? KeyGetter;
+    internal ArrayGetter? ValueGetter;
 
     #endregion Fields
 

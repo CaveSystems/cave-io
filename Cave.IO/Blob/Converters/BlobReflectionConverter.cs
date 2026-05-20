@@ -59,7 +59,7 @@ public class BlobReflectionConverter : BlobConverterBase
     public override IList<Type> GetContentTypes(Type type)
     {
         GetHandlingData(type, out BlobReflectionConverterData data);
-        return data.Members.Select(m => m.Bundle.Type).ToList();
+        return data.ElementTypes;
     }
 
     /// <inheritdoc/>

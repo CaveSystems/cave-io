@@ -11,7 +11,15 @@ namespace Cave.IO.Blob;
 /// </remarks>
 abstract class BlobState : IBlobState
 {
+    #region Properties
+
+    /// <summary>Gets the registry of active converters used during the current serialization or deserialization operation.</summary>
     public BlobConverterRegistry Converters { get; } = new();
+
+    /// <summary>Gets the binary format version written to the stream header.</summary>
+    public int Version { get; } = 1;
+
+    #endregion Properties
 
     #region Public Constructors
 

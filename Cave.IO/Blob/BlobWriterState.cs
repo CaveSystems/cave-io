@@ -26,8 +26,6 @@ sealed class BlobWriterState : BlobState, IBlobWriterState
 
     #region Properties
 
-    /// <summary>Gets the binary format version written to the stream header.</summary>
-    internal int Version { get; } = 1;
 
     #endregion Properties
 
@@ -80,7 +78,8 @@ sealed class BlobWriterState : BlobState, IBlobWriterState
         var converter = Serializer.GetConverter(type);
         var id = Converters.RequestId();
         Writer.Write7BitEncoded32(id);
-        WriteTypeDefition(type);
+        WriteTypeDefinition(type);
+
         bundle = new BlobConverterBundle(id, type, converter);
         Converters.Add(bundle);
         Logger?.Debug($"Created new converter {bundle.Id} {bundle.Converter.GetType().ToShortName()} for type {type.ToShortName()}.");
@@ -89,7 +88,7 @@ sealed class BlobWriterState : BlobState, IBlobWriterState
     }
 
     /// <inheritdoc/>
-    public void WriteTypeDefition(Type type)
+    public void WriteTypeDefinition(Type type)
     {
         if (BlobSerializer.GetPrimitiveType(type, out var primitiveType))
         {

@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using Cave;
+﻿using Cave;
 using Cave.Collections;
 using Cave.IO;
 using Cave.IO.Blob;
 using Cave.IO.Blob.Converters;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 
 namespace Tests.Cave.IO;
 
@@ -78,11 +78,10 @@ public class BlobSerializerTest
         uint[] UIntArray,
         ulong[] ULongArray,
         short[] ShortArray,
-        ushort[] UShortArray
+        ushort[] UShortArray,
+        TestRecordWithInvalidStringRoundtrip Test
     ) : BaseRecord
     {
-        Level5Payload() : this(false, 0, 0, 0, 0, 0, 0, 0, 0, '\0', 0f, 0.0, 0m, default, default, null, null, null, null, null, null, null, null, null, null, null, null) { }
-
         public bool Equals(Level5Payload other)
         {
             if (ReferenceEquals(this, other)) return true;
@@ -115,29 +114,42 @@ public class BlobSerializerTest
                 DeepEquals.ListEqual(UIntArray, other.UIntArray) &&
                 DeepEquals.ListEqual(ULongArray, other.ULongArray) &&
                 DeepEquals.ListEqual(ShortArray, other.ShortArray) &&
-                DeepEquals.ListEqual(UShortArray, other.UShortArray);
+                DeepEquals.ListEqual(UShortArray, other.UShortArray) &&
+                Test.Equals(other.Test);
         }
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                int hash = 17;
-                hash = hash * 31 + Int;
-                hash = hash * 31 + (Text?.GetHashCode() ?? 0);
-                hash = hash * 31 + Doubles.Count;
-                hash = hash * 31 + Floats.Count;
-                hash = hash * 31 + Map.Count;
-                hash = hash * 31 + FloatArray.Length;
-                hash = hash * 31 + DoubleArray.Length;
-                hash = hash * 31 + IntArray.Length;
-                hash = hash * 31 + LongArray.Length;
-                hash = hash * 31 + UIntArray.Length;
-                hash = hash * 31 + ULongArray.Length;
-                hash = hash * 31 + ShortArray.Length;
-                hash = hash * 31 + UShortArray.Length;
-                return hash;
-            }
+            var hash = DefaultHashingFunction.Create();
+            hash.Add(Bool);
+            hash.Add(Byte);
+            hash.Add(SByte);
+            hash.Add(Short);
+            hash.Add(UShort);
+            hash.Add(Int);
+            hash.Add(UInt);
+            hash.Add(Long);
+            hash.Add(ULong);
+            hash.Add(Char);
+            hash.Add(Float);
+            hash.Add(Double);
+            hash.Add(Decimal);
+            hash.Add(DateTime);
+            hash.Add(TimeSpan);
+            hash.Add(Text);
+            hash.Add(Doubles);
+            hash.Add(Floats);
+            hash.Add(Map);
+            hash.Add(FloatArray);
+            hash.Add(DoubleArray);
+            hash.Add(IntArray);
+            hash.Add(LongArray);
+            hash.Add(UIntArray);
+            hash.Add(ULongArray);
+            hash.Add(ShortArray);
+            hash.Add(UShortArray);
+            hash.Add(Test);
+            return hash.ToHashCode();
         }
     }
 
@@ -160,10 +172,7 @@ public class BlobSerializerTest
         public override int GetHashCode() => (Name?.GetHashCode() ?? 0) ^ Tags.Count;
     }
 
-    public sealed record Level2Node(int Index, bool Enabled, Level3Node Child) : BaseRecord
-    {
-        Level2Node() : this(0, false, null) { }
-    }
+    public sealed record Level2Node(int Index, bool Enabled, Level3Node Child) : BaseRecord { }
 
     public sealed record RootRecord(Guid Id, DateTime CreatedUtc, Level2Node A, Level2Node B) : BaseRecord
     {
@@ -213,14 +222,14 @@ public class BlobSerializerTest
                 UIntArray: new Counter(0, 200).Select(i => (uint)i).ToArray(),
                 ULongArray: new Counter(0, 200).Select(i => (ulong)i * (ulong)int.MaxValue).ToArray(),
                 ShortArray: new Counter(-100, 200).Select(i => (short)i).ToArray(),
-                UShortArray: new Counter(0, 200).Select(i => (ushort)i).ToArray()
+                UShortArray: new Counter(0, 200).Select(i => (ushort)i).ToArray(),
+                new TestRecordWithInvalidStringRoundtrip(rnd.Next().ToString())
             );
 
             var l4 = new Level4Node(Guid.NewGuid(), payload, -1.0, 1.0);
             var l3 = new Level3Node("L3", new List<string> { "A", "B", "C" }, l4);
-            var l2a = new Level2Node(1, true, l3);
-            var l2b = new Level2Node(2, false, l3);
-
+            var l2a = new Level2Node(rnd.Next(), true, l3);
+            var l2b = new Level2Node(rnd.Next(), false, l3);
             return new RootRecord(Guid.NewGuid(), DateTime.UtcNow, l2a, l2b);
         }
     }
@@ -269,18 +278,20 @@ public class BlobSerializerTest
         var serializer = new BlobSerializer();
         //test serialization with defining the converter explicitly
         //this allows usage without access to the source code of the class
-        serializer.Register(
-            typeof(EnumerableClassWithProperties), 
-            new BlobReflectionConverter(typeof(EnumerableClassWithProperties), BlobConverterFlags.Private | BlobConverterFlags.Public | BlobConverterFlags.Fields | BlobConverterFlags.Properties));
+        serializer.RegisterReflectionConverter<EnumerableClassWithProperties>(BlobConverterFlags.Private | BlobConverterFlags.Public | BlobConverterFlags.Fields | BlobConverterFlags.Properties);
+        serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
+
         serializer.Serialize(fifo, obj1);
         serializer.Serialize(fifo, obj2);
         serializer.Deserialize<EnumerableClassWithProperties>(fifo, out var rt1);
         serializer.Deserialize<EnumerableClassWithProperties>(fifo, out var rt2);
         Assert.AreEqual(obj1.SomeObject, rt1.SomeObject);
         Assert.AreEqual(obj1.SomeValue, rt1.SomeValue);
+        Assert.AreEqual(obj1.Uri, rt1.Uri);
         Assert.That(obj1.SequenceEqual(rt1));
         Assert.AreEqual(obj2.SomeObject, rt2.SomeObject);
-        Assert.AreEqual(obj2.SomeValue, rt2.SomeValue); 
+        Assert.AreEqual(obj2.SomeValue, rt2.SomeValue);
+        Assert.AreEqual(obj2.Uri, rt2.Uri);
         Assert.That(obj2.SequenceEqual(rt2));
     }
 
@@ -291,19 +302,23 @@ public class BlobSerializerTest
         var obj2 = new EnumerableClassWithPropertiesAndAttribute();
         var fifo = new FifoStream();
         var serializer = new BlobSerializer();
+        serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
         serializer.Serialize(fifo, obj1);
         serializer.Serialize(fifo, obj2);
         serializer.Deserialize<EnumerableClassWithPropertiesAndAttribute>(fifo, out var rt1);
         serializer.Deserialize<EnumerableClassWithPropertiesAndAttribute>(fifo, out var rt2);
         Assert.AreEqual(obj1.SomeObject, rt1.SomeObject);
         Assert.AreEqual(obj1.SomeValue, rt1.SomeValue);
+        Assert.AreEqual(obj1.Uri, rt1.Uri);
         Assert.That(obj1.SequenceEqual(rt1));
         Assert.AreEqual(obj2.SomeObject, rt2.SomeObject);
         Assert.AreEqual(obj2.SomeValue, rt2.SomeValue);
+        Assert.AreEqual(obj2.Uri, rt2.Uri);
         Assert.That(obj2.SequenceEqual(rt2));
     }
 
     [Test]
+    [Category("Performance")]
     public void PerfTestBigRecordWrite10s()
     {
         var serializer = new BlobSerializer();
@@ -347,6 +362,7 @@ public class BlobSerializerTest
     }
 
     [Test]
+    [Category("Performance")]
     public void PerfTestBigRecordRead10s()
     {
         var serializer = new BlobSerializer();
@@ -414,6 +430,7 @@ public class BlobSerializerTest
     }
 
     [Test]
+    [Category("Performance")]
     public void PerfTestBigRecordWriteRead10s()
     {
         var serializer = new BlobSerializer();
@@ -473,10 +490,16 @@ public class BlobSerializerTest
     }
 
     [Test]
+    [Category("Performance")]
     public void PerfTestWrite10s()
     {
         var serializer = new BlobSerializer();
-        serializer.Prepare(typeof(RootRecord));
+        serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
+        serializer.Prepare(typeof(TestStruct));
+        serializer.Prepare(typeof(SettingsStructFields));
+        serializer.Prepare(typeof(SettingsObjectFields));
+        serializer.Prepare(typeof(SettingsStructProperties));
+        serializer.Prepare(typeof(SettingsObjectProperties));
         using var ms = new Sink();
         var test1 = TestStruct.Create(111);
         var test2 = SettingsStructFields.Random();
@@ -516,9 +539,16 @@ public class BlobSerializerTest
     }
 
     [Test]
+    [Category("Performance")]
     public void PerfTestWriteRead10s()
     {
         var serializer = new BlobSerializer();
+        serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
+        serializer.Prepare(typeof(TestStruct));
+        serializer.Prepare(typeof(SettingsStructFields));
+        serializer.Prepare(typeof(SettingsObjectFields));
+        serializer.Prepare(typeof(SettingsStructProperties));
+        serializer.Prepare(typeof(SettingsObjectProperties));
         using var fs = new FifoStream();
         var test1 = TestStruct.Create(111);
         var test2 = SettingsStructFields.Random();
@@ -577,7 +607,7 @@ public class BlobSerializerTest
     public void TestBigBlockWithSystemUri()
     {
         var serializer = new BlobSerializer();
-
+        serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
         var ms = new MemoryStream();
         {
             var writer = serializer.StartWriting(ms);
@@ -613,6 +643,7 @@ public class BlobSerializerTest
             {
                 var test = TestStruct.Create(i);
                 var serializer = new BlobSerializer();
+                serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
                 serializer.Serialize(ms, test);
             }
         }
@@ -621,6 +652,7 @@ public class BlobSerializerTest
             for (var i = 0; i < 1000; i++)
             {
                 var serializer = new BlobSerializer();
+                serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
                 serializer.Deserialize(ms, out TestStruct read);
                 var test = TestStruct.Create(i);
                 Assert.AreEqual(test, read);
@@ -717,6 +749,7 @@ public class BlobSerializerTest
         for (var i = 0; i < 1000; i++)
         {
             var serializer = new BlobSerializer();
+            serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
             var stream = new MemoryStream();
             var test = TestStruct.Create(i);
             serializer.Serialize(stream, test);
@@ -732,6 +765,7 @@ public class BlobSerializerTest
         for (var i = 0; i < 1000; i++)
         {
             var serializer = new BlobSerializer();
+            serializer.RegisterStringParseConverter(new Uri("https://example.com/test"), allowConstructor: true);
             var stream = new MemoryStream();
             var test = TestStructNullables.Create(i);
             serializer.Serialize(stream, test);

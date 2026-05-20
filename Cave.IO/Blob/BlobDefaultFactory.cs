@@ -83,6 +83,7 @@ public class BlobDefaultFactory : IBlobConverterFactory
             new BlobMarshalStructConverter(),
             new BlobDictionaryConverter(),
             new BlobEnumerableConverter(),
+            new BlobPositionalRecordConverter(),
         ];
 
     /// <summary>Gets the collection of additional converters used for blob serialization and deserialization.</summary>

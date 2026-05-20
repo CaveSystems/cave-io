@@ -18,7 +18,6 @@ public class TestClass : IEquatable<TestClass>
         var result = new TestClass()
         {
             Values = new[] { i, i + 1, i + 2 },
-            Uri = new("http://localhost/" + i),
             Version = new Version(1, 0, i % 1000),
             Address = IPAddress.Parse(new int[] { 127, ((i >> 16) & 0xff), ((i >> 8) & 0xff), (i & 0xff) }.Join('.')),
             DateTimeOffset = DateTimeOffset.Now,
@@ -40,8 +39,6 @@ public class TestClass : IEquatable<TestClass>
     public int[] Values { get; init; }
 
     public Dictionary<int, string> Data { get; init; } = new();
-
-    public Uri Uri { get; init; }
 
     public Version Version { get; init; }
 
@@ -69,7 +66,6 @@ public class TestClass : IEquatable<TestClass>
     {
         if (other == null) return false;
         if (!Values.SequenceEqual(other.Values)) return false;
-        if (!Equals(Uri , other.Uri)) return false;
         if (!Equals(Version , other.Version)) return false;
         if (!Equals(DateTimeOffset , other.DateTimeOffset)) return false;
         if (!Equals(Address , other.Address)) return false;

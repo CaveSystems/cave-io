@@ -19,7 +19,7 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
         var bin = Reader.ReadZeroTerminatedFixedLengthString(4);
         if (bin != "BIN") throw new InvalidDataException("Invalid binary format (missing BIN tag).");
         var version = Reader.Read7BitEncodedInt32();
-        if (version != 1) throw new NotImplementedException($"Unkown version {version}!");
+        if (version < 1 || version > Version) throw new NotImplementedException($"Unkown version {version}!");
     }
 
     #endregion Internal Methods
@@ -28,9 +28,6 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
 
     /// <summary>Gets processed object identifiers.</summary>
     internal HashSet<int> ProcessedIds { get; } = new HashSet<int>();
-
-    /// <summary>Gets the supported binary format version.</summary>
-    internal int Version { get; } = 1;
 
     /// <inheritdoc/>
     public bool IsCompleted { get; private set; }
@@ -119,7 +116,7 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
             throw new InvalidDataException("Invalid converter ID sequence.");
         }
         // No cached converter; read initialization for this type.
-        var type = ReadTypeDefitition();
+        var type = ReadTypeDefinition();
         var converter = Serializer.GetConverter(type);
         var bundle = new BlobConverterBundle(id, type, converter);
         Converters.Add(bundle);
@@ -131,7 +128,7 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
     /// <returns>The resolved type.</returns>
     /// <exception cref="InvalidDataException">Thrown if the type data is invalid.</exception>
     /// <exception cref="InvalidOperationException">Thrown if the type cannot be resolved.</exception>
-    public Type ReadTypeDefitition()
+    public Type ReadTypeDefinition()
     {
         var typeCode = (BlobPrimitiveType)Reader.Read7BitEncodedUInt32();
         if (typeCode != 0 && typeCode != BlobPrimitiveType.Enum)

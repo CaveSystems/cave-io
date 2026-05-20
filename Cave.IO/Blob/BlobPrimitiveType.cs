@@ -90,5 +90,8 @@ public enum BlobPrimitiveType : uint
     Int64Array,
 
     /// <summary>Represents a length-prefixed array of unsigned 64-bit integers ( <see cref="ulong"/>[]).</summary>
-    UInt64Array
+    UInt64Array,
+
+    /// <summary>Represents a length-prefixed array of signed 8-bit integers ( <see cref="sbyte"/>[]).</summary>
+    Int8Array,
 }

@@ -24,7 +24,7 @@ public interface IBlobReaderState : IBlobState
     /// <returns>The resolved <see cref="Type"/>.</returns>
     /// <exception cref="System.IO.InvalidDataException">Thrown if the stream does not contain a valid type name.</exception>
     /// <exception cref="InvalidOperationException">Thrown if the encoded type cannot be resolved or generic type metadata is invalid.</exception>
-    Type ReadTypeDefitition();
+    Type ReadTypeDefinition();
 
     /// <summary>Closes the reader and validates the end marker.</summary>
     void Close();
