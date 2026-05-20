@@ -122,5 +122,13 @@ public interface IFifoStream
     /// <param name="count">The number of bytes to be written to the current stream.</param>
     void Write(byte[] buffer, int offset, int count);
 
+    /// <summary>
+    /// Copies the content starting at the current read position to the provided <paramref name="stream"/>.
+    /// </summary>
+    /// <remarks>After completion the position is at the end of the stream.</remarks>
+    /// <param name="stream">Stream to copy to.</param>
+    /// <returns>The number of bytes copied.</returns>
+    long CopyTo(Stream stream);
+
     #endregion Public Methods
 }

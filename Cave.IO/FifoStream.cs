@@ -488,6 +488,34 @@ public sealed class FifoStream : Stream, IFifoStream
         return resultSize;
     }
 
+    /// <inheritdoc/>
+    public new long CopyTo(Stream stream)
+    {
+        if (closed) return -1;
+        var resultSize = 0L;
+        if (currentBuffer == null) return 0;
+        //first partial buffer
+        if (currentBufferPosition > 0)
+        {
+            var size = currentBuffer.Value.Length - currentBufferPosition;
+            stream.Write(currentBuffer.Value, currentBufferPosition, size);
+            resultSize += size;
+            realPosition += size;
+            currentBufferPosition = 0;
+            currentBuffer = currentBuffer.Next;
+        }
+        //all remaining full buffers
+        while ((Available > 0) && (currentBuffer != null))
+        {
+            stream.Write(currentBuffer.Value, 0, currentBuffer.Value.Length);
+            resultSize += currentBuffer.Value.Length;
+            realPosition += currentBuffer.Value.Length;
+            currentBufferPosition = 0;
+            currentBuffer = currentBuffer.Next;
+        }
+        return resultSize;
+    }
+
     /// <summary>Reads the next byte in the buffer (much faster than <see cref="Read"/>). Returns -1 if no more data available.</summary>
     /// <returns>The next byte if available.</returns>
     [MethodImpl(256)]
@@ -538,7 +566,7 @@ public sealed class FifoStream : Stream, IFifoStream
             currentBufferPosition++;
             if (currentBufferPosition == currentBuffer!.Value.Length)
             {
-                currentBuffer = currentBuffer.Next ?? throw new InvalidOperationException("Buffer corrupt!");
+                currentBuffer = currentBuffer.Next;
                 currentBufferPosition = 0;
             }
             return realPosition;

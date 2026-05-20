@@ -96,5 +96,8 @@ public class ConcurrentFifoStream(IFifoStream baseStream) : IFifoStream
     /// <inheritdoc/>
     public void Write(byte[] buffer, int offset, int count) => Locked(() => baseStream.Write(buffer, offset, count));
 
+    /// <inheritdoc/>
+    public long CopyTo(Stream stream) => Locked(() => baseStream.CopyTo(stream));
+
     #endregion Public Methods
 }

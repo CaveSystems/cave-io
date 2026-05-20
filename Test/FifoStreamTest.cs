@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Cave;
+using Cave.Collections;
 using Cave.IO;
 using NUnit.Framework;
 
@@ -90,6 +91,42 @@ public class FifoStreamTest
             Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("Bye!"));
         }
         Assert.That(reader.ReadZeroTerminatedString(), Is.EqualTo("234678"));
+    }
+
+    [Test]
+    public void TestCopyContinue()
+    {
+        var fifo = new FifoStream();
+        var writer = new DataWriter(fifo);
+        for (var i = 0; i < 10; i++)
+        {
+            writer.WriteZeroTerminated("111");
+            var buffer = fifo.ReadAllBytes();
+            Assert.That(buffer.Length, Is.EqualTo(4));
+            Assert.That(buffer, Is.EqualTo(ASCII.GetBytes("111\0")));
+            for (var j = 0; j < i + 2; j++)
+            {
+                writer.Write((byte)j);
+            }
+            using MemoryStream ms = new();
+            fifo.CopyTo(ms);
+            buffer = ms.ToArray();
+            Assert.That(buffer.Length, Is.EqualTo(i + 2));
+            Assert.That(buffer, Is.EqualTo(new Counter(0, i + 2).Select(j => (byte)j).ToArray()));
+            if (i % 2 == 0)
+            {
+                fifo.FreeBuffers();
+                Assert.That(fifo.Position, Is.EqualTo(0));
+                Assert.That(fifo.Length, Is.EqualTo(0));
+                Assert.That(fifo.Available, Is.EqualTo(0));
+            }
+            else
+            {
+                fifo.Position -= 2;
+                Assert.That(fifo.ReadByte(), Is.EqualTo((byte)i));
+                Assert.That(fifo.ReadByte(), Is.EqualTo((byte)(i + 1)));
+            }
+        }
     }
 
     [Test]
