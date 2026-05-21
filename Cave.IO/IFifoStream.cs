@@ -128,7 +128,7 @@ public interface IFifoStream
     /// <remarks>After completion the position is at the end of the stream.</remarks>
     /// <param name="stream">Stream to copy to.</param>
     /// <returns>The number of bytes copied.</returns>
-    long CopyTo(Stream stream);
+    long FastCopyTo(Stream stream);
 
     #endregion Public Methods
 }

@@ -109,7 +109,7 @@ public class FifoStreamTest
                 writer.Write((byte)j);
             }
             using MemoryStream ms = new();
-            fifo.CopyTo(ms);
+            fifo.FastCopyTo(ms);
             buffer = ms.ToArray();
             Assert.That(buffer.Length, Is.EqualTo(i + 2));
             Assert.That(buffer, Is.EqualTo(new Counter(0, i + 2).Select(j => (byte)j).ToArray()));

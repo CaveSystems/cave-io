@@ -37,7 +37,14 @@ public class BlobReflectionConverter : BlobConverterBase
         if (type.IsValueType || type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).Any(c => c.GetParameters().Length == 0))
         {
             var data = new BlobReflectionConverterData(type);
-            return (data.MemberCount == 0) ? null : data;
+            if (data.MemberCount == 0)
+            {
+                if (data.Fields.Length > 0 || data.Properties.Length > 0)
+                {
+                    return null;
+                }
+            }
+            return data;
         }
         return null;
     }
@@ -145,30 +152,31 @@ public class BlobReflectionConverter : BlobConverterBase
     public override void WriteContent(IBlobWriterState state, BlobConverterBundle bundle, object instance)
     {
         if (bundle.State is not BlobReflectionConverterData myState) throw new InvalidOperationException("Invalid state for reflection converter.");
-        if (myState.MemberCount == 0) throw new InvalidOperationException("Initialization has not been written yet.");
         var writer = state.Writer;
         var index = 0;
-
-        state.Logger?.Verbose($"Write {myState.Fields.Length} fields and {myState.Properties.Length} properties.");
-        // iterate fields and write only non-null values, writing the member index before each value so that deserialization can skip missing members
-        foreach (var field in myState.Fields)
+        if (myState.MemberCount > 0)
         {
-            var i = index++;
-            var value = field.GetValue(instance);
-            if (value is null) continue;
-            var member = myState.Members[i];
-            writer.Write7BitEncoded32(i);
-            member.Bundle.Converter.WriteContent(state, member.Bundle, value);
-        }
-        // iterate properties in the same way
-        foreach (var property in myState.Properties)
-        {
-            var i = index++;
-            var value = property.GetValue(instance);
-            if (value is null) continue;
-            var member = myState.Members[i];
-            writer.Write7BitEncoded32(i);
-            member.Bundle.Converter.WriteContent(state, member.Bundle, value);
+            state.Logger?.Verbose($"Write {myState.Fields.Length} fields and {myState.Properties.Length} properties.");
+            // iterate fields and write only non-null values, writing the member index before each value so that deserialization can skip missing members
+            foreach (var field in myState.Fields)
+            {
+                var i = index++;
+                var value = field.GetValue(instance);
+                if (value is null) continue;
+                var member = myState.Members[i];
+                writer.Write7BitEncoded32(i);
+                member.Bundle.Converter.WriteContent(state, member.Bundle, value);
+            }
+            // iterate properties in the same way
+            foreach (var property in myState.Properties)
+            {
+                var i = index++;
+                var value = property.GetValue(instance);
+                if (value is null) continue;
+                var member = myState.Members[i];
+                writer.Write7BitEncoded32(i);
+                member.Bundle.Converter.WriteContent(state, member.Bundle, value);
+            }
         }
         //write end mark
         writer.Write7BitEncoded32(index);
@@ -214,7 +222,6 @@ public class BlobReflectionConverter : BlobConverterBase
         }
         bundle.State = myState;
         state.Logger?.Debug($"BlobReflectionConverter {bundle} initialized with {myState.Fields.Length} fields and {myState.Properties.Length} properties.");
-        return;
     }
 
     #endregion Public Methods

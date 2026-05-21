@@ -489,7 +489,7 @@ public sealed class FifoStream : Stream, IFifoStream
     }
 
     /// <inheritdoc/>
-    public new long CopyTo(Stream stream)
+    public long FastCopyTo(Stream stream)
     {
         if (closed) return -1;
         var resultSize = 0L;

@@ -24,6 +24,10 @@ public class BlobPositionalRecordConverter : BlobConverterBase
     /// <returns>Converter data or null.</returns>
     internal static BlobPositionalRecordConverterData? CreateData(Type type)
     {
+        if (type.GetProperty("EqualityContract", BindingFlags.Instance | BindingFlags.NonPublic)?.PropertyType != typeof(Type))
+        {
+            return null;
+        }
         var allProperties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.CanRead).ToArray();
         var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(c => c.GetParameters().Length > 0)

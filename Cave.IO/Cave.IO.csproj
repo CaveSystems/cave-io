@@ -56,5 +56,5 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net47' OR '$(TargetFramework)' == 'net48'">
 		<PackageReference Include="System.Memory"/>
 	</ItemGroup>
-	
+
 </Project>
