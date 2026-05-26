@@ -23,8 +23,6 @@ public sealed class DataReader
 
     bool closed;
     NewLineData? newLineData;
-    NewLineMode newLineMode;
-    StringEncoding stringEncoding;
     byte[]? zeroBytes;
 
     #endregion Private Fields
@@ -108,17 +106,17 @@ public sealed class DataReader
     /// <param name="input">The stream to read from.</param>
     /// <param name="encoding">The encoding. Use UTF_8, UTF_16 or UTF_32 whenever possible!</param>
     /// <param name="endian">The endian type.</param>
-    /// <param name="newLine">New line mode.</param>
+    /// <param name="newLineMode">New line mode.</param>
     /// <exception cref="ArgumentNullException">output.</exception>
     /// <exception cref="ArgumentException">Stream does not support writing or is already closed.;output.</exception>
     /// <exception cref="NotSupportedException">StringEncoding {0} not supported! or EndianType {0} not supported!.</exception>
-    public DataReader(Stream input, StringEncoding encoding = StringEncoding.UTF_8, NewLineMode newLine = NewLineMode.LF, EndianType endian = EndianType.LittleEndian)
+    public DataReader(Stream input, StringEncoding encoding = StringEncoding.UTF_8, NewLineMode newLineMode = IO.NewLineMode.LF, EndianType endian = EndianType.LittleEndian)
     {
-        BaseStream = input ?? throw new ArgumentNullException(nameof(input));
-        newLineMode = newLine;
-        stringEncoding = encoding != StringEncoding.Undefined ? encoding : throw new ArgumentOutOfRangeException(nameof(encoding));
+        Stream = input ?? throw new ArgumentNullException(nameof(input));
+        this.NewLineMode = newLineMode;
+        StringEncoding = encoding != StringEncoding.Undefined ? encoding : throw new ArgumentOutOfRangeException(nameof(encoding));
         EndianType = endian;
-        if (!BaseStream.CanRead)
+        if (!Stream.CanRead)
         {
             throw new ArgumentException("Stream does not support reading or is already closed.", nameof(input));
         }
@@ -129,10 +127,11 @@ public sealed class DataReader
     #region Public Properties
 
     /// <summary>Gets the available bytes for reading. Attention: the BaseStream has to support the Length and Position properties.</summary>
-    public long Available => BaseStream.Length - BaseStream.Position;
+    public long Available => Stream.Length - Stream.Position;
 
     /// <summary>Gets access to the base stream.</summary>
-    public Stream BaseStream { get; }
+    [Obsolete("Use Stream instead.")]
+    public Stream BaseStream => Stream;
 
     /// <summary>Gets or sets the endian encoder type.</summary>
     /// <remarks>This can be used between all read calls.</remarks>
@@ -143,20 +142,23 @@ public sealed class DataReader
     /// <remarks>This can be used between all read calls.</remarks>
     public NewLineMode NewLineMode
     {
-        get => newLineMode;
-        set { newLineData = null; newLineMode = value; }
+        get => field;
+        set { newLineData = null; field = value; }
     }
+
+    /// <summary>Gets access to the base stream.</summary>
+    public Stream Stream { get; }
 
     /// <summary>Gets or sets the Encoding to use for characters and strings. Setting this property updates <see cref="Encoding"/> automatically.</summary>
     /// <remarks>This can be used between all read calls.</remarks>
     public StringEncoding StringEncoding
     {
-        get => stringEncoding;
-        set { stringEncoding = value; newLineData = null; zeroBytes = null; }
+        get => field;
+        set { field = value; newLineData = null; zeroBytes = null; }
     }
 
     /// <summary>Gets the line feed string.</summary>
-    public string LineFeed => (newLineData ??= new NewLineData(StringEncoding, newLineMode)).LineFeed;
+    public string LineFeed => (newLineData ??= new NewLineData(StringEncoding, NewLineMode)).LineFeed;
 
     #endregion Public Properties
 
@@ -168,34 +170,34 @@ public sealed class DataReader
         if (!closed)
         {
             closed = true;
-            BaseStream.Close();
-            if (BaseStream is IDisposable disposable) disposable.Dispose();
+            Stream.Close();
+            if (Stream is IDisposable disposable) disposable.Dispose();
         }
     }
 
     /// <summary>Flushes the stream.</summary>
     [MethodImpl((MethodImplOptions)256)]
-    public void Flush() => BaseStream.Flush();
+    public void Flush() => Stream.Flush();
 
     /// <summary>Reads a 7 bit encoded 32 bit value from the stream.</summary>
     /// <returns>The value.</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public int Read7BitEncodedInt32() => BitCoder32.Read7BitEncodedInt32(BaseStream);
+    public int Read7BitEncodedInt32() => BitCoder32.Read7BitEncodedInt32(Stream);
 
     /// <summary>Reads a 7 bit encoded 64 bit value from the stream.</summary>
     /// <returns>The value.</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public long Read7BitEncodedInt64() => BitCoder64.Read7BitEncodedInt64(BaseStream);
+    public long Read7BitEncodedInt64() => BitCoder64.Read7BitEncodedInt64(Stream);
 
     /// <summary>Reads a 7 bit encoded 32 bit value from the stream.</summary>
     /// <returns>The value.</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public uint Read7BitEncodedUInt32() => BitCoder32.Read7BitEncodedUInt32(BaseStream);
+    public uint Read7BitEncodedUInt32() => BitCoder32.Read7BitEncodedUInt32(Stream);
 
     /// <summary>Reads a 7 bit encoded 64 bit value from the stream.</summary>
     /// <returns>The value.</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public ulong Read7BitEncodedUInt64() => BitCoder64.Read7BitEncodedUInt64(BaseStream);
+    public ulong Read7BitEncodedUInt64() => BitCoder64.Read7BitEncodedUInt64(Stream);
 
     /// <summary>Reads an array of the specified struct type from the stream using the default marshaller.</summary>
     /// <remarks>This function ignores the endianness of the data.</remarks>
@@ -215,7 +217,7 @@ public sealed class DataReader
         var result = new T[count];
 #if NET6_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
         var bytes = MemoryMarshal.AsBytes(result.AsSpan());
-        var read = BaseStream.Read(bytes);
+        var read = Stream.Read(bytes);
         if (read != length) throw new EndOfStreamException();
 #else
         var buffer = ReadBytes(length);
@@ -240,7 +242,7 @@ public sealed class DataReader
     [MethodImpl((MethodImplOptions)256)]
     public byte ReadByte()
     {
-        var b = BaseStream.ReadByte();
+        var b = Stream.ReadByte();
         if (b < 0)
         {
             throw new EndOfStreamException();
@@ -277,7 +279,7 @@ public sealed class DataReader
         var done = 0;
         while (done < count)
         {
-            var read = BaseStream.Read(result, done, count - done);
+            var read = Stream.Read(result, done, count - done);
             if (read == 0)
             {
                 throw new EndOfStreamException();
@@ -743,7 +745,7 @@ public sealed class DataReader
     /// <returns>The string.</returns>
     public string ReadLine(int maximumBytes = 64 * 1024)
     {
-        newLineData ??= new(stringEncoding, newLineMode);
+        newLineData ??= new(StringEncoding, NewLineMode);
         if (StringEncoding == StringEncoding.UTF_7)
         {
             return ReadUTF7(maximumBytes, newLineData.LineFeed);
@@ -810,22 +812,22 @@ public sealed class DataReader
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public short? ReadPrefixedInt16() => (short?)BitCoder32.Read8BitPrefixedInt32(BaseStream);
+    public short? ReadPrefixedInt16() => (short?)BitCoder32.Read8BitPrefixedInt32(Stream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public int? ReadPrefixedInt32() => BitCoder32.Read8BitPrefixedInt32(BaseStream);
+    public int? ReadPrefixedInt32() => BitCoder32.Read8BitPrefixedInt32(Stream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public long? ReadPrefixedInt64() => BitCoder64.Read8BitPrefixedInt64(BaseStream);
+    public long? ReadPrefixedInt64() => BitCoder64.Read8BitPrefixedInt64(Stream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public sbyte? ReadPrefixedInt8() => (sbyte?)BitCoder32.Read8BitPrefixedInt32(BaseStream);
+    public sbyte? ReadPrefixedInt8() => (sbyte?)BitCoder32.Read8BitPrefixedInt32(Stream);
 
     /// <summary>Reads a value from the stream.</summary>
     /// <returns>The value.</returns>
@@ -871,22 +873,22 @@ public sealed class DataReader
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public ushort? ReadPrefixedUInt16() => (ushort?)BitCoder32.Read8BitPrefixedUInt32(BaseStream);
+    public ushort? ReadPrefixedUInt16() => (ushort?)BitCoder32.Read8BitPrefixedUInt32(Stream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public uint? ReadPrefixedUInt32() => BitCoder32.Read8BitPrefixedUInt32(BaseStream);
+    public uint? ReadPrefixedUInt32() => BitCoder32.Read8BitPrefixedUInt32(Stream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public ulong? ReadPrefixedUInt64() => BitCoder64.Read8BitPrefixedUInt64(BaseStream);
+    public ulong? ReadPrefixedUInt64() => BitCoder64.Read8BitPrefixedUInt64(Stream);
 
     /// <summary>Reads a value with length prefix byte and little endian encoding from the stream.</summary>
     /// <returns>Returns the value read</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public byte? ReadPrefixedUInt8() => (byte?)BitCoder32.Read8BitPrefixedUInt32(BaseStream);
+    public byte? ReadPrefixedUInt8() => (byte?)BitCoder32.Read8BitPrefixedUInt32(Stream);
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <returns>The value.</returns>
@@ -1088,7 +1090,7 @@ public sealed class DataReader
         {
             //first read
             var min = Math.Max(blockSize, endMark.Length);
-            if (BaseStream.Read(data, currentOffset, min) != min) throw new EndOfStreamException();
+            if (Stream.Read(data, currentOffset, min) != min) throw new EndOfStreamException();
             currentOffset += min;
         }
 
@@ -1110,7 +1112,7 @@ public sealed class DataReader
             {
                 throw new InvalidDataException($"Refusing to read more than {maxCount} blocks at ReadUntil()!");
             }
-            if (BaseStream.Read(data, currentOffset, blockSize) != blockSize) throw new EndOfStreamException();
+            if (Stream.Read(data, currentOffset, blockSize) != blockSize) throw new EndOfStreamException();
             currentOffset += blockSize;
         }
 
@@ -1394,7 +1396,7 @@ public sealed class DataReader
     /// <param name="origin">Origin to seek from.</param>
     /// <returns>A value of type SeekOrigin indicating the reference point used to obtain the new position.</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public long Seek(long offset, SeekOrigin origin) => BaseStream.Seek(offset, origin);
+    public long Seek(long offset, SeekOrigin origin) => Stream.Seek(offset, origin);
 
     /// <summary>Skips some bytes at the base stream.</summary>
     /// <param name="count">Length to skip in bytes.</param>

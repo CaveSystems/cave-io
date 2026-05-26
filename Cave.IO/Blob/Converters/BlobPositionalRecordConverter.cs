@@ -206,29 +206,19 @@ public class BlobPositionalRecordConverter : BlobConverterBase
         }
 
         var minimumIndex = 0;
-        while (true)
+        for (; ; )
         {
-            var next = reader.Read7BitEncodedInt32();
-            if (next > myState.SerializedMemberCount)
-            {
-                throw new InvalidDataException($"Invalid binary format (member number {next} exceeds member count {myState.SerializedMemberCount}).");
-            }
+            // read member index and allow to skip not serialized ones
+            var index = reader.Read7BitEncodedInt32();
+            if (index > myState.SerializedMemberCount) throw new InvalidDataException($"Invalid binary format (member number {index} exceeds member count {myState.SerializedMemberCount}).");
+            if (index == myState.SerializedMemberCount) break;
+            if (index < minimumIndex) throw new InvalidDataException($"Invalid binary format (expected member number >= {minimumIndex} but got {index}).");
 
-            if (next == myState.SerializedMemberCount)
-            {
-                break;
-            }
-
-            if (next < minimumIndex)
-            {
-                throw new InvalidDataException($"Invalid binary format (expected member number >= {minimumIndex} but got {next}).");
-            }
-
-            var member = myState.Members[next];
+            var member = myState.Members[index];
             var content = member.Bundle.Converter.ReadContent(state, member.Bundle);
             state.Logger?.Verbose($"Set ctor arg {member.Parameter.Name} = {content}");
             args[member.ParameterIndex] = content;
-            minimumIndex = next + 1;
+            minimumIndex = index + 1;
         }
 
         try

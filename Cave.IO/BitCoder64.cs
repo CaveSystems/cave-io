@@ -245,7 +245,7 @@ public static class BitCoder64
         {
             throw new ArgumentNullException(nameof(writer));
         }
-        return Write7BitEncoded(writer.BaseStream, value);
+        return Write7BitEncoded(writer.Stream, value);
     }
 
     /// <summary>Writes the specified value 7 bit encoded to the specified Stream.</summary>

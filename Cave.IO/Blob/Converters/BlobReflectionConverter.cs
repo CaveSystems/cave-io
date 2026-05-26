@@ -77,19 +77,20 @@ public class BlobReflectionConverter : BlobConverterBase
         if (bundle.State is not BlobReflectionConverterData myState) throw new InvalidOperationException("Invalid state for reflection converter.");
         var result = TypeActivator.CreateFast(type) ?? throw new InvalidOperationException($"Could not create instance of type {type.Name}.");
         var reader = state.Reader;
-        for (var index = 0; index < myState.MemberCount;)
+        var minimumIndex = 0;
+        for (; ; )
         {
             // read member index and allow to skip not serialized ones
-            var next = reader.Read7BitEncodedInt32();
-            if (next > myState.MemberCount) throw new InvalidDataException($"Invalid binary format (member number {next} exceeds member count {myState.MemberCount}).");
-            if (next == myState.MemberCount) break;
-            if (next < index) throw new InvalidDataException($"Invalid binary format (expected member number > {index} but got {next}).");
-            index = next;
+            var index = reader.Read7BitEncodedInt32();
+            if (index > myState.MemberCount) throw new InvalidDataException($"Invalid binary format (member number {index} exceeds member count {myState.MemberCount}).");
+            if (index == myState.MemberCount) break;
+            if (index < minimumIndex) throw new InvalidDataException($"Invalid binary format (expected member number > {minimumIndex} but got {index}).");
             var member = myState.Members[index];
             var converter = member.Bundle.Converter;
             var content = converter.ReadContent(state, member.Bundle) ?? throw new InvalidDataException($"Invalid binary format (member with id {index} has null value).");
             state.Logger?.Verbose($"Set Value {member.Member.Name} = {content}");
             member.Setter(result, content);
+            minimumIndex = index + 1;
         }
         return result;
     }

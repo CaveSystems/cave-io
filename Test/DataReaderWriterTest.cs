@@ -660,48 +660,134 @@ public class DataReaderWriterTest
         var reader = new DataReader(stream);
 
         writer.WriteNullable(true);
+        Assert.AreEqual(true, reader.ReadNullableBool());
+        
         writer.WriteNullable(false);
+        Assert.AreEqual(false, reader.ReadNullableBool());
+
         writer.WriteNullable((bool?)null);
+        Assert.AreEqual(null, reader.ReadNullableBool());
+
         writer.WritePrefixed(sbyte.MinValue);
+        Assert.AreEqual(sbyte.MinValue, reader.ReadPrefixedInt8());
+
         writer.WritePrefixed(sbyte.MaxValue);
+        Assert.AreEqual(sbyte.MaxValue, reader.ReadPrefixedInt8());
+
         writer.WritePrefixed((sbyte?)null);
+        Assert.AreEqual((sbyte?)null, reader.ReadPrefixedInt8());
+
         writer.WritePrefixed((sbyte?)0);
+        Assert.AreEqual((sbyte?)0, reader.ReadPrefixedInt8());
+
         writer.WritePrefixed(byte.MinValue);
+        Assert.AreEqual(byte.MinValue, reader.ReadPrefixedUInt8());
+
         writer.WritePrefixed(byte.MaxValue);
+        Assert.AreEqual(byte.MaxValue, reader.ReadPrefixedUInt8());
+
         writer.WritePrefixed((byte?)null);
+        Assert.AreEqual(null, reader.ReadPrefixedUInt8());
+
         writer.WritePrefixed((byte?)0);
+        Assert.AreEqual((byte?)0, reader.ReadPrefixedUInt8());
+
         writer.WritePrefixed(short.MinValue);
+        Assert.AreEqual(short.MinValue, reader.ReadPrefixedInt16());
+
         writer.WritePrefixed(short.MaxValue);
+        Assert.AreEqual(short.MaxValue, reader.ReadPrefixedInt16());
+
         writer.WritePrefixed((short?)null);
+        Assert.AreEqual(null, reader.ReadPrefixedInt16());
+
         writer.WritePrefixed((short?)0);
+        Assert.AreEqual((short?)0, reader.ReadPrefixedInt16());
+
         writer.WritePrefixed(ushort.MinValue);
+        Assert.AreEqual(ushort.MinValue, reader.ReadPrefixedUInt16());
+
         writer.WritePrefixed(ushort.MaxValue);
+        Assert.AreEqual(ushort.MaxValue, reader.ReadPrefixedUInt16());
+
         writer.WritePrefixed((ushort?)null);
+        Assert.AreEqual((ushort?)null, reader.ReadPrefixedUInt16());
+
         writer.WritePrefixed((ushort?)0);
+        Assert.AreEqual((ushort?)0, reader.ReadPrefixedUInt16());
+
         writer.WritePrefixed(int.MinValue);
+        Assert.AreEqual(int.MinValue, reader.ReadPrefixedInt32());
+
         writer.WritePrefixed(int.MaxValue);
+        Assert.AreEqual(int.MaxValue, reader.ReadPrefixedInt32());
+
         writer.WritePrefixed((int?)null);
+        Assert.AreEqual((int?)null, reader.ReadPrefixedInt32());
+
         writer.WritePrefixed((int?)0);
+        Assert.AreEqual((int?)0, reader.ReadPrefixedInt32());
+
         writer.WritePrefixed(uint.MinValue);
+        Assert.AreEqual(uint.MinValue, reader.ReadPrefixedUInt32());
+
         writer.WritePrefixed(uint.MaxValue);
+        Assert.AreEqual(uint.MaxValue, reader.ReadPrefixedUInt32());
+
         writer.WritePrefixed((uint?)null);
+        Assert.AreEqual(null, reader.ReadPrefixedUInt32());
+
         writer.WritePrefixed((uint?)0);
+        Assert.AreEqual((uint?)0, reader.ReadPrefixedUInt32());
+
         writer.WritePrefixed(long.MinValue);
+        Assert.AreEqual(long.MinValue, reader.ReadPrefixedInt64());
+
         writer.WritePrefixed(long.MaxValue);
+        Assert.AreEqual(long.MaxValue, reader.ReadPrefixedInt64());
+
         writer.WritePrefixed((long?)null);
+        Assert.AreEqual((long?)null, reader.ReadPrefixedInt64());
+
         writer.WritePrefixed((long?)0);
+        Assert.AreEqual((long?)0, reader.ReadPrefixedInt64());
+
         writer.WritePrefixed(ulong.MinValue);
+        Assert.AreEqual(ulong.MinValue, reader.ReadPrefixedUInt64());
+
         writer.WritePrefixed(ulong.MaxValue);
+        Assert.AreEqual(ulong.MaxValue, reader.ReadPrefixedUInt64());
+
         writer.WritePrefixed((ulong?)null);
+        Assert.AreEqual((ulong?)null, reader.ReadPrefixedUInt64());
+
         writer.WritePrefixed((ulong?)0);
+        Assert.AreEqual((ulong?)0, reader.ReadPrefixedUInt64());
+
         writer.WritePrefixed(float.MinValue);
+        Assert.AreEqual(float.MinValue, reader.ReadPrefixedSingle());
+
         writer.WritePrefixed(float.MaxValue);
+        Assert.AreEqual(float.MaxValue, reader.ReadPrefixedSingle());
+
         writer.WritePrefixed((float?)null);
+        Assert.AreEqual((float?)null, reader.ReadPrefixedSingle());
+
         writer.WritePrefixed((float?)0);
+        Assert.AreEqual((float?)0, reader.ReadPrefixedSingle());
+
         writer.WritePrefixed(double.MinValue);
+        Assert.AreEqual(double.MinValue, reader.ReadPrefixedDouble());
+
         writer.WritePrefixed(double.MaxValue);
+        Assert.AreEqual(double.MaxValue, reader.ReadPrefixedDouble());
+
         writer.WritePrefixed((double?)null);
+        Assert.AreEqual((double?)null, reader.ReadPrefixedDouble());
+
         writer.WritePrefixed((double?)0);
+        Assert.AreEqual((double?)0, reader.ReadPrefixedDouble());
+
         writer.WritePrefixed(decimal.MinValue);
         writer.WritePrefixed(decimal.MaxValue);
         writer.WritePrefixed((decimal?)null);
@@ -725,8 +811,8 @@ public class DataReaderWriterTest
         writer.WritePrefixed((UTF16BE)AceOfSpades);
         writer.WritePrefixed((UTF32LE)AceOfSpades);
         writer.WritePrefixed((UTF32BE)AceOfSpades);
-        writer.Flush();
 
+        reader.Stream.Position = 0;
         Assert.AreEqual(true, reader.ReadNullableBool());
         Assert.AreEqual(false, reader.ReadNullableBool());
         Assert.AreEqual(null, reader.ReadNullableBool());

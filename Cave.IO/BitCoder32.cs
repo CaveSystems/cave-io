@@ -147,6 +147,75 @@ public static class BitCoder32
         }
     }
 
+    /// <summary>
+    /// Decodes a value previously encoded with Get8BitShifted (0 = null, 1 = 0, N = N-1 LE bytes).
+    /// </summary>
+    [MethodImpl((MethodImplOptions)256)]
+    public static uint? Read8BitPrefixedUInt32(byte[] data)
+    {
+        unchecked
+        {
+            if (data == null || data.Length == 0) throw new ArgumentException("Data must not be empty.", nameof(data));
+            var count = data[0];
+            if (count == 0) return null;
+            if (--count == 0) return 0;
+            if (count > 4) throw new InvalidDataException("8Bit prefixed 32 bit integer may not exceed 5 bytes!");
+            if (data.Length < count + 1) throw new EndOfStreamException();
+            uint value = 0;
+            switch (count)
+            {
+                case 4: value |= (uint)data[4] << 24; goto case 3;
+                case 3: value |= (uint)data[3] << 16; goto case 2;
+                case 2: value |= (uint)data[2] << 8; goto case 1;
+                case 1: value |= data[1]; break;
+            }
+            return value;
+        }
+    }
+
+    /// <summary>
+    /// Decodes a value previously encoded with Get8BitShifted (0 = null, 1 = 0, N = N-1 LE bytes).
+    /// </summary>
+    public static int? Read8BitPrefixedInt32(byte[] data) => unchecked((int?)Read8BitPrefixedUInt32(data));
+
+    /// <summary>
+    /// Decodes a value previously encoded with Get8BitShifted (0 = null, 1 = 0, N = N-1 LE bytes).
+    /// Supports up to 64-bit values.
+    /// </summary>
+    public static long? Read8BitPrefixedInt64(byte[] data) => unchecked((long?)Read8BitPrefixedUInt64(data));
+
+    /// <summary>
+    /// Decodes a value previously encoded with Get8BitShifted (0 = null, 1 = 0, N = N-1 LE bytes).
+    /// Supports up to 64-bit values.
+    /// </summary>
+    [MethodImpl((MethodImplOptions)256)]
+    public static ulong? Read8BitPrefixedUInt64(byte[] data)
+    {
+        unchecked
+        {
+            if (data == null || data.Length == 0) throw new ArgumentException("Data must not be empty.", nameof(data));
+            var count = data[0];
+            if (count == 0) return null;
+            if (--count == 0) return 0UL;
+            if (count > 8) throw new InvalidDataException("8Bit prefixed 64 bit integer may not exceed 9 bytes!");
+            if (data.Length < count + 1) throw new EndOfStreamException();
+            ulong value = 0;
+            switch (count)
+            {
+                case 8: value |= (ulong)data[8] << 56; goto case 7;
+                case 7: value |= (ulong)data[7] << 48; goto case 6;
+                case 6: value |= (ulong)data[6] << 40; goto case 5;
+                case 5: value |= (ulong)data[5] << 32; goto case 4;
+                case 4: value |= (ulong)data[4] << 24; goto case 3;
+                case 3: value |= (ulong)data[3] << 16; goto case 2;
+                case 2: value |= (ulong)data[2] << 8; goto case 1;
+                case 1: value |= data[1]; break;
+            }
+            return value;
+        }
+    }
+
+
     /// <summary>Reads a 8 bit prefixed and shifted value from the specified Stream.</summary>
     /// <param name="stream">The <see cref="Stream"/> to read from.</param>
     /// <returns>Returns the read value.</returns>
@@ -164,7 +233,7 @@ public static class BitCoder32
             var count = stream.ReadByte();
             if (count == 0) return null;
             if (--count == 0) return 0;
-            if (count > 4) throw new InvalidDataException("8Bit prefixed 64 bit integer may not exceed 8 bytes!");
+            if (count > 4) throw new InvalidDataException("8Bit prefixed 32 bit integer may not exceed 5 bytes!");
 
             var buffer = new byte[count];
             var read = stream.Read(buffer, 0, count);
@@ -220,7 +289,7 @@ public static class BitCoder32
         {
             throw new ArgumentNullException(nameof(writer));
         }
-        return Write7BitEncoded(writer.BaseStream, value);
+        return Write7BitEncoded(writer.Stream, value);
     }
 
     /// <summary>Writes the specified value 7 bit encoded to the specified Stream.</summary>

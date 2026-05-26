@@ -12,14 +12,16 @@ namespace Cave.IO;
 /// </summary>
 public sealed class DataWriter
 {
+    #region Fields
+
     internal static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
+
+    #endregion Fields
 
     #region Private Fields
 
     bool closed;
     NewLineData? newLineData;
-    NewLineMode newLineMode = NewLineMode.LF;
-    StringEncoding stringEncoding;
     bool zeroTested;
 
     #endregion Private Fields
@@ -27,7 +29,7 @@ public sealed class DataWriter
     #region Private Methods
 
     [MethodImpl((MethodImplOptions)256)]
-    byte[] EncodeString(string text) => stringEncoding.Encode(text, withRoundtripTest: !DisableEncodingRoundtripTest);
+    byte[] EncodeString(string text) => StringEncoding.Encode(text, withRoundtripTest: !DisableEncodingRoundtripTest);
 
     [MethodImpl((MethodImplOptions)256)]
     void ZeroTerminationTest()
@@ -54,14 +56,13 @@ public sealed class DataWriter
     /// <exception cref="ArgumentNullException">output.</exception>
     /// <exception cref="ArgumentException">Stream does not support writing or is already closed.;output.</exception>
     /// <exception cref="NotSupportedException">StringEncoding {0} not supported! or EndianType {0} not supported!.</exception>
-    public DataWriter(Stream output, StringEncoding encoding = StringEncoding.UTF_8, NewLineMode newLineMode = NewLineMode.LF,
-        EndianType endian = EndianType.LittleEndian)
+    public DataWriter(Stream output, StringEncoding encoding = StringEncoding.UTF_8, NewLineMode newLineMode = NewLineMode.LF, EndianType endian = EndianType.LittleEndian)
     {
-        BaseStream = output ?? throw new ArgumentNullException(nameof(output));
+        Stream = output ?? throw new ArgumentNullException(nameof(output));
         NewLineMode = newLineMode;
-        stringEncoding = encoding != StringEncoding.Undefined ? encoding : throw new ArgumentOutOfRangeException(nameof(encoding));
+        StringEncoding = encoding != StringEncoding.Undefined ? encoding : throw new ArgumentOutOfRangeException(nameof(encoding));
         EndianType = endian;
-        if (!BaseStream.CanWrite)
+        if (!Stream.CanWrite)
         {
             throw new ArgumentException("Stream does not support writing or is already closed.", nameof(output));
         }
@@ -72,7 +73,8 @@ public sealed class DataWriter
     #region Public Properties
 
     /// <summary>Gets access to the base stream.</summary>
-    public Stream BaseStream { get; }
+    [Obsolete("Use Stream instead.")]
+    public Stream BaseStream => Stream;
 
     /// <summary>
     /// Disable the string roundtrip test when writing non unicode strings. This might improve write performance but will not tell you when encoding errors
@@ -89,20 +91,23 @@ public sealed class DataWriter
     /// <remarks>This can be used between all write calls.</remarks>
     public NewLineMode NewLineMode
     {
-        get => newLineMode;
-        set { newLineData = null; newLineMode = value; }
+        get => field;
+        set { newLineData = null; field = value; }
     }
+
+    /// <summary>Gets access to the base stream.</summary>
+    public Stream Stream { get; }
 
     /// <summary>Gets or sets encoding to use for characters and strings. Setting this property updates <see cref="Encoding"/> automatically.</summary>
     /// <remarks>This can be used between all write calls.</remarks>
     public StringEncoding StringEncoding
     {
-        get => stringEncoding;
-        set { stringEncoding = value; zeroTested = false; newLineData = null; }
+        get => field;
+        set { field = value; zeroTested = false; newLineData = null; }
     }
 
     /// <summary>Gets the line feed string.</summary>
-    public string LineFeed => (newLineData ??= new NewLineData(StringEncoding, newLineMode)).LineFeed;
+    public string LineFeed => (newLineData ??= new NewLineData(StringEncoding, NewLineMode)).LineFeed;
 
     #endregion Public Properties
 
@@ -114,43 +119,43 @@ public sealed class DataWriter
         if (!closed)
         {
             closed = true;
-            BaseStream.Close();
-            if (BaseStream is IDisposable disposable) disposable.Dispose();
+            Stream.Close();
+            if (Stream is IDisposable disposable) disposable.Dispose();
         }
     }
 
     /// <summary>Flushes the stream.</summary>
     [MethodImpl((MethodImplOptions)256)]
-    public void Flush() => BaseStream.Flush();
+    public void Flush() => Stream.Flush();
 
     /// <summary>Seeks at the base stream (this requires the stream to be seekable).</summary>
     /// <param name="offset">Offset to seek to.</param>
     /// <param name="origin">Origin to seek from.</param>
     /// <returns>A value of type SeekOrigin indicating the reference point used to obtain the new position.</returns>
     [MethodImpl((MethodImplOptions)256)]
-    public long Seek(int offset, SeekOrigin origin) => BaseStream.Seek(offset, origin);
+    public long Seek(int offset, SeekOrigin origin) => Stream.Seek(offset, origin);
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(bool value) => BaseStream.WriteByte(value ? (byte)1 : (byte)0);
+    public void Write(bool value) => Stream.WriteByte(value ? (byte)1 : (byte)0);
 
     /// <summary>Writes the specified value directly to the stream.</summary>
     /// <param name="value">The value to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(byte value) => BaseStream.WriteByte(value);
+    public void Write(byte value) => Stream.WriteByte(value);
 
     /// <summary>Writes the specified buffer directly to the stream.</summary>
     /// <param name="buffer">The buffer to write.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(byte[] buffer) => BaseStream.Write(buffer, 0, buffer.Length);
+    public void Write(byte[] buffer) => Stream.Write(buffer, 0, buffer.Length);
 
     /// <summary>Writes a part of the specified buffer directly to the stream.</summary>
     /// <param name="buffer">The buffer to write.</param>
     /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
     /// <param name="count">The number of bytes to be written to the current stream.</param>
     [MethodImpl((MethodImplOptions)256)]
-    public void Write(byte[] buffer, int offset, int count) => BaseStream.Write(buffer, offset, count);
+    public void Write(byte[] buffer, int offset, int count) => Stream.Write(buffer, offset, count);
 
     /// <summary>Writes the specified character directly to the stream.</summary>
     /// <param name="c">The character to write.</param>
@@ -338,14 +343,14 @@ public sealed class DataWriter
 #if NET5_0_OR_GREATER || NETSTANDARD2_1_OR_GREATER
         ReadOnlySpan<byte> byteBuffer = MemoryMarshal.AsBytes(array.AsSpan());
         var headerLength = Write7BitEncoded32(byteBuffer.Length);
-        BaseStream.Write(byteBuffer);
+        Stream.Write(byteBuffer);
 #else
         var size = Marshal.SizeOf(typeof(T));
         var byteCount = array.Length * size;
         var byteBuffer = new byte[byteCount];
         Buffer.BlockCopy(array, 0, byteBuffer, 0, byteCount);
         var headerLength = Write7BitEncoded32(byteBuffer.Length);
-        BaseStream.Write(byteBuffer, 0, byteBuffer.Length);
+        Stream.Write(byteBuffer, 0, byteBuffer.Length);
 #endif
         return headerLength + byteBuffer.Length;
     }
@@ -413,7 +418,7 @@ public sealed class DataWriter
         else
         {
             Write7BitEncoded32(buffer.Length);
-            BaseStream.Write(buffer, 0, buffer.Length);
+            Stream.Write(buffer, 0, buffer.Length);
         }
     }
 
@@ -722,7 +727,7 @@ public sealed class DataWriter
     public void WritePrefixed(byte[] buffer, int offset, int count)
     {
         Write7BitEncoded32(count);
-        BaseStream.Write(buffer, offset, count);
+        Stream.Write(buffer, offset, count);
     }
 
     /// <summary>Writes the specified string with length prefix directly to the stream.</summary>
