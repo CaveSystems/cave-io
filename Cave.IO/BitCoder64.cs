@@ -32,7 +32,6 @@ public static class BitCoder64
         return buffer;
     }
 
-
     /// <summary>Gets the data of a 7 bit encoded value.</summary>
     /// <param name="value">The value to encode.</param>
     /// <returns>The encoded value as byte array.</returns>
@@ -149,9 +148,22 @@ public static class BitCoder64
     [MethodImpl((MethodImplOptions)256)]
     public static long Read7BitEncodedInt64(Stream stream) => unchecked((long)Read7BitEncodedUInt64(stream));
 
-    /// <summary>Reads a 7 bit encoded value from the specified Stream.</summary>
-    /// <param name="stream">The <see cref="Stream"/> to read from.</param>
-    /// <returns>Returns the read value.</returns>
+    /// <summary>Reads a 7-bit encoded 64-bit unsigned integer from a byte array.</summary>
+    /// <param name="data">The byte array containing the encoded data.</param>
+    /// <param name="offset">The current position in the array, incremented as bytes are read.</param>
+    /// <returns>The decoded 64-bit unsigned integer.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="data"/> is <see langword="null"/>.</exception>
+    /// <exception cref="EndOfStreamException">The end of the array is reached before completing the read operation.</exception>
+    /// <exception cref="InvalidDataException">The encoded integer exceeds 10 bytes.</exception>
+    [MethodImpl((MethodImplOptions)256)]
+    public static long Read7BitEncodedInt64(byte[] data, ref int offset) => unchecked((long)Read7BitEncodedUInt64(data, ref offset));
+
+    /// <summary>Reads a 7-bit encoded unsigned 64-bit integer from the stream.</summary>
+    /// <param name="stream">The stream to read from.</param>
+    /// <returns>The decoded unsigned 64-bit integer.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="stream"/> is null.</exception>
+    /// <exception cref="EndOfStreamException">End of stream reached before completing the read.</exception>
+    /// <exception cref="InvalidDataException">Encoded integer exceeds 10 bytes.</exception>
     [MethodImpl((MethodImplOptions)256)]
     public static ulong Read7BitEncodedUInt64(Stream stream)
     {
@@ -167,6 +179,36 @@ public static class BitCoder64
             {
                 b = stream.ReadByte();
                 if (b == -1) throw new EndOfStreamException();
+                if (++count > 10) throw new InvalidDataException("7Bit encoded 64 bit integer may not exceed 10 bytes!");
+                result |= (ulong)(b & 0x7F) << bitPos;
+                bitPos += 7;
+            }
+            return result;
+        }
+    }
+
+    /// <summary>Reads a 7-bit encoded 64-bit unsigned integer from a byte array.</summary>
+    /// <param name="data">The byte array containing the encoded data.</param>
+    /// <param name="offset">The current position in the array, incremented as bytes are read.</param>
+    /// <returns>The decoded 64-bit unsigned integer.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="data"/> is <see langword="null"/>.</exception>
+    /// <exception cref="EndOfStreamException">The end of the array is reached before completing the read operation.</exception>
+    /// <exception cref="InvalidDataException">The encoded integer exceeds 10 bytes.</exception>
+    [MethodImpl((MethodImplOptions)256)]
+    public static ulong Read7BitEncodedUInt64(byte[] data, ref int offset)
+    {
+        unchecked
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (offset >= data.Length) throw new EndOfStreamException();
+            int b = data[offset++];
+            var result = (ulong)(b & 0x7F);
+            var bitPos = 7;
+            var count = 1;
+            while ((b & 0x80) != 0)
+            {
+                if (offset >= data.Length) throw new EndOfStreamException();
+                b = data[offset++];
                 if (++count > 10) throw new InvalidDataException("7Bit encoded 64 bit integer may not exceed 10 bytes!");
                 result |= (ulong)(b & 0x7F) << bitPos;
                 bitPos += 7;
