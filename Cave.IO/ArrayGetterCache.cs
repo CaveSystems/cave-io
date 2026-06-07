@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Cave.IO;
 
@@ -18,6 +19,7 @@ public class ArrayGetterCache
     #region Public Methods
 
     /// <summary>Gets a fast array getter for the specified element type, using a cache to avoid redundant dynamic method generation.</summary>
+    [MethodImpl(256)]
     public ArrayGetter Get(Type elementType)
     {
         if (!cache.TryGetValue(elementType, out var getter))

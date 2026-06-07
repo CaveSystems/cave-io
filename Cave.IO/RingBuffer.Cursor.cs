@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -10,7 +9,7 @@ partial class RingBuffer<TValue>
 {
     #region Private Classes
 
-    sealed class Cursor(RingBuffer<TValue> ringBuffer) : IRingBufferCursor<TValue>
+    sealed class Cursor(RingBuffer<TValue> buf) : IRingBufferCursor<TValue>
     {
         #region Private Fields
 
@@ -20,36 +19,43 @@ partial class RingBuffer<TValue>
 
         #region Public Properties
 
+        /// <inheritdoc/>
         public int Available
         {
             [MethodImpl((MethodImplOptions)0x0100)]
-            get => (int)(ringBuffer.WriteCount - ReadCount);
+            get => (int)(Interlocked.Read(ref buf.nextWrite) - ReadCount);
         }
 
+        /// <inheritdoc/>
         public long LostCount { get; private set; }
 
+        /// <inheritdoc/>
         public long ReadCount { get; private set; }
 
-        public int ReadPosition { get; private set; } = ringBuffer.WritePosition;
+        /// <inheritdoc/>
+        public int ReadPosition { get; private set; } = buf.WritePosition;
 
         #endregion Public Properties
 
         #region Public Methods
 
+        /// <inheritdoc/>
         public TValue Read()
         {
-            while (true)
+            var spin = new SpinWait();
+            for (; ; )
             {
                 if (TryRead(out var result)) return result;
-                Thread.Sleep(1);
+                spin.SpinOnce();
             }
         }
 
+        /// <inheritdoc/>
         public IList<TValue> ReadList(int count = 0)
         {
             if (count <= 0) count = Available;
-            List<TValue> list = new(count);
-            for (var i = 0; i < count; i++)
+            var list = new List<TValue>(count);
+            for (var n = 0; n < count; n++)
             {
                 if (!TryRead(out var value)) break;
                 list.Add(value);
@@ -57,49 +63,53 @@ partial class RingBuffer<TValue>
             return list;
         }
 
+        /// <inheritdoc/>
         public TValue[] ToArray()
         {
-            var block = new Container[ringBuffer.Capacity];
-            ringBuffer.buffer.CopyTo(block, 0);
-            var write = ringBuffer.WritePosition;
+            var capacity = buf.Capacity;
+            var result = new List<TValue>(capacity);
+            var write = buf.WritePosition;
             var read = ReadPosition;
-            var selected = (write > read) ? block[read..write] : block[read..].Concat(block[..write]);
-            return selected.Where(c => c is not null).Select(c => c!.Value).ToArray();
+            var count = ((write - read) + capacity) & buf.mask;
+            for (var n = 0; n < count; n++)
+            {
+                var i = (read + n) & buf.mask;
+                if (Volatile.Read(ref buf.seq[i]) >= 0)
+                {
+                    result.Add(buf.items[i]);
+                }
+            }
+            return result.ToArray();
         }
 
+        /// <inheritdoc/>
         public bool TryRead(out TValue value)
         {
             try
             {
                 if (Interlocked.Increment(ref threadEnterCheck) > 1)
+                    throw new NotSupportedException("Multithread enter detected. Use GetCursor() per thread.");
+
+                // skip lapped slots
+                var nw = Interlocked.Read(ref buf.nextWrite);
+                var basePos = (long)ReadPosition;
+                if (nw - basePos > buf.Capacity)
                 {
-                    throw new NotSupportedException("Multithread enter detected. This is not supported by a IRingBufferCursor. Use the global IRingBuffer.Read functions or create a reader for each thread!");
+                    var jump = (int)((nw - buf.Capacity) & buf.mask);
+                    LostCount += (jump - ReadPosition + buf.Capacity) & buf.mask;
+                    ReadPosition = jump;
                 }
 
-                while (Available > ringBuffer.Capacity)
-                {
-                    ReadPosition = (ReadPosition + 1) & ringBuffer.mask;
-                    LostCount++;
-                }
+                if (ReadCount + LostCount >= nw) { value = default!; return false; }
 
-                while (true)
-                {
-                    //first check, handles entry into reader
-                    if (ReadCount + LostCount >= ringBuffer.WriteCount)
-                    {
-                        value = default!;
-                        return false;
-                    }
-                    //read
+                var i = ReadPosition;
+                var s = Volatile.Read(ref buf.seq[i]);
+                if (s < 0) { value = default!; return false; }
 
-                    var i = ReadPosition;
-                    ReadPosition = (ReadPosition + 1) & ringBuffer.mask;
-                    var result = ringBuffer.buffer[i];
-                    if (result is null) continue;
-                    ReadCount++;
-                    value = result.Value;
-                    return true;
-                }
+                ReadPosition = (ReadPosition + 1) & buf.mask;
+                ReadCount++;
+                value = buf.items[i];
+                return true;
             }
             finally
             {

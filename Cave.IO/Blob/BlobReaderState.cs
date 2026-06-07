@@ -15,10 +15,17 @@ sealed class BlobReaderState : BlobState, IBlobReaderState
     /// <exception cref="NotImplementedException">Thrown if the stream version is not supported.</exception>
     internal void Initialize()
     {
-        var bin = Reader.ReadZeroTerminatedFixedLengthString(4);
-        if (bin != "BIN") throw new InvalidDataException("Invalid binary format (missing BIN tag).");
-        var version = Reader.Read7BitEncodedInt32();
-        if (version < 1 || version > Version) throw new NotImplementedException($"Unkown version {version}!");
+        try
+        {
+            var bin = Reader.ReadZeroTerminatedFixedLengthString(4);
+            if (bin != "BIN") throw new InvalidDataException("Invalid binary format (missing BIN tag).");
+            var version = Reader.Read7BitEncodedInt32();
+            if (version < 1 || version > Version) throw new NotImplementedException($"Unkown version {version}!");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"BlobReader initialization failed!", ex);
+        }
     }
 
     #endregion Internal Methods

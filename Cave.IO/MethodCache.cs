@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 
 namespace Cave.IO;
 
@@ -103,37 +104,6 @@ public sealed class MethodCache
 
     #endregion Protected Constructors
 
-    #region Protected Methods
-
-    /// <summary>Emits the IL instructions to load the arguments for the cached method.</summary>
-    /// <param name="il">The IL generator used to emit the instructions.</param>
-    /// <param name="declaringType">The type that declares the cached method.</param>
-    /// <param name="paramTypes">The types of the parameters for the cached method.</param>
-    static void EmitLoadArgs(ILGenerator il, Type declaringType, Type[] paramTypes)
-    {
-        il.Emit(OpCodes.Ldarg_0);
-        il.Emit(OpCodes.Castclass, declaringType);
-
-        for (var i = 0; i < paramTypes.Length; i++)
-        {
-            il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Ldc_I4, i);
-            il.Emit(OpCodes.Ldelem_Ref);
-
-            var t = paramTypes[i];
-            if (t.IsValueType)
-            {
-                il.Emit(OpCodes.Unbox_Any, t);
-            }
-            else
-            {
-                il.Emit(OpCodes.Castclass, t);
-            }
-        }
-    }
-
-    #endregion Protected Methods
-
     #region Fields
 
     /// <summary>Gets the type that declares the cached method.</summary>
@@ -171,6 +141,7 @@ public sealed class MethodCache
     /// <param name="target">The object on which to invoke the method. This must be an instance of the declaring type, or null for static methods.</param>
     /// <param name="args">An array of arguments to pass to the method. The number, order, and type of the elements must match the method's parameters.</param>
     /// <returns>The return value of the invoked method, or null if the method has no return value.</returns>
+    [MethodImpl(256)]
     public object? InvokeFast(object? target, object?[] args) => Function(target, args);
 
     #endregion Public Methods

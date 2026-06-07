@@ -7,38 +7,41 @@ using System.Threading;
 
 namespace Cave.IO;
 
-/// <summary>Provides a lock free ring buffer without overflow checking.</summary>
+/// <summary>Provides a lock free ring buffer optimized for maximum write throughput.</summary>
+/// <remarks>
+/// Write cost: 1x Interlocked.Increment + 1x Volatile.Write.
+/// Read cost: higher — lapping detection and lost-item accounting happen on read.
+/// Overflow always overwrites unless <see cref="RingBufferOverflowFlags.Prevent"/> is set.
+/// </remarks>
 /// <typeparam name="TValue">Item type.</typeparam>
 public partial class RingBuffer<TValue> : IRingBuffer<TValue>
 {
     #region Private Fields
 
-    readonly Container?[] buffer;
+    readonly TValue[] items;
+    readonly long[] seq;
     readonly int mask;
+    long nextWrite;
+    long nextRead;
     long lostCount;
-    int nextReadPosition;
-    int nextWritePosition;
     long readCount;
     long rejectedCount;
-    int space;
-    long writeCount;
 
     #endregion Private Fields
 
     #region Public Constructors
 
-    /// <summary>Initializes a new instance of the <see cref="UncheckedRingBuffer{TValue}"/> class.</summary>
-    /// <param name="bits">Number of bits to use for item capacity (defaults to 12 = 4096 items).</param>
+    /// <summary>Initializes a new instance of the <see cref="RingBuffer{TValue}"/> class.</summary>
+    /// <param name="bits">Number of bits for item capacity (default 12 = 4096 items).</param>
     public RingBuffer(int bits = 12)
     {
-        if (bits is < 1 or > 31)
-        {
-            throw new ArgumentOutOfRangeException(nameof(bits));
-        }
-
-        buffer = new Container?[1 << bits];
-        mask = Capacity - 1;
-        space = Capacity;
+        if (bits is < 1 or > 31) throw new ArgumentOutOfRangeException(nameof(bits));
+        var capacity = 1 << bits;
+        items = new TValue[capacity];
+        seq = new long[capacity];
+        mask = capacity - 1;
+        // sentinel: seq[i] = i - capacity → all slots unwritten (seq < 0 for first round)
+        for (var i = 0; i < capacity; i++) seq[i] = i - capacity;
     }
 
     #endregion Public Constructors
@@ -49,14 +52,20 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     public int Available
     {
         [MethodImpl((MethodImplOptions)0x0100)]
-        get => (int)(WriteCount - ReadCount - LostCount);
+        get
+        {
+            var nw = Interlocked.Read(ref nextWrite);
+            var nr = Interlocked.Read(ref nextRead);
+            var avail = nw - nr;
+            return avail > Capacity ? Capacity : (int)avail;
+        }
     }
 
     /// <inheritdoc/>
     public int Capacity
     {
         [MethodImpl((MethodImplOptions)0x0100)]
-        get => buffer.Length;
+        get => mask + 1;
     }
 
     /// <inheritdoc/>
@@ -80,7 +89,7 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     public int ReadPosition
     {
         [MethodImpl((MethodImplOptions)0x0100)]
-        get => nextReadPosition & mask;
+        get => (int)(Interlocked.Read(ref nextRead) & mask);
     }
 
     /// <inheritdoc/>
@@ -94,21 +103,21 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     public int Space
     {
         [MethodImpl((MethodImplOptions)0x0100)]
-        get => space;
+        get => Capacity - Available;
     }
 
     /// <inheritdoc/>
     public long WriteCount
     {
         [MethodImpl((MethodImplOptions)0x0100)]
-        get => Interlocked.Read(ref writeCount);
+        get => Interlocked.Read(ref nextWrite);
     }
 
     /// <inheritdoc/>
     public int WritePosition
     {
         [MethodImpl((MethodImplOptions)0x0100)]
-        get => nextWritePosition & mask;
+        get => (int)(Interlocked.Read(ref nextWrite) & mask);
     }
 
     #endregion Public Properties
@@ -116,7 +125,19 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     #region Public Methods
 
     /// <inheritdoc/>
-    public void CopyTo(TValue[] array, int index) => buffer.CopyTo(array, index);
+    public void CopyTo(TValue[] array, int index)
+    {
+        var nw = Interlocked.Read(ref nextWrite);
+        var nr = Interlocked.Read(ref nextRead);
+        var start = nw - nr > Capacity ? nw - Capacity : nr;
+        var count = (int)(nw - start);
+        for (var n = 0; n < count; n++)
+        {
+            var i = (int)((start + n) & mask);
+            if (Volatile.Read(ref seq[i]) == start + n)
+                array[index++] = items[i];
+        }
+    }
 
     /// <inheritdoc/>
     public IRingBufferCursor<TValue> GetCursor() => new Cursor(this);
@@ -135,8 +156,8 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     public IList<TValue> ReadList(int count = 0)
     {
         if (count <= 0) count = Available;
-        List<TValue> list = new(count);
-        for (var i = 0; i < count; i++)
+        var list = new List<TValue>(count);
+        for (var n = 0; n < count; n++)
         {
             if (!TryRead(out var value)) break;
             list.Add(value);
@@ -147,78 +168,101 @@ public partial class RingBuffer<TValue> : IRingBuffer<TValue>
     /// <inheritdoc/>
     public TValue[] ToArray()
     {
-        var clone = new TValue[Capacity];
-        CopyTo(clone, 0);
-        return clone;
+        var result = new TValue[Capacity];
+        CopyTo(result, 0);
+        return result;
     }
 
     /// <inheritdoc/>
     public bool TryRead(out TValue value)
     {
-        //first check, handles entry into reader
-        if (Interlocked.Read(ref readCount) >= Interlocked.Read(ref writeCount))
+        while (true)
         {
-            value = default!;
-            return false;
-        }
-        //read
-        var i = (Interlocked.Increment(ref nextReadPosition) - 1) & mask;
-        var result = Interlocked.Exchange(ref buffer[i], null);
-        //second check, handles overshooting of multiple (same time) read operations passing first check
-        if (result is null)
-        {
-            //overshot, return to prev read position
-            Interlocked.Decrement(ref nextReadPosition);
-            value = default!;
-            return false;
-        }
-        //all clear, count
-        Interlocked.Increment(ref readCount);
-        Interlocked.Increment(ref space);
-        value = result.Value;
-        return true;
-    }
+            var pos = Interlocked.Read(ref nextRead);
+            var nw = Interlocked.Read(ref nextWrite);
 
-    /// <inheritdoc/>
-    public bool Write(TValue item)
-    {
-        if (item is null) throw new ArgumentNullException(nameof(item));
-        var container = new Container(item);
-        if (Interlocked.Decrement(ref space) >= 0)
-        {
-            var i = (Interlocked.Increment(ref nextWritePosition) - 1) & mask;
-            var prev = Interlocked.Exchange(ref buffer[i], container);
-            if (prev != null) throw new Exception("Fatal buffer corruption detected!");
-            Interlocked.Increment(ref writeCount);
+            // nothing written yet
+            if (pos >= nw) { value = default!; return false; }
+
+            var i = (int)(pos & mask);
+            var s = Volatile.Read(ref seq[i]);
+
+            if (s < pos)
+            {
+                // slot not yet published by writer → nothing readable
+                value = default!;
+                return false;
+            }
+
+            if (s > pos)
+            {
+                // lapping: slot already overwritten, advance reader to oldest valid position
+                var jump = nw - Capacity;
+                if (jump <= pos) jump = pos + 1;
+                var lost = jump - pos;
+                if (Interlocked.CompareExchange(ref nextRead, jump, pos) == pos)
+                    Interlocked.Add(ref lostCount, lost);
+                continue;
+            }
+
+            // s == pos: slot is ready, claim it
+            if (Interlocked.CompareExchange(ref nextRead, pos + 1, pos) != pos) continue;
+
+            value = items[i];
+            items[i] = default!;
+            Interlocked.Increment(ref readCount);
             return true;
         }
-        //overflow handling
+    }
 
-        bool result;
+    /// <summary>
+    /// Writes an item. Only 1x <see cref="Interlocked.Increment(ref long)"/> + 1x <see cref="Volatile.Write(ref long, long)"/> in the hot path.
+    /// If <see cref="RingBufferOverflowFlags.Prevent"/> is set a space check is added.
+    /// </summary>
+    /// <param name="item">Item to write.</param>
+    /// <returns>Returns true on success.</returns>
+    [MethodImpl((MethodImplOptions)0x0100)]
+    public bool Write(TValue item)
+    {
         if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Prevent))
         {
-            Interlocked.Increment(ref rejectedCount);
-            result = false;
+            // atomic check-and-claim
+            while (true)
+            {
+                var nw = Interlocked.Read(ref nextWrite);
+                var nr = Interlocked.Read(ref nextRead);
+                if (nw - nr >= Capacity)
+                {
+                    Interlocked.Increment(ref rejectedCount);
+                    if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Trace))
+                        Trace.TraceError(new InternalBufferOverflowException().Message);
+                    if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Exception))
+                        throw new InternalBufferOverflowException();
+                    return false;
+                }
+                // atomically claim the slot - retry if another thread was faster
+                if (Interlocked.CompareExchange(ref nextWrite, nw + 1, nw) == nw)
+                {
+                    var i = (int)(nw & mask);
+                    items[i] = item;
+                    Volatile.Write(ref seq[i], nw); // publish
+                    return true;
+                }
+            }
         }
-        else
+
+        // hot path (no overflow prevention): 1x Interlocked.Increment + 1x Volatile.Write
+        var pos = Interlocked.Increment(ref nextWrite) - 1;
+        var overwrittenPos = pos - Capacity;
+        if (overwrittenPos >= 0)
         {
-            var i = (Interlocked.Increment(ref nextWritePosition) - 1) & mask;
-            buffer[i] = new(item);
-            Interlocked.Increment(ref writeCount);
-            Interlocked.Increment(ref lostCount);
-            result = true;
+            if (Interlocked.CompareExchange(ref nextRead, overwrittenPos + 1, overwrittenPos) == overwrittenPos)
+                Interlocked.Increment(ref lostCount);
         }
-        //give space back
-        Interlocked.Increment(ref space);
-        if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Trace))
-        {
-            Trace.TraceError(new InternalBufferOverflowException().Message);
-        }
-        if (OverflowHandling.HasFlag(RingBufferOverflowFlags.Exception))
-        {
-            throw new InternalBufferOverflowException();
-        }
-        return result;
+        var idx = (int)(pos & mask);
+        items[idx] = item;
+        Volatile.Write(ref seq[idx], pos); // publish
+        return true;
     }
 
     #endregion Public Methods

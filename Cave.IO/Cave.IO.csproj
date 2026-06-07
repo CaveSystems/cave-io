@@ -11,18 +11,7 @@
 		<AssemblyOriginatorKeyFile>cave-io.snk</AssemblyOriginatorKeyFile>
 		<Product>CaveSystems IO Library</Product>
 		<PackageTags>CaveSystems IO</PackageTags>
-		<Description>
-			CaveSystems IO Library.
-			This package contains:
-			* Fast non-buffering data readers and writers.
-			* Endian conversion utilities.
-			* FIFO and ring buffer stream implementations.
-			* High‑performance struct marshalling.
-			* INI (settings) readers and writers.
-			* BinarySerializer for lightweight object serialization.
-			* BlobSerializer framework for advanced, version‑resilient binary serialization
-			(reflection-based converters, custom converters, dictionary/enumerable support).
-		</Description>
+		<Description>Multi-targeted .NET library focused on fast, low-overhead data handling. It provides tools commonly needed in protocol stacks, file formats, embedded systems, and performance-sensitive backend systems.</Description>
 		<PackageProjectUrl>https://github.com/CaveSystems/cave-io</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/CaveSystems/cave-io</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
