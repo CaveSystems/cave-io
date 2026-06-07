@@ -1,4 +1,4 @@
-﻿#if !DEBUG && (NET8_0 || NET48 || NET35)
+﻿#if DEBUG && (NET8_0 || NET48 || NET35)
 
 using System;
 using System.Collections.Concurrent;
