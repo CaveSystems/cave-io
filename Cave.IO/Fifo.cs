@@ -130,6 +130,10 @@ public class Fifo<TValue>
     #region Public Constructors
 
     /// <summary>Creates a new instance of the <see cref="Fifo{TValue}"/> class.</summary>
+    /// <remarks>The default instances uses 10 bits for segment size.</remarks>
+    public Fifo() : this(10) { }
+
+    /// <summary>Creates a new instance of the <see cref="Fifo{TValue}"/> class.</summary>
     /// <param name="segmentBits">Bits for segment size (default 10 = 1024 slots per segment).</param>
     public Fifo(int segmentBits = 10)
     {
